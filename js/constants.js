@@ -1,0 +1,1 @@
+let CANVAS = canvas;
