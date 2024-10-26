@@ -7,10 +7,15 @@
   </head>
   
   <body>
-    <canvas class = 'full-page' id = 'canvas'></canvas>
+    <div class = 'full-page' id = 'canvas_container'></div>
+    
+    <button class = 'bottom-right' onclick = 'toggleSettings();'>Settings</button>
+    
+    <div id = 'settings_div' style = 'display: none;'></div>
     
     <script src = 'js/constants.js'></script>
     <script src = 'js/globals.js'></script>
     <script src = 'js/event_listeners.js'></script>
+    <script src = 'js/ui.js'></script>
   </body>
 </html>

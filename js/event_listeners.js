@@ -5,10 +5,10 @@ CANVAS.addEventListener('click', async () => {
 });
 
 CANVAS.addEventListener('mousemove', evt => {
-  if (pointerLocked) {
-    console.log(evt.clientX, evt.movementX);
-  }
+  if (pointerLocked) {}
 });
+
+CANVAS.addEventListener()
 
 document.addEventListener('pointerlockchange', () => {
   if (document.pointerLockElement == CANVAS) {
