@@ -1,2 +1,1 @@
-class for enums with strict error if property does not exist
 camera scrolling / moving lib that is a pure class that can take in functions for x and y scaling factor based on current x and y

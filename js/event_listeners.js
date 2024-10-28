@@ -8,8 +8,6 @@ CANVAS.addEventListener('mousemove', evt => {
   if (pointerLocked) {}
 });
 
-CANVAS.addEventListener()
-
 document.addEventListener('pointerlockchange', () => {
   if (document.pointerLockElement == CANVAS) {
     pointerLocked = true;
