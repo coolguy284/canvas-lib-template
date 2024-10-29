@@ -1,3 +1,3 @@
-gracefully shutdown canvasmanager if error detected
+fix apparent bugs in canvasmanager
 configmanager class that can handle persistence on its own, setup with a declaration of all variables and the persistence key
 camera scrolling / moving lib that is a pure class that can take in functions for x and y scaling factor based on current x and y
