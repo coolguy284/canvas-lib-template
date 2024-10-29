@@ -35,6 +35,8 @@
       
       man.setCanvasMode('2D');
       
+      await new Promise(r => setTimeout(r, 1));
+      
       let [ width, height ] = man.getCanvasSize();
       
       let ctx = man.getContext();
@@ -42,6 +44,8 @@
       ctx.clearRect(0, 0, width, height);
       ctx.fillStyle = 'red';
       ctx.fillRect(100, 100, 100, 100);
+      
+      window.scriptVars = { man, ctx };
     </script>
   </body>
 </html>
