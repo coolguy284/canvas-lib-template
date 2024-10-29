@@ -2,6 +2,27 @@
 <html>
   <head>
     <title>Basic</title>
+    
+    <style>
+      html {
+        font-family: Arial, sans-serif;
+        color: white;
+        background-color: black;
+      }
+      
+      #canvas_container {
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        
+        canvas {
+          width: 100%;
+          height: 100%;
+        }
+      }
+    </style>
   </head>
   
   <body>
@@ -10,8 +31,17 @@
     <script type = 'module'>
       import { CanvasManager } from '../lib/canvas/manager.mjs';
       
-      let man = new CanvasManager();
-      man.setContainer(canvas_container);
+      let man = new CanvasManager(canvas_container);
+      
+      man.setCanvasMode('2D');
+      
+      let [ width, height ] = man.getCanvasSize();
+      
+      let ctx = man.getContext();
+      
+      ctx.clearRect(0, 0, width, height);
+      c.fillStyle = 'red';
+      ctx.fillRect(100, 100, 100, 100);
     </script>
   </body>
 </html>
