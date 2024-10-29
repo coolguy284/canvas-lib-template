@@ -29,23 +29,28 @@
     <div id = 'canvas_container'></div>
     
     <script type = 'module'>
-      import { CanvasManager } from '../lib/canvas/manager.mjs';
+      import { CanvasManager, FrameRate } from '../lib/canvas/manager.mjs';
       
       let man = new CanvasManager(canvas_container);
       
-      man.setCanvasMode('2D');
+      man.setCanvasMode({
+        mode: '2D',
+        frameRate: {
+          mode: FrameRate.RESIZE_ONLY,
+        },
+        triggers: {
+          render: () => {
+            let [ width, height ] = man.getCanvasSize();
+            let ctx = man.getContext();
+            
+            ctx.clearRect(0, 0, width, height);
+            ctx.fillStyle = 'red';
+            ctx.fillRect(100, 100, 100, 100);
+          },
+        },
+      });
       
-      await new Promise(r => setTimeout(r, 1));
-      
-      let [ width, height ] = man.getCanvasSize();
-      
-      let ctx = man.getContext();
-      
-      ctx.clearRect(0, 0, width, height);
-      ctx.fillStyle = 'red';
-      ctx.fillRect(100, 100, 100, 100);
-      
-      window.scriptVars = { man, ctx };
+      window.scriptVars = { man };
     </script>
   </body>
 </html>
