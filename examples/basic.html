@@ -1,0 +1,17 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Basic</title>
+  </head>
+  
+  <body>
+    <div id = 'canvas_container'></div>
+    
+    <script type = 'module'>
+      import { CanvasManager } from '../lib/canvas/manager.mjs';
+      
+      let man = new CanvasManager();
+      man.setContainer(canvas_container);
+    </script>
+  </body>
+</html>
