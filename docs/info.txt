@@ -25,4 +25,12 @@ CanvasManager:
         },
         ...
       ],
+      #uniforms: [
+      #  {
+      #    name: <string>,
+      #    type: UniformType,
+      #    if type == UniformType....:
+      #      ...
+      #  },
+      #],
   }

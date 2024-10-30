@@ -196,7 +196,7 @@ export class CanvasManager {
       throw new Error(`opts.triggers.setup not function or null: ${typeof opts.triggers.setup}`);
     }
     
-    if (typeof opts.triggers.render == 'function') {
+    if (opts.triggers.render == null || typeof opts.triggers.render == 'function') {
       triggers.render = opts.triggers.render;
     } else {
       throw new Error(`opts.triggers.render not function ${opts.triggers.render == null ? 'null / undefined' : typeof opts.triggers.render}`);
@@ -443,7 +443,9 @@ export class CanvasManager {
         throw new Error('default case should not be triggered');
     }
     
-    await this.#triggers.render();
+    if (this.#triggers.render != null) {
+      await this.#triggers.render();
+    }
   }
   
   async #renderLoop() {
