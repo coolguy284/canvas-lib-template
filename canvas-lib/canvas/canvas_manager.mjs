@@ -45,6 +45,23 @@ export class CanvasManager {
     this.#canvas.width = this.#canvasWidth;
     this.#canvas.height = this.#canvasHeight;
     
+    switch (this.#canvasMode) {
+      case CanvasMode['2D']:
+        break;
+      
+      case CanvasMode.WEBGL1:
+      case CanvasMode.WEBGL2:
+        this.#canvasContext.viewport(0, 0, this.#canvasWidth, this.#canvasHeight);
+        break;
+      
+      case CanvasMode.WEBGL_FULL_CANVAS_SHADER:
+        this.#canvasContext.viewport(0, 0, this.#canvasWidth, this.#canvasHeight);
+        break;
+      
+      default:
+        throw new Error('default case should not be triggered');
+    }
+    
     this.#queueForceRender();
   }
   
