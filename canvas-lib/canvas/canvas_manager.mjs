@@ -4,20 +4,21 @@ import { Lock } from '../lock.mjs';
 import { ShaderManager } from './shader_manager.mjs';
 
 // https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Tutorial/Adding_2D_content_to_a_WebGL_context
-const VERTEX_SHADER_XY_ONLY_TEXT = `
-  #version 330 es
+const ALL_SHADER_PREFIX = `
+  #version 300 es
   precision highp float;
+`.trim();
+
+const VERTEX_SHADER_XY_ONLY_TEXT =
+ALL_SHADER_PREFIX + `
+  in vec4 aVertexPosition;
   
-  attribute vec4 aVertexPosition;
   void main() {
     gl_Position = vec4(aVertexPosition.xy, 0.0, 1.0);
   }
-`;
+`.trim();
 
-const FRAGMENT_SHADER_PREFIX = `
-  #version 330 es
-  precision highp float;
-`;
+const FRAGMENT_SHADER_PREFIX = ALL_SHADER_PREFIX;
 
 export const CanvasMode = Enum([
   'NONE',

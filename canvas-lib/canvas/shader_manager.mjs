@@ -45,8 +45,8 @@ export class ShaderManager {
     this.#gl.compileShader(shader);
     
     if (!this.#gl.getShaderParameter(shader, this.#gl.COMPILE_STATUS)) {
-      let info = gl.getShaderInfoLog(shader);
-      gl.deleteShader(shader);
+      let info = this.#gl.getShaderInfoLog(shader);
+      this.#gl.deleteShader(shader);
       throw new Error(`Shader compilation error: ${info}`);
     }
     
