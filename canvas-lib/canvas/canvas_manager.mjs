@@ -321,7 +321,7 @@ export class CanvasManager {
           gl.bufferData(gl.ARRAY_BUFFER, positionData, gl.STATIC_DRAW);
           gl.vertexAttribPointer(attribLocations.vertexPosition, numComponents, type, normalize, stride, offset);
           gl.enableVertexAttribArray(attribLocations.vertexPosition);
-          gl.bindBuffer(null);
+          gl.bindBuffer(gl.ARRAY_BUFFER, null);
         } catch (err) {
           console.error(err);
           this.gracefulShutdown();
@@ -401,7 +401,7 @@ export class CanvasManager {
   }
   
   async #callRender() {
-    switch (opts.mode) {
+    switch (this.#canvasMode) {
       case CanvasMode['2D']:
       case CanvasMode.WEBGL1:
       case CanvasMode.WEBGL2:
@@ -410,13 +410,11 @@ export class CanvasManager {
       case CanvasMode.WEBGL_FULL_CANVAS_SHADER: {
         // https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Tutorial/Adding_2D_content_to_a_WebGL_context
         
-        let gl = canvas.getContext('webgl2');
+        let gl = this.#canvasContext;
         
         //gl.clearColor(0.0, 0.0, 0.0, 1.0);
         //gl.clearDepth(1.0);
         //gl.clear(gl.COLOR_BUFFER_BIT, gl.DEPTH_BUFFER_BIT);
-        
-        // TODOsetposattrib
         
         gl.useProgram(this.#fullCanvasShaderData.shaderProgram);
         gl.useProgram(null);
