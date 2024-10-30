@@ -1,6 +1,23 @@
 import { removeNode } from '../dom_tools.mjs';
 import { Enum } from '../enum.mjs';
 import { Lock } from '../lock.mjs';
+import { ShaderManager } from './shader_manager.mjs';
+
+// https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Tutorial/Adding_2D_content_to_a_WebGL_context
+const VERTEX_SHADER_XY_ONLY_TEXT = `
+  #version 330 es
+  precision highp float;
+  
+  attribute vec4 aVertexPosition;
+  void main() {
+    gl_Position = vec4(aVertexPosition.xy, 0.0, 1.0);
+  }
+`;
+
+const FRAGMENT_SHADER_PREFIX = `
+  #version 330 es
+  precision highp float;
+`;
 
 export const CanvasMode = Enum([
   'NONE',
@@ -40,6 +57,7 @@ export class CanvasManager {
   #skipRenderLoopWaitSentinel = false;
   #stopRenderLoopSentinel = false;
   #skipRenderLoopWaitResolveFunc = null;
+  #fullCanvasShaderData = null;
   
   // helper functions
   
@@ -155,6 +173,8 @@ export class CanvasManager {
     
     let triggers = {};
     
+    let shaderSegmentStrings;
+    
     if (typeof opts.triggers != 'object' && opts.triggers != null) {
       throw new Error('opts.triggers must be object');
     }
@@ -175,6 +195,40 @@ export class CanvasManager {
       triggers.tearDown = opts.triggers.tearDown;
     } else {
       throw new Error(`opts.triggers.tearDown not function or null: ${typeof opts.triggers.tearDown}`);
+    }
+    
+    if (opts.mode == CanvasMode.WEBGL_FULL_CANVAS_SHADER) {
+      if (Array.isArray(opts.shaderSegments)) {
+        shaderSegmentStrings = [];
+        
+        for (let i = 0; i < opts.shaderSegments.length; i++) {
+          let segment = opts.shaderSegments[i];
+          
+          if (typeof segment.type != 'string' || !(segment.type in ShaderSegmentType)) {
+            throw new Error(`opts.shaderSegments[${i}].type value ${segment.type} invalid`);
+          }
+          
+          switch (segment.type) {
+            case ShaderSegmentType.STRING:
+              if (typeof segment.content != 'string') {
+                throw new Error(`opts.shaderSegments[${i}].content not string`);
+              }
+              
+              shaderSegmentStrings.push(segment.content);
+              break;
+            
+            case ShaderSegmentType.URL:
+              if (typeof segment.url != 'string') {
+                throw new Error(`opts.shaderSegments[${i}].url not string`);
+              }
+              
+              shaderSegmentStrings.push(await (await fetch(segment.url)).text());
+              break;
+          }
+        }
+      } else {
+        throw new Error(`opts.triggers.tearDown not function or null: ${typeof opts.triggers.tearDown}`);
+      }
     }
     
     this.#frameRate = frameRate;
@@ -198,8 +252,30 @@ export class CanvasManager {
         this.#canvasContext = canvas.getContext('webgl2');
         break;
       
-      case CanvasMode.WEBGL_FULL_CANVAS_SHADER:
-        throw new Error('webgl modes not supported');
+      case CanvasMode.WEBGL_FULL_CANVAS_SHADER: {
+        let gl = canvas.getContext('webgl2');
+        
+        this.#canvasContext = gl;
+        
+        try {
+          this.#fullCanvasShaderData = {};
+          
+          this.#fullCanvasShaderData.shaderManager = new ShaderManager(gl);
+          
+          this.#fullCanvasShaderData.shaderManager.loadShaderFromString(gl.VERTEX_SHADER, VERTEX_SHADER_XY_ONLY_TEXT);
+          
+          let fragmentShaderSource = [
+            FRAGMENT_SHADER_PREFIX,
+            ...shaderSegmentStrings
+          ].join('\n');
+          
+          this.#fullCanvasShaderData.shaderManager.loadShaderFromString(gl.FRAGMENT_SHADER, fragmentShaderSource);
+        } catch (err) {
+          console.error(err);
+          this.gracefulShutdown();
+        }
+        break;
+      }
       
       default:
         throw new Error('default case should not be triggered');
@@ -231,16 +307,6 @@ export class CanvasManager {
       }
     }
     
-    removeNode(this.#canvas);
-    
-    this.#canvas = null;
-    this.#canvasContext = null;
-    this.#canvasWidth = null;
-    this.#canvasHeight = null;
-    this.#canvasStyle = null;
-    this.#resizeObserver.unobserve(this.#canvas);
-    this.#resizeObserver = null;
-    
     switch (this.#canvasMode) {
       case CanvasMode['2D']:
         break;
@@ -250,11 +316,25 @@ export class CanvasManager {
         break;
       
       case CanvasMode.WEBGL_FULL_CANVAS_SHADER:
+        this.#fullCanvasShaderData.shaderManager.deleteAllShaders();
+        this.#fullCanvasShaderData.shaderManager = null;
+        
+        this.#fullCanvasShaderData = null;
         break;
       
       default:
         throw new Error('default case should not be triggered');
     }
+    
+    removeNode(this.#canvas);
+    
+    this.#canvas = null;
+    this.#canvasContext = null;
+    this.#canvasWidth = null;
+    this.#canvasHeight = null;
+    this.#canvasStyle = null;
+    this.#resizeObserver.unobserve(this.#canvas);
+    this.#resizeObserver = null;
   }
   
   async #renderLoop() {

@@ -27,8 +27,10 @@ export class ShaderManager {
   loadShaderFromString(shaderType, sourceString) {
     if (
       !Number.isSafeInteger(shaderType) ||
-      shaderType != this.#gl.VERTEX_SHADER ||
-      shaderType != this.#gl.FRAGMENT_SHADER
+      (
+        shaderType != this.#gl.VERTEX_SHADER &&
+        shaderType != this.#gl.FRAGMENT_SHADER
+      )
     ) {
       throw new Error(`ShaderType must be gl.VERTEX_SHADER or gl.FRAGMENT_SHADER`);
     }
