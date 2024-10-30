@@ -29,12 +29,12 @@
     <div id = 'canvas_container'></div>
     
     <script type = 'module'>
-      import { CanvasManager, FrameRateMode } from '../canvas-lib/main.mjs';
+      import { CanvasManager, CanvasMode, FrameRateMode } from '../canvas-lib/main.mjs';
       
       let man = new CanvasManager(canvas_container);
       
       await man.setCanvasMode({
-        mode: 'WEBGL2',
+        mode: CanvasMode.WEBGL2,
         frameRate: {
           mode: FrameRateMode.RESIZE_ONLY,
         },

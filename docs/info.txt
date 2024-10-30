@@ -18,8 +18,10 @@ CanvasManager:
       shaderSegments: [
         {
           type: ShaderSegmentType,
-          if type == ShaderSegmentType:
-            ...
+          if type == ShaderSegmentType.STRING:
+            contents: <string>,
+          if type == ShaderSegmentType.URL:
+            url: <relative or absolute url string>,
         },
         ...
       ],

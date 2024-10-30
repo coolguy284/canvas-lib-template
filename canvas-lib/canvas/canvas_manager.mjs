@@ -17,6 +17,11 @@ export const FrameRateMode = Enum([
   'MILLISECOND',
 ]);
 
+export const ShaderSegmentType = Enum([
+  'STRING',
+  'URL',
+]);
+
 export class CanvasManager {
   // class variables
   

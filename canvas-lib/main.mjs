@@ -3,6 +3,7 @@ export {
   CanvasManager,
   CanvasMode,
   FrameRateMode,
+  ShaderSegmentType,
 } from './canvas/canvas_manager.mjs';
 
 // convenience exports

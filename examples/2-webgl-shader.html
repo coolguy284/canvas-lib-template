@@ -29,15 +29,25 @@
     <div id = 'canvas_container'></div>
     
     <script type = 'module'>
-      import { CanvasManager, FrameRateMode } from '../canvas-lib/main.mjs';
+      import { CanvasManager, CanvasMode, FrameRateMode, ShaderSegmentType } from '../canvas-lib/main.mjs';
       
       let man = new CanvasManager(canvas_container);
       
       await man.setCanvasMode({
-        mode: 'WEBGL_FULL_CANVAS_SHADER',
+        mode: CanvasMode.WEBGL_FULL_CANVAS_SHADER,
         frameRate: {
           mode: FrameRateMode.RESIZE_ONLY,
         },
+        shaderSegments: [
+          {
+            type: ShaderSegmentType.STRING,
+            content: `
+              void main() {
+                gl_FragColor = vec4(gl_FragCoord.xy / 100, 0.0, 1.0);
+              }
+            `,
+          },
+        ],
         triggers: {
           render: () => {},
         },
