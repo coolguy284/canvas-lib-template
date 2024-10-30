@@ -29,14 +29,14 @@
     <div id = 'canvas_container'></div>
     
     <script type = 'module'>
-      import { CanvasManager, FrameRate } from '../canvas-lib/main.mjs';
+      import { CanvasManager, FrameRateMode } from '../canvas-lib/main.mjs';
       
       let man = new CanvasManager(canvas_container);
       
       await man.setCanvasMode({
         mode: '2D',
         frameRate: {
-          mode: FrameRate.RESIZE_ONLY,
+          mode: FrameRateMode.RESIZE_ONLY,
         },
         triggers: {
           render: () => {

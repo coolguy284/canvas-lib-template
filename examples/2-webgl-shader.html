@@ -34,18 +34,12 @@
       let man = new CanvasManager(canvas_container);
       
       await man.setCanvasMode({
-        mode: 'WEBGL2',
+        mode: 'WEBGL_FULL_CANVAS_SHADER',
         frameRate: {
           mode: FrameRateMode.RESIZE_ONLY,
         },
         triggers: {
-          render: () => {
-            let [ width, height ] = man.getCanvasSize();
-            let gl = man.getContext();
-            
-            gl.clearColor(1.0, 0.0, 0.0, 1.0);
-            gl.clear(gl.COLOR_BUFFER_BIT);
-          },
+          render: () => {},
         },
       });
       

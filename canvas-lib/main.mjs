@@ -2,7 +2,7 @@
 export {
   CanvasManager,
   CanvasMode,
-  FrameRate,
+  FrameRateMode,
 } from './canvas/canvas_manager.mjs';
 
 // convenience exports

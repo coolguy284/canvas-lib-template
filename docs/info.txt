@@ -8,10 +8,19 @@ CanvasManager:
         tearDown: <function called to tear down variables / null>,
       },
       frameRate: {
-        mode: FrameRate,
-        if mode == 'FRAME_MULT':
+        mode: FrameRateMode,
+        if mode == FrameRateMode.FRAME_MULT:
           frameSkips: <integer>,
-        if mode == 'MILLISECOND':
+        if mode == FrameRateMode.MILLISECOND:
           delay: <integer milliseconds > 0>,
       },
+    if mode == CanvasMode.WEBGL_FULL_CANVAS_SHADER:
+      shaderSegments: [
+        {
+          type: ShaderSegmentType,
+          if type == ShaderSegmentType:
+            ...
+        },
+        ...
+      ],
   }

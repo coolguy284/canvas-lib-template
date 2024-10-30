@@ -10,7 +10,7 @@ export const CanvasMode = Enum([
   'WEBGL_FULL_CANVAS_SHADER',
 ]);
 
-export const FrameRate = Enum([
+export const FrameRateMode = Enum([
   'NONE',
   'RESIZE_ONLY',
   'FRAME_MULT',
@@ -72,19 +72,19 @@ export class CanvasManager {
       throw new Error('frameRate must be object');
     }
     
-    if (typeof frameRate.mode == 'string' && frameRate.mode in FrameRate) {
+    if (typeof frameRate.mode == 'string' && frameRate.mode in FrameRateMode) {
       parsedFrameRate.mode = frameRate.mode;
     } else {
       throw new Error(`frameRate.mode not known: ${frameRate.mode}`);
     }
     
     switch (frameRate.mode) {
-      case FrameRate.NONE:
-      case FrameRate.RESIZE_ONLY:
+      case FrameRateMode.NONE:
+      case FrameRateMode.RESIZE_ONLY:
         // no additional settings
         break;
       
-      case FrameRate.FRAME_MULT:
+      case FrameRateMode.FRAME_MULT:
         if (Number.isSafeInteger(frameRate.frameSkips) && frameRate.frameSkips >= 0) {
           parsedFrameRate.frameSkips = frameRate.frameSkips;
         } else {
@@ -92,7 +92,7 @@ export class CanvasManager {
         }
         break;
       
-      case FrameRate.MILLISECOND:
+      case FrameRateMode.MILLISECOND:
         if (Number.isSafeInteger(frameRate.delay) && frameRate.delay > 0) {
           parsedFrameRate.delay = frameRate.delay;
         } else {
@@ -113,16 +113,16 @@ export class CanvasManager {
     };
     
     switch (frameRate.mode) {
-      case FrameRate.NONE:
-      case FrameRate.RESIZE_ONLY:
+      case FrameRateMode.NONE:
+      case FrameRateMode.RESIZE_ONLY:
         // no additional settings
         break;
       
-      case FrameRate.FRAME_MULT:
+      case FrameRateMode.FRAME_MULT:
         frameRateCopy.frameSkips = frameRate.frameSkips;
         break;
       
-      case FrameRate.MILLISECOND:
+      case FrameRateMode.MILLISECOND:
         frameRateCopy.delay = frameRate.delay;
         break;
       
@@ -280,7 +280,7 @@ export class CanvasManager {
       }
       
       switch (this.#frameRate.mode) {
-        case FrameRate.FRAME_MULT:
+        case FrameRateMode.FRAME_MULT:
           let frameSkips = this.#frameRate.frameSkips;
           
           for (let i = 0; i < frameSkips; i++) {
@@ -297,7 +297,7 @@ export class CanvasManager {
           }
           break;
         
-        case FrameRate.MILLISECOND:
+        case FrameRateMode.MILLISECOND:
           resolveToCall = await new Promise(r => {
             setTimeout(r, this.#frameRate.delay);
             this.#skipRenderLoopWaitResolveFunc = r;
@@ -334,7 +334,7 @@ export class CanvasManager {
   }
   
   #startRenderLoop() {
-    if (this.#frameRate.mode == FrameRate.FRAME_MULT || this.#frameRate.mode == FrameRate.MILLISECOND) {
+    if (this.#frameRate.mode == FrameRateMode.FRAME_MULT || this.#frameRate.mode == FrameRateMode.MILLISECOND) {
       this.#renderLoop();
     }
   }
@@ -345,13 +345,13 @@ export class CanvasManager {
     }
     
     switch (this.#frameRate.mode) {
-      case FrameRate.NONE:
-      case FrameRate.RESIZE_ONLY:
+      case FrameRateMode.NONE:
+      case FrameRateMode.RESIZE_ONLY:
         // do nothing
         break;
       
-      case FrameRate.FRAME_MULT:
-      case FrameRate.MILLISECOND:
+      case FrameRateMode.FRAME_MULT:
+      case FrameRateMode.MILLISECOND:
         if (this.#skipRenderLoopWaitResolveFunc) {
           if (haltLoop) {
             this.#stopRenderLoopSentinel = true;
@@ -369,13 +369,13 @@ export class CanvasManager {
   
   async #endRenderLoop() {
     switch (this.#frameRate.mode) {
-      case FrameRate.NONE:
-      case FrameRate.RESIZE_ONLY:
+      case FrameRateMode.NONE:
+      case FrameRateMode.RESIZE_ONLY:
         // do nothing
         break;
       
-      case FrameRate.FRAME_MULT:
-      case FrameRate.MILLISECOND:
+      case FrameRateMode.FRAME_MULT:
+      case FrameRateMode.MILLISECOND:
         await this.#skipRenderLoopWait(true);
         break;
       
@@ -386,16 +386,16 @@ export class CanvasManager {
   
   async #forceRender() {
     switch (this.#frameRate.mode) {
-      case FrameRate.NONE:
+      case FrameRateMode.NONE:
         // do nothing
         break;
       
-      case FrameRate.RESIZE_ONLY:
+      case FrameRateMode.RESIZE_ONLY:
         await this.#triggers.render();
         break;
       
-      case FrameRate.FRAME_MULT:
-      case FrameRate.MILLISECOND:
+      case FrameRateMode.FRAME_MULT:
+      case FrameRateMode.MILLISECOND:
         await this.#skipRenderLoopWait(false);
         break;
       
