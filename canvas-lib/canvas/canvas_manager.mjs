@@ -11,7 +11,7 @@ const ALL_SHADER_PREFIX = `
 `.trim();
 
 const VERTEX_SHADER_XY_ONLY_TEXT =
-ALL_SHADER_PREFIX + `
+  ALL_SHADER_PREFIX + `
   in vec4 aVertexPosition;
   
   void main() {
@@ -19,7 +19,10 @@ ALL_SHADER_PREFIX + `
   }
 `.trim();
 
-const FRAGMENT_SHADER_PREFIX = ALL_SHADER_PREFIX;
+const FRAGMENT_SHADER_PREFIX =
+  ALL_SHADER_PREFIX + `
+  uniform vec2 iResolution;
+`;
 
 export const CanvasMode = Enum([
   'NONE',
@@ -81,6 +84,12 @@ export class CanvasManager {
       
       case CanvasMode.WEBGL_FULL_CANVAS_SHADER:
         this.#canvasContext.viewport(0, 0, this.#canvasWidth, this.#canvasHeight);
+        
+        // set resolution in uniform in program
+          
+        this.#canvasContext.useProgram(this.#fullCanvasShaderData.shaderProgram);
+        this.#canvasContext.uniform2f(this.#fullCanvasShaderData.uniformLocations.iResolution, this.#canvasWidth, this.#canvasHeight);
+        this.#canvasContext.useProgram(null);
         break;
       
       default:
@@ -297,7 +306,9 @@ export class CanvasManager {
             vertexPosition: gl.getAttribLocation(shaderProgram, 'aVertexPosition'),
           };
           
-          let uniformLocations = this.#fullCanvasShaderData.uniformLocations = {};
+          this.#fullCanvasShaderData.uniformLocations = {
+            iResolution: gl.getUniformLocation(shaderProgram, 'iResolution'),
+          };
           
           // buffer for quad coordinates
           
