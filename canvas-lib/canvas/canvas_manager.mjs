@@ -417,11 +417,12 @@ export class CanvasManager {
         //gl.clear(gl.COLOR_BUFFER_BIT, gl.DEPTH_BUFFER_BIT);
         
         gl.useProgram(this.#fullCanvasShaderData.shaderProgram);
-        gl.useProgram(null);
         
         const offset = 0;
         const vertexCount = 4;
         gl.drawArrays(gl.TRIANGLE_STRIP, offset, vertexCount);
+        
+        gl.useProgram(null);
         break;
       }
       
