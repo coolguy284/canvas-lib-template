@@ -1,0 +1,55 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Basic</title>
+    
+    <style>
+      html {
+        font-family: Arial, sans-serif;
+        color: white;
+        background-color: black;
+      }
+      
+      #canvas_container {
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        
+        canvas {
+          width: 100%;
+          height: 100%;
+        }
+      }
+    </style>
+  </head>
+  
+  <body>
+    <div id = 'canvas_container'></div>
+    
+    <script type = 'module'>
+      import { CanvasManager, FrameRate } from '../lib/canvas/canvas_manager.mjs';
+      
+      let man = new CanvasManager(canvas_container);
+      
+      await man.setCanvasMode({
+        mode: 'WEBGL2',
+        frameRate: {
+          mode: FrameRate.RESIZE_ONLY,
+        },
+        triggers: {
+          render: () => {
+            let [ width, height ] = man.getCanvasSize();
+            let gl = man.getContext();
+            
+            gl.clearColor(1.0, 0.0, 0.0, 1.0);
+            gl.clear(gl.COLOR_BUFFER_BIT);
+          },
+        },
+      });
+      
+      window.scriptVars = { man };
+    </script>
+  </body>
+</html>
