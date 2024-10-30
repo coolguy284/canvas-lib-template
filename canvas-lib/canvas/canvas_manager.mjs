@@ -250,6 +250,8 @@ export class CanvasManager {
     this.#canvasContainer.appendChild(canvas);
     this.#canvas = canvas;
     
+    this.#canvasMode = opts.mode;
+    
     switch (opts.mode) {
       case CanvasMode['2D']:
         this.#canvasContext = canvas.getContext('2d');
@@ -648,6 +650,7 @@ export class CanvasManager {
           
           if (newMode != CanvasMode.NONE) {
             await this.#createCanvas(opts);
+          } else {
             this.#canvasMode = newMode;
           }
         }
@@ -676,7 +679,7 @@ export class CanvasManager {
   }
   
   getCanvas() {
-    this.#editLock.errorIfAcquired();
+    //this.#editLock.errorIfAcquired();
     
     if (this.#canvasMode == CanvasMode.NONE) {
       throw new Error('Cannot get canvas if mode is none');
@@ -686,7 +689,7 @@ export class CanvasManager {
   }
   
   getContext() {
-    this.#editLock.errorIfAcquired();
+    //this.#editLock.errorIfAcquired();
     
     if (this.#canvasMode == CanvasMode.NONE) {
       throw new Error('Cannot get context if mode is none');
@@ -696,7 +699,7 @@ export class CanvasManager {
   }
   
   getCanvasSize() {
-    this.#editLock.errorIfAcquired();
+    //this.#editLock.errorIfAcquired();
     
     return [this.#canvasWidth, this.#canvasHeight];
   }

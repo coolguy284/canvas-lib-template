@@ -3,9 +3,5 @@ stop render on lost focus, reactivate on regain
 configmanager class that can handle persistence on its own, setup with a declaration of all variables and the persistence key
 uniforms support
 
-misc:
-convert let to const
-use scissor test to draw red rectangle
-
 low prio:
 camera scrolling / moving lib that is a pure class that can take in functions for x and y scaling factor based on current x and y

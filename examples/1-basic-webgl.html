@@ -39,6 +39,12 @@
           mode: FrameRateMode.RESIZE_ONLY,
         },
         triggers: {
+          setup: () => {
+            let gl = man.getContext();
+            
+            gl.enable(gl.SCISSOR_TEST);
+            gl.scissor(100, 100, 200, 200);
+          },
           render: () => {
             let [ width, height ] = man.getCanvasSize();
             let gl = man.getContext();
