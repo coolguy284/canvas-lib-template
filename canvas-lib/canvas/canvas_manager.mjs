@@ -138,42 +138,6 @@ export class CanvasManager {
     return frameRateCopy;
   }
   
-  // might get called to destroy canvas if mode not NONE
-  async #destroyCanvas() {
-    if (this.#triggers.tearDown != null) {
-      try {
-        await this.#triggers.tearDown();
-      } catch (err) {
-        console.error(err);
-      }
-    }
-    
-    removeNode(this.#canvas);
-    
-    this.#canvas = null;
-    this.#canvasContext = null;
-    this.#canvasWidth = null;
-    this.#canvasHeight = null;
-    this.#canvasStyle = null;
-    this.#resizeObserver.unobserve(this.#canvas);
-    this.#resizeObserver = null;
-    
-    switch (this.#canvasMode) {
-      case CanvasMode['2D']:
-        break;
-      case CanvasMode.WEBGL1:
-        break;
-      case CanvasMode.WEBGL2:
-        break;
-      
-      case CanvasMode.WEBGL_FULL_CANVAS_SHADER:
-        break;
-      
-      default:
-        throw new Error('default case should not be triggered');
-    }
-  }
-  
   async #resizeHandler() {
     // treated as a "public" function call in that the lock must be acquired
     
@@ -255,6 +219,42 @@ export class CanvasManager {
     }
     
     this.#startRenderLoop();
+  }
+  
+  // might get called to destroy canvas if mode not NONE
+  async #destroyCanvas() {
+    if (this.#triggers.tearDown != null) {
+      try {
+        await this.#triggers.tearDown();
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    
+    removeNode(this.#canvas);
+    
+    this.#canvas = null;
+    this.#canvasContext = null;
+    this.#canvasWidth = null;
+    this.#canvasHeight = null;
+    this.#canvasStyle = null;
+    this.#resizeObserver.unobserve(this.#canvas);
+    this.#resizeObserver = null;
+    
+    switch (this.#canvasMode) {
+      case CanvasMode['2D']:
+        break;
+      case CanvasMode.WEBGL1:
+        break;
+      case CanvasMode.WEBGL2:
+        break;
+      
+      case CanvasMode.WEBGL_FULL_CANVAS_SHADER:
+        break;
+      
+      default:
+        throw new Error('default case should not be triggered');
+    }
   }
   
   async #renderLoop() {
