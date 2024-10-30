@@ -4,6 +4,7 @@ import { Lock } from '../lock.mjs';
 import { ShaderManager } from './shader_manager.mjs';
 
 // https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Tutorial/Adding_2D_content_to_a_WebGL_context
+
 const ALL_SHADER_PREFIX = `
   #version 300 es
   precision highp float;
@@ -259,18 +260,68 @@ export class CanvasManager {
         this.#canvasContext = gl;
         
         try {
+          // https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Tutorial/Adding_2D_content_to_a_WebGL_context
+          
+          // shader creation
+          
           this.#fullCanvasShaderData = {};
           
-          this.#fullCanvasShaderData.shaderManager = new ShaderManager(gl);
+          let shaderManager = this.#fullCanvasShaderData.shaderManager = new ShaderManager(gl);
           
-          this.#fullCanvasShaderData.shaderManager.loadShaderFromString(gl.VERTEX_SHADER, VERTEX_SHADER_XY_ONLY_TEXT);
+          let vertexShader = this.#fullCanvasShaderData.vertexShader = shaderManager.loadShaderFromString(gl.VERTEX_SHADER, VERTEX_SHADER_XY_ONLY_TEXT);
           
           let fragmentShaderSource = [
             FRAGMENT_SHADER_PREFIX,
             ...shaderSegmentStrings
           ].join('\n');
           
-          this.#fullCanvasShaderData.shaderManager.loadShaderFromString(gl.FRAGMENT_SHADER, fragmentShaderSource);
+          let fragmentShader = this.#fullCanvasShaderData.fragmentShader = shaderManager.loadShaderFromString(gl.FRAGMENT_SHADER, fragmentShaderSource);
+          
+          // shader program creation
+          
+          let shaderProgram = this.#fullCanvasShaderData.shaderProgram = gl.createProgram();
+          
+          gl.attachShader(shaderProgram, vertexShader);
+          gl.attachShader(shaderProgram, fragmentShader);
+          gl.linkProgram(shaderProgram);
+          
+          if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
+            let info = gl.getProgramInfoLog(shaderProgram);
+            gl.deleteProgram(shaderProgram);
+            throw new Error(`Shader program initialization error: ${info}`);
+          }
+          
+          // get variable positions
+          
+          let attribLocations = this.#fullCanvasShaderData.attribLocations = {
+            vertexPosition: gl.getAttribLocation(shaderProgram, 'aVertexPosition'),
+          };
+          
+          let uniformLocations = this.#fullCanvasShaderData.uniformLocations = {};
+          
+          // buffer for quad coordinates
+          
+          let positionBuffer = this.#fullCanvasShaderData.positionBuffer = gl.createBuffer();
+          
+          const positionData = new Float32Array([
+            1, 1,
+            -1, 1,
+            1, -1,
+            -1, -1,
+          ]);
+          
+          const numComponents = 2; // pull out 2 values per iteration
+          const type = gl.FLOAT; // the data in the buffer is 32bit floats
+          const normalize = false; // don't normalize
+          const stride = 0; // how many bytes to get from one set of values to the next
+          // 0 = use type and numComponents above
+          const offset = 0; // how many bytes inside the buffer to start from
+          
+          gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+          gl.bufferData(gl.ARRAY_BUFFER, positionData, gl.STATIC_DRAW);
+          gl.vertexAttribPointer(attribLocations.vertexPosition, numComponents, type, normalize, stride, offset);
+          gl.enableVertexAttribArray(attribLocations.vertexPosition);
+          gl.bindBuffer(null);
         } catch (err) {
           console.error(err);
           this.gracefulShutdown();
@@ -310,18 +361,29 @@ export class CanvasManager {
     
     switch (this.#canvasMode) {
       case CanvasMode['2D']:
-        break;
       case CanvasMode.WEBGL1:
-        break;
       case CanvasMode.WEBGL2:
         break;
       
-      case CanvasMode.WEBGL_FULL_CANVAS_SHADER:
+      case CanvasMode.WEBGL_FULL_CANVAS_SHADER: {
+        // https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Tutorial/Adding_2D_content_to_a_WebGL_context
+        
+        let gl = this.#canvasContext;
+        
+        gl.deleteBuffer(this.#fullCanvasShaderData.positionBuffer);
+        this.#fullCanvasShaderData.positionBuffer = null;
+        
+        gl.deleteProgram(this.#fullCanvasShaderData.shaderProgram);
+        this.#fullCanvasShaderData.shaderProgram = null;
+        
         this.#fullCanvasShaderData.shaderManager.deleteAllShaders();
+        this.#fullCanvasShaderData.vertexShader = null;
+        this.#fullCanvasShaderData.fragmentShader = null;
         this.#fullCanvasShaderData.shaderManager = null;
         
         this.#fullCanvasShaderData = null;
         break;
+      }
       
       default:
         throw new Error('default case should not be triggered');
@@ -338,6 +400,40 @@ export class CanvasManager {
     this.#resizeObserver = null;
   }
   
+  async #callRender() {
+    switch (opts.mode) {
+      case CanvasMode['2D']:
+      case CanvasMode.WEBGL1:
+      case CanvasMode.WEBGL2:
+        break;
+      
+      case CanvasMode.WEBGL_FULL_CANVAS_SHADER: {
+        // https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Tutorial/Adding_2D_content_to_a_WebGL_context
+        
+        let gl = canvas.getContext('webgl2');
+        
+        //gl.clearColor(0.0, 0.0, 0.0, 1.0);
+        //gl.clearDepth(1.0);
+        //gl.clear(gl.COLOR_BUFFER_BIT, gl.DEPTH_BUFFER_BIT);
+        
+        // TODOsetposattrib
+        
+        gl.useProgram(this.#fullCanvasShaderData.shaderProgram);
+        gl.useProgram(null);
+        
+        const offset = 0;
+        const vertexCount = 4;
+        gl.drawArrays(gl.TRIANGLE_STRIP, offset, vertexCount);
+        break;
+      }
+      
+      default:
+        throw new Error('default case should not be triggered');
+    }
+    
+    await this.#triggers.render();
+  }
+  
   async #renderLoop() {
     let resolveToCall = null;
     
@@ -350,7 +446,7 @@ export class CanvasManager {
     
     while (true) {
       try {
-        await this.#triggers.render();
+        await this.#callRender();
       } catch (err) {
         console.error(err);
         this.gracefulShutdown();
@@ -477,7 +573,7 @@ export class CanvasManager {
         break;
       
       case FrameRateMode.RESIZE_ONLY:
-        await this.#triggers.render();
+        await this.#callRender();
         break;
       
       case FrameRateMode.FRAME_MULT:
