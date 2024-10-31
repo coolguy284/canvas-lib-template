@@ -213,8 +213,8 @@ export class RenderLoop {
     return this.#frameRate == null ? null : this.#copyFrameRate(this.#frameRate);
   }
   
-  async setFrameRate(frameRate) {
-    let frameRate = this.#parseFrameRate(frameRate);
+  async setFrameRate(newFrameRate) {
+    let frameRate = this.#parseFrameRate(newFrameRate);
     
     await this.#renderLoop.endRenderLoop();
     
