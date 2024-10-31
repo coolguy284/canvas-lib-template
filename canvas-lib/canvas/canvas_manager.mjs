@@ -1,6 +1,7 @@
 import { removeNode } from '../dom_tools.mjs';
 import { Enum } from '../enum.mjs';
 import { Lock } from '../lock.mjs';
+import { RenderLoop } from './render_loop.mjs';
 import { ShaderManager } from './shader_manager.mjs';
 
 // https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Tutorial/Adding_2D_content_to_a_WebGL_context
@@ -32,13 +33,6 @@ export const CanvasMode = Enum([
   'WEBGL_FULL_CANVAS_SHADER',
 ]);
 
-export const FrameRateMode = Enum([
-  'NONE',
-  'RESIZE_ONLY',
-  'FRAME_MULT',
-  'MILLISECOND',
-]);
-
 export const ShaderSegmentType = Enum([
   'STRING',
   'URL',
@@ -58,10 +52,10 @@ export class CanvasManager {
   #canvasStyle = null;
   #resizeObserver = null;
   #triggers = null;
-  #frameRate = null;
-  #skipRenderLoopWaitSentinel = false;
-  #stopRenderLoopSentinel = false;
-  #skipRenderLoopWaitResolveFunc = null;
+  #renderLoop = new RenderLoop();
+  
+  // class variables > webgl full canvas shader specific
+  
   #fullCanvasShaderData = null;
   
   // helper functions
@@ -99,74 +93,6 @@ export class CanvasManager {
     this.#queueForceRender();
   }
   
-  #parseFrameRate(frameRate) {
-    let parsedFrameRate = {};
-    
-    if (typeof frameRate != 'object' && frameRate != null) {
-      throw new Error('frameRate must be object');
-    }
-    
-    if (typeof frameRate.mode == 'string' && frameRate.mode in FrameRateMode) {
-      parsedFrameRate.mode = frameRate.mode;
-    } else {
-      throw new Error(`frameRate.mode not known: ${frameRate.mode}`);
-    }
-    
-    switch (frameRate.mode) {
-      case FrameRateMode.NONE:
-      case FrameRateMode.RESIZE_ONLY:
-        // no additional settings
-        break;
-      
-      case FrameRateMode.FRAME_MULT:
-        if (Number.isSafeInteger(frameRate.frameSkips) && frameRate.frameSkips >= 0) {
-          parsedFrameRate.frameSkips = frameRate.frameSkips;
-        } else {
-          throw new Error(`frameRate.frameSkips bad value: ${frameRate.frameSkips}`);
-        }
-        break;
-      
-      case FrameRateMode.MILLISECOND:
-        if (Number.isSafeInteger(frameRate.delay) && frameRate.delay > 0) {
-          parsedFrameRate.delay = frameRate.delay;
-        } else {
-          throw new Error(`frameRate.delay bad value: ${frameRate.delay}`);
-        }
-        break;
-      
-      default:
-        throw new Error('default case should not be triggered, all options accounted for');
-    }
-    
-    return parsedFrameRate;
-  }
-  
-  #copyFrameRate(frameRate) {
-    let frameRateCopy = {
-      mode: frameRate.mode,
-    };
-    
-    switch (frameRate.mode) {
-      case FrameRateMode.NONE:
-      case FrameRateMode.RESIZE_ONLY:
-        // no additional settings
-        break;
-      
-      case FrameRateMode.FRAME_MULT:
-        frameRateCopy.frameSkips = frameRate.frameSkips;
-        break;
-      
-      case FrameRateMode.MILLISECOND:
-        frameRateCopy.delay = frameRate.delay;
-        break;
-      
-      default:
-        throw new Error('default case should not be triggered, all options accounted for');
-    }
-    
-    return frameRateCopy;
-  }
-  
   async #resizeHandler() {
     // treated as a "public" function call in that the lock must be acquired
     
@@ -180,7 +106,7 @@ export class CanvasManager {
   }
   
   async #createCanvas(opts) {
-    let frameRate = this.#parseFrameRate(opts.frameRate);
+    this.#renderLoop.setFrameRate(opts.frameRate);
     
     let triggers = {};
     
@@ -242,7 +168,6 @@ export class CanvasManager {
       }
     }
     
-    this.#frameRate = frameRate;
     this.#triggers = triggers;
     
     let canvas = document.createElement('canvas');
@@ -359,7 +284,7 @@ export class CanvasManager {
       }
     }
     
-    this.#startRenderLoop();
+    this.#renderLoop.startRenderLoop();
   }
   
   // might get called to destroy canvas if mode not NONE
@@ -411,6 +336,7 @@ export class CanvasManager {
     this.#canvasStyle = null;
     this.#resizeObserver.unobserve(this.#canvas);
     this.#resizeObserver = null;
+    this.#renderLoop.clearFrameRate();
   }
   
   async #callRender() {
@@ -424,6 +350,8 @@ export class CanvasManager {
         // https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Tutorial/Adding_2D_content_to_a_WebGL_context
         
         let gl = this.#canvasContext;
+        
+        // no need to clear screen if shader is drawing over full screen anyway
         
         //gl.clearColor(0.0, 0.0, 0.0, 1.0);
         //gl.clearDepth(1.0);
@@ -448,162 +376,10 @@ export class CanvasManager {
     }
   }
   
-  async #renderLoop() {
-    let resolveToCall = null;
-    
-    if (this.#stopRenderLoopSentinel) {
-      this.#stopRenderLoopSentinel = false;
-      return;
-    } else if (this.#skipRenderLoopWaitSentinel) {
-      this.#skipRenderLoopWaitSentinel = false;
-    }
-    
-    while (true) {
-      try {
-        await this.#callRender();
-      } catch (err) {
-        console.error(err);
-        this.gracefulShutdown();
-      }
-      
-      if (this.#stopRenderLoopSentinel) {
-        break;
-      } else if (this.#skipRenderLoopWaitSentinel) {
-        this.#skipRenderLoopWaitSentinel = false;
-        
-        // resolveToCall should never be set here so no need to call
-        continue;
-      }
-      
-      switch (this.#frameRate.mode) {
-        case FrameRateMode.FRAME_MULT:
-          let frameSkips = this.#frameRate.frameSkips;
-          
-          for (let i = 0; i < frameSkips; i++) {
-            resolveToCall = await new Promise(r => {
-              requestAnimationFrame(r);
-              this.#skipRenderLoopWaitResolveFunc = r;
-            });
-            
-            this.#skipRenderLoopWaitResolveFunc = null;
-            
-            if (this.#stopRenderLoopSentinel || this.#skipRenderLoopWaitSentinel) {
-              break;
-            }
-          }
-          break;
-        
-        case FrameRateMode.MILLISECOND:
-          resolveToCall = await new Promise(r => {
-            setTimeout(r, this.#frameRate.delay);
-            this.#skipRenderLoopWaitResolveFunc = r;
-          });
-          
-          this.#skipRenderLoopWaitResolveFunc = null;
-          break;
-        
-        default:
-          throw new Error('default case should not be triggered');
-      }
-      
-      if (this.#stopRenderLoopSentinel) {
-        break;
-      } else if (this.#skipRenderLoopWaitSentinel) {
-        // no need to continue at end of loop
-        this.#skipRenderLoopWaitSentinel = false;
-        
-        if (resolveToCall) {
-          resolveToCall();
-          resolveToCall = null;
-        }
-      }
-    }
-    
-    if (this.#stopRenderLoopSentinel) {
-      this.#stopRenderLoopSentinel = false;
-        
-      if (resolveToCall) {
-        resolveToCall();
-        resolveToCall = null;
-      }
-    }
-  }
-  
-  #startRenderLoop() {
-    if (this.#frameRate.mode == FrameRateMode.FRAME_MULT || this.#frameRate.mode == FrameRateMode.MILLISECOND) {
-      this.#renderLoop();
-    }
-  }
-  
-  async #skipRenderLoopWait(haltLoop) {
-    if (haltLoop == null) {
-      throw new Error('haltLoop must be false or true');
-    }
-    
-    switch (this.#frameRate.mode) {
-      case FrameRateMode.NONE:
-      case FrameRateMode.RESIZE_ONLY:
-        // do nothing
-        break;
-      
-      case FrameRateMode.FRAME_MULT:
-      case FrameRateMode.MILLISECOND:
-        if (this.#skipRenderLoopWaitResolveFunc) {
-          if (haltLoop) {
-            this.#stopRenderLoopSentinel = true;
-          } else {
-            this.#skipRenderLoopWaitSentinel = true;
-          }
-          await new Promise(r => { this.#skipRenderLoopWaitResolveFunc(r); });
-        }
-        break;
-      
-      default:
-        throw new Error('default case should not be triggered, all options accounted for');
-    }
-  }
-  
-  async #endRenderLoop() {
-    switch (this.#frameRate.mode) {
-      case FrameRateMode.NONE:
-      case FrameRateMode.RESIZE_ONLY:
-        // do nothing
-        break;
-      
-      case FrameRateMode.FRAME_MULT:
-      case FrameRateMode.MILLISECOND:
-        await this.#skipRenderLoopWait(true);
-        break;
-      
-      default:
-        throw new Error('default case should not be triggered, all options accounted for');
-    }
-  }
-  
-  async #forceRender() {
-    switch (this.#frameRate.mode) {
-      case FrameRateMode.NONE:
-        // do nothing
-        break;
-      
-      case FrameRateMode.RESIZE_ONLY:
-        await this.#callRender();
-        break;
-      
-      case FrameRateMode.FRAME_MULT:
-      case FrameRateMode.MILLISECOND:
-        await this.#skipRenderLoopWait(false);
-        break;
-      
-      default:
-        throw new Error('default case should not be triggered, all options accounted for');
-    }
-  }
-  
   #queueForceRender() {
     (async () => {
       await this.#editLock.awaitAcquirable();
-      await this.#forceRender();
+      await this.#renderLoop.forceRender();
     })();
   }
   
@@ -615,6 +391,8 @@ export class CanvasManager {
     } else {
       throw new Error('Canvas container not a html element');
     }
+    
+    this.#renderLoop.setRenderFunc(this.#callRender.bind(this));
   }
   
   getCanvasContainer() {
@@ -637,7 +415,7 @@ export class CanvasManager {
       // probably imperative that the render loop be ended before the lock is acquired,
       // but the loop can only be ended if the canvas is set up in the first place
       if (this.#canvasMode != CanvasMode.NONE) {
-        await this.#endRenderLoop();
+        await this.#renderLoop.endRenderLoop();
       }
       
       this.#editLock.acquire();
@@ -709,20 +487,14 @@ export class CanvasManager {
   getFrameRate() {
     this.#editLock.errorIfAcquired();
     
-    return this.#copyFrameRate(this.#frameRate);
+    return this.#renderLoop.getFrameRate();
   }
   
   async setFrameRate(newFrameRate) {
     this.#editLock.acquire();
     
     try {
-      let frameRate = this.#parseFrameRate(newFrameRate);
-      
-      await this.#endRenderLoop();
-      
-      this.#frameRate = frameRate;
-      
-      this.#startRenderLoop();
+      this.#renderLoop.setFrameRate(newFrameRate);
     } finally {
       this.#editLock.release();
     }
