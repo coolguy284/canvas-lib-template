@@ -6,6 +6,7 @@ export class RenderLoop {
   #frameRate = null;
   #renderFunc = null;
   #renderLoopRunning = false;
+  #boundVisibilityChangeListener = null;
   #skipRenderLoopWaitSentinel = false;
   #stopRenderLoopSentinel = false;
   #skipRenderLoopWaitResolveFunc = null;
@@ -98,6 +99,15 @@ export class RenderLoop {
     
     try {
       while (true) {
+        if (document.visibilityState == 'hidden') {
+          await new Promise(r => {
+            this.#skipRenderLoopWaitResolveFunc = r;
+          });
+          
+          this.#skipRenderLoopWaitResolveFunc = null;
+          continue;
+        }
+        
         try {
           await this.#renderFunc();
         } catch (err) {
@@ -199,6 +209,10 @@ export class RenderLoop {
     }
   }
   
+  async #visibilityChangeListener() {
+    await this.#skipRenderLoopWait(false);
+  }
+  
   // public functions
   
   constructor(renderFunc) {
@@ -207,6 +221,8 @@ export class RenderLoop {
     } else {
       throw new Error('Renderfunc invalid type');
     }
+    
+    this.#boundVisibilityChangeListener = this.#visibilityChangeListener.bind(this);
   }
   
   getFrameRate() {
@@ -261,6 +277,8 @@ export class RenderLoop {
     }
     
     if (this.#frameRate.mode == FrameRateMode.FRAME_MULT || this.#frameRate.mode == FrameRateMode.MILLISECOND) {
+      document.addEventListener('visibilitychange', this.#boundVisibilityChangeListener);
+      
       this.#renderLoop();
     }
   }
@@ -275,6 +293,8 @@ export class RenderLoop {
       case FrameRateMode.FRAME_MULT:
       case FrameRateMode.MILLISECOND:
         await this.#skipRenderLoopWait(true);
+    
+        document.removeEventListener('visibilitychange', this.#boundVisibilityChangeListener);
         break;
       
       default:
