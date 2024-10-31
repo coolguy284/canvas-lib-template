@@ -216,11 +216,15 @@ export class RenderLoop {
   async setFrameRate(newFrameRate) {
     let frameRate = this.#parseFrameRate(newFrameRate);
     
-    await this.#renderLoop.endRenderLoop();
-    
-    this.#frameRate = frameRate;
-    
-    this.#renderLoop.startRenderLoop();
+    if (this.renderLoopRunning()) {
+      await this.endRenderLoop();
+      
+      this.#frameRate = frameRate;
+      
+      this.#renderLoop.startRenderLoop();
+    } else {
+      this.#frameRate = frameRate;
+    }
   }
   
   clearFrameRate() {
@@ -245,6 +249,10 @@ export class RenderLoop {
       default:
         throw new Error('default case should not be triggered, all options accounted for');
     }
+  }
+  
+  renderLoopRunning() {
+    return this.#renderLoopRunning;
   }
   
   startRenderLoop() {
