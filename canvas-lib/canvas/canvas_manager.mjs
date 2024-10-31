@@ -52,7 +52,7 @@ export class CanvasManager {
   #canvasStyle = null;
   #resizeObserver = null;
   #triggers = null;
-  #renderLoop = new RenderLoop();
+  #renderLoop = null;
   
   // class variables > webgl full canvas shader specific
   
@@ -392,7 +392,7 @@ export class CanvasManager {
       throw new Error('Canvas container not a html element');
     }
     
-    this.#renderLoop.setRenderFunc(this.#callRender.bind(this));
+    this.#renderLoop = new RenderLoop(this.#callRender.bind(this));
   }
   
   getCanvasContainer() {
