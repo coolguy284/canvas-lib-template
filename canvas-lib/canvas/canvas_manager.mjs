@@ -68,15 +68,15 @@ const uniformTypeData = Object.freeze([
   ['IVEC4' + UniformType_ArraySuffix, []],
   
   // matrices
-  ['MAT22', ['mat2x2', 'mat2']],
+  ['MAT22', ['mat2', 'mat2x2']],
   ['MAT23', ['mat2x3']],
   ['MAT24', ['mat2x4']],
   ['MAT32', ['mat3x2']],
-  ['MAT33', ['mat3x3', 'mat3']],
+  ['MAT33', ['mat3', 'mat3x3']],
   ['MAT34', ['mat3x4']],
   ['MAT42', ['mat4x2']],
   ['MAT43', ['mat4x3']],
-  ['MAT44', ['mat4x4', 'mat4']],
+  ['MAT44', ['mat4', 'mat4x4']],
   ['MAT22' + UniformType_ArraySuffix, []],
   ['MAT23' + UniformType_ArraySuffix, []],
   ['MAT24' + UniformType_ArraySuffix, []],
@@ -93,6 +93,12 @@ const uniformTypeData = Object.freeze([
 ]);
 
 export const UniformType = Enum(uniformTypeData.map(x => x[0]));
+
+const uniformEnumNameToPreferredGlslName = new Map(
+  uniformTypeData
+    .filter(([_, glslNames]) => glslNames.length == 1)
+    .map(([enumName, glslNames]) => [enumName, glslNames[0]])
+);
 
 const uniformGlslNameToEnum = new Map(
   uniformTypeData.map(
@@ -187,6 +193,14 @@ export class CanvasManager {
     uniformEntry.type = enumType;
     
     return uniformEntry;
+  }
+  
+  #uniformEntryToString(uniformEntry) {
+    if ('length' in uniformEntry) {
+      return `${uniformEnumNameToPreferredGlslName.get(uniformEntry.type.slice(0, -UniformType_ArraySuffix.length))} ${uniformEntry.name}[${uniformEntry.length}]`;
+    } else {
+      return `${uniformEnumNameToPreferredGlslName.get(uniformEntry.type)} ${uniformEntry.name}`;
+    }
   }
   
   async #updateCanvasSize() {
@@ -360,8 +374,28 @@ export class CanvasManager {
           
           let vertexShader = this.#fullCanvasShaderData.vertexShader = shaderManager.loadShaderFromString(gl.VERTEX_SHADER, VERTEX_SHADER_XY_ONLY_TEXT);
           
+          this.#fullCanvasShaderData.uniforms = new Map(uniforms.map(uniformEntry => {
+            if ('length' in uniformEntry) {
+              return [
+                uniformEntry.name,
+                {
+                  type: uniformEntry.type,
+                  length: uniformEntry.length,
+                },
+              ];
+            } else {
+              return [
+                uniformEntry.name,
+                {
+                  type: uniformEntry.type,
+                },
+              ];
+            }
+          }));
+          
           let fragmentShaderSource = [
             FRAGMENT_SHADER_PREFIX,
+            ...uniforms.map(x => `uniform ${this.#uniformEntryToString(x)};`),
             ...shaderSegmentStrings
           ].join('\n');
           
@@ -472,6 +506,7 @@ export class CanvasManager {
         this.#fullCanvasShaderData.vertexShader = null;
         this.#fullCanvasShaderData.fragmentShader = null;
         this.#fullCanvasShaderData.shaderManager = null;
+        this.#fullCanvasShaderData.uniforms = null;
         
         this.#fullCanvasShaderData = null;
         break;

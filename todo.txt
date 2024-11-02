@@ -1,4 +1,5 @@
 features:
+convert static methods to static on all classes
 value / array uniforms
 texture uniforms
 split off gl boilerplate
