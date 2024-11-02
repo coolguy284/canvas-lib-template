@@ -36,7 +36,8 @@
       await man.setCanvasMode({
         mode: CanvasMode.WEBGL_FULL_CANVAS_SHADER,
         frameRate: {
-          mode: FrameRateMode.RESIZE_ONLY,
+          mode: FrameRateMode.FRAME_MULT,
+          frameSkips: 0,
         },
         uniforms: [
           'float currentTime',

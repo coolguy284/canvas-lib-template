@@ -474,8 +474,6 @@ export class CanvasManager {
         this.gracefulShutdown();
       }
     }
-    
-    this.#renderLoop.startRenderLoop();
   }
   
   // might get called to destroy canvas if mode not NONE
@@ -631,6 +629,10 @@ export class CanvasManager {
         }
       } finally {
         this.#editLock.release();
+      }
+      
+      if (this.getCanvasMode() != CanvasMode.NONE) {
+        this.#renderLoop.startRenderLoop();
       }
     } else {
       throw new Error(`Canvas mode ${newMode} invalid`);
