@@ -128,7 +128,7 @@ export class RenderLoop {
           case FrameRateMode.FRAME_MULT:
             let frameSkips = this.#frameRate.frameSkips;
             
-            for (let i = 0; i < frameSkips; i++) {
+            for (let i = 0; i < frameSkips + 1; i++) {
               resolveToCall = await new Promise(r => {
                 requestAnimationFrame(r);
                 this.#skipRenderLoopWaitResolveFunc = r;
