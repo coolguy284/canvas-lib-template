@@ -129,7 +129,7 @@ export class CanvasManager {
   
   // helper functions
   
-  #parseUniformEntry(uniformEntry) {
+  static #parseUniformEntry(uniformEntry) {
     let parsedUniformEntry = {};
     
     if (typeof uniformEntry.name == 'string') {
@@ -157,7 +157,7 @@ export class CanvasManager {
   
   static #parseUniformEntryString_regex = /^([^ \[\]]+)(?:\[([1-9]\d*)\])?$/;
   
-  #parseUniformEntryString(uniformString) {
+  static #parseUniformEntryString(uniformString) {
     let [ glslType, ...rest ] = uniformString.split(' ');
     
     if (rest.length != 1) {
@@ -196,7 +196,7 @@ export class CanvasManager {
     return uniformEntry;
   }
   
-  #uniformEntryToString(uniformEntry) {
+  static #uniformEntryToString(uniformEntry) {
     if ('length' in uniformEntry) {
       return `${uniformEnumNameToPreferredGlslName.get(uniformEntry.type.slice(0, -UniformType_ArraySuffix.length))} ${uniformEntry.name}[${uniformEntry.length}]`;
     } else {
@@ -290,9 +290,9 @@ export class CanvasManager {
             let uniformEntry = opts.uniforms[i];
             
             if (typeof uniformEntry == 'object' && uniformEntry != null) {
-              uniformEntry = this.#parseUniformEntry(uniformEntry);
+              uniformEntry = CanvasManager.#parseUniformEntry(uniformEntry);
             } else if (typeof uniformEntry == 'string') {
-              uniformEntry = this.#parseUniformEntryString(uniformEntry);
+              uniformEntry = CanvasManager.#parseUniformEntryString(uniformEntry);
             } else {
               throw new Error(`opts.uniforms[${i}] unrecognized type: ${typeof uniformEntry}`);
             }
@@ -377,7 +377,7 @@ export class CanvasManager {
           
           let fragmentShaderSource = [
             FRAGMENT_SHADER_PREFIX,
-            ...uniforms.map(x => `uniform ${this.#uniformEntryToString(x)};`),
+            ...uniforms.map(x => `uniform ${CanvasManager.#uniformEntryToString(x)};`),
             ...shaderSegmentStrings
           ].join('\n');
           

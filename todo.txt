@@ -1,5 +1,4 @@
 features:
-convert static methods to static on all classes
 add boolean enum types (boolean, bvec2, bvec3, bvec4)
 texture uniforms
 split off gl boilerplate
@@ -10,3 +9,6 @@ jsdoc everything in canvas-lib
 
 low prio:
 camera scrolling / moving lib that is a pure class that can take in functions for x and y scaling factor based on current x and y
+
+don't care:
+type check value field of CanvasManager.setUniform

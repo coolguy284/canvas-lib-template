@@ -13,7 +13,7 @@ export class RenderLoop {
   
   // helper functions
   
-  #parseFrameRate(frameRate) {
+  static #parseFrameRate(frameRate) {
     let parsedFrameRate = {};
     
     if (typeof frameRate != 'object' && frameRate != null) {
@@ -55,7 +55,7 @@ export class RenderLoop {
     return parsedFrameRate;
   }
   
-  #copyFrameRate(frameRate) {
+  static #copyFrameRate(frameRate) {
     let frameRateCopy = {
       mode: frameRate.mode,
     };
@@ -226,11 +226,11 @@ export class RenderLoop {
   }
   
   getFrameRate() {
-    return this.#frameRate == null ? null : this.#copyFrameRate(this.#frameRate);
+    return this.#frameRate == null ? null : RenderLoop.#copyFrameRate(this.#frameRate);
   }
   
   async setFrameRate(newFrameRate) {
-    let frameRate = this.#parseFrameRate(newFrameRate);
+    let frameRate = RenderLoop.#parseFrameRate(newFrameRate);
     
     if (this.renderLoopRunning()) {
       await this.endRenderLoop();
