@@ -860,67 +860,67 @@ export class CanvasManager {
         break;
       
       case ['MAT24']:
-        
+        gl.uniformMatrix2x4fv(loc, false, data);
         break;
       
       case ['MAT32']:
-        
+        gl.uniformMatrix3x2fv(loc, false, data);
         break;
       
       case ['MAT33']:
-        
+        gl.uniformMatrix3fv(loc, false, data);
         break;
       
       case ['MAT34']:
-        
+        gl.uniformMatrix3x4fv(loc, false, data);
         break;
       
       case ['MAT42']:
-        
+        gl.uniformMatrix4x2fv(loc, false, data);
         break;
       
       case ['MAT43']:
-        
+        gl.uniformMatrix4x3fv(loc, false, data);
         break;
       
       case ['MAT44']:
-        
+        gl.uniformMatrix4fv(loc, false, data);
         break;
       
       case ['MAT22' + UniformType_ArraySuffix]:
-        
+        gl.uniformMatrix2fv(loc, false, data);
         break;
       
       case ['MAT23' + UniformType_ArraySuffix]:
-        
+        gl.uniformMatrix2x3fv(loc, false, data);
         break;
       
       case ['MAT24' + UniformType_ArraySuffix]:
-        
+        gl.uniformMatrix2x4fv(loc, false, data);
         break;
       
       case ['MAT32' + UniformType_ArraySuffix]:
-        
+        gl.uniformMatrix3x2fv(loc, false, data);
         break;
       
       case ['MAT33' + UniformType_ArraySuffix]:
-        
+        gl.uniformMatrix3fv(loc, false, data);
         break;
       
       case ['MAT34' + UniformType_ArraySuffix]:
-        
+        gl.uniformMatrix3x4fv(loc, false, data);
         break;
       
       case ['MAT42' + UniformType_ArraySuffix]:
-        
+        gl.uniformMatrix4x2fv(loc, false, data);
         break;
       
       case ['MAT43' + UniformType_ArraySuffix]:
-        
+        gl.uniformMatrix4x3fv(loc, false, data);
         break;
       
       case ['MAT44' + UniformType_ArraySuffix]:
-        
+        gl.uniformMatrix4fv(loc, false, data);
         break;
     }
   }
