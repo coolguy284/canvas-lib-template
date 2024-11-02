@@ -749,179 +749,188 @@ export class CanvasManager {
     let gl = this.#canvasContext;
     let loc = uniformEntry.location;
     
-    switch (uniformEntry.type) {
-      // scalars / vectors
-      
-      case UniformType['UINT']:
-        gl.uniform1ui(loc, value);
-        break;
-      
-      case UniformType['UVEC2']:
-        gl.uniform2ui(loc, ...value);
-        break;
-      
-      case UniformType['UVEC3']:
-        gl.uniform3ui(loc, ...value);
-        break;
-      
-      case UniformType['UVEC4']:
-        gl.uniform4ui(loc, ...value);
-        break;
-      
-      case UniformType['FLOAT']:
-        gl.uniform1f(loc, value);
-        break;
-      
-      case UniformType['VEC2']:
-        gl.uniform2f(loc, ...value);
-        break;
-      
-      case UniformType['VEC3']:
-        gl.uniform3f(loc, ...value);
-        break;
-      
-      case UniformType['VEC4']:
-        gl.uniform4f(loc, ...value);
-        break;
-      
-      case UniformType['INT']:
-        gl.uniform1i(loc, value);
-        break;
-      
-      case UniformType['IVEC2']:
-        gl.uniform2i(loc, ...value);
-        break;
-      
-      case UniformType['IVEC3']:
-        gl.uniform3i(loc, ...value);
-        break;
-      
-      case UniformType['IVEC4']:
-        gl.uniform4i(loc, ...value);
-        break;
-      
-      case UniformType['UINT' + UniformType_ArraySuffix]:
-        gl.uniform1uiv(loc, value);
-        break;
-      
-      case UniformType['UVEC2' + UniformType_ArraySuffix]:
-        gl.uniform2uiv(loc, value);
-        break;
-      
-      case UniformType['UVEC3' + UniformType_ArraySuffix]:
-        gl.uniform3uiv(loc, value);
-        break;
-      
-      case UniformType['UVEC4' + UniformType_ArraySuffix]:
-        gl.uniform4uiv(loc, value);
-        break;
-      
-      case UniformType['FLOAT' + UniformType_ArraySuffix]:
-        gl.uniform1fv(loc, value);
-        break;
-      
-      case UniformType['VEC2' + UniformType_ArraySuffix]:
-        gl.uniform2fv(loc, value);
-        break;
-      
-      case UniformType['VEC3' + UniformType_ArraySuffix]:
-        gl.uniform3fv(loc, value);
-        break;
-      
-      case UniformType['VEC4' + UniformType_ArraySuffix]:
-        gl.uniform4fv(loc, value);
-        break;
-      
-      case UniformType['INT' + UniformType_ArraySuffix]:
-        gl.uniform1iv(loc, value);
-        break;
-      
-      case UniformType['IVEC2' + UniformType_ArraySuffix]:
-        gl.uniform2iv(loc, value);
-        break;
-      
-      case UniformType['IVEC3' + UniformType_ArraySuffix]:
-        gl.uniform3iv(loc, value);
-        break;
-      
-      case UniformType['IVEC4' + UniformType_ArraySuffix]:
-        gl.uniform4iv(loc, value);
-        break;
-      
-      
-      // matrices
-      
-      case ['MAT22']:
-        gl.uniformMatrix2fv(loc, false, data);
-        break;
-      
-      case ['MAT23']:
-        gl.uniformMatrix2x3fv(loc, false, data);
-        break;
-      
-      case ['MAT24']:
-        gl.uniformMatrix2x4fv(loc, false, data);
-        break;
-      
-      case ['MAT32']:
-        gl.uniformMatrix3x2fv(loc, false, data);
-        break;
-      
-      case ['MAT33']:
-        gl.uniformMatrix3fv(loc, false, data);
-        break;
-      
-      case ['MAT34']:
-        gl.uniformMatrix3x4fv(loc, false, data);
-        break;
-      
-      case ['MAT42']:
-        gl.uniformMatrix4x2fv(loc, false, data);
-        break;
-      
-      case ['MAT43']:
-        gl.uniformMatrix4x3fv(loc, false, data);
-        break;
-      
-      case ['MAT44']:
-        gl.uniformMatrix4fv(loc, false, data);
-        break;
-      
-      case ['MAT22' + UniformType_ArraySuffix]:
-        gl.uniformMatrix2fv(loc, false, data);
-        break;
-      
-      case ['MAT23' + UniformType_ArraySuffix]:
-        gl.uniformMatrix2x3fv(loc, false, data);
-        break;
-      
-      case ['MAT24' + UniformType_ArraySuffix]:
-        gl.uniformMatrix2x4fv(loc, false, data);
-        break;
-      
-      case ['MAT32' + UniformType_ArraySuffix]:
-        gl.uniformMatrix3x2fv(loc, false, data);
-        break;
-      
-      case ['MAT33' + UniformType_ArraySuffix]:
-        gl.uniformMatrix3fv(loc, false, data);
-        break;
-      
-      case ['MAT34' + UniformType_ArraySuffix]:
-        gl.uniformMatrix3x4fv(loc, false, data);
-        break;
-      
-      case ['MAT42' + UniformType_ArraySuffix]:
-        gl.uniformMatrix4x2fv(loc, false, data);
-        break;
-      
-      case ['MAT43' + UniformType_ArraySuffix]:
-        gl.uniformMatrix4x3fv(loc, false, data);
-        break;
-      
-      case ['MAT44' + UniformType_ArraySuffix]:
-        gl.uniformMatrix4fv(loc, false, data);
-        break;
+    gl.useProgram(this.#fullCanvasShaderData.shaderProgram);
+    
+    try {
+      switch (uniformEntry.type) {
+        // scalars / vectors
+        
+        case UniformType['UINT']:
+          gl.uniform1ui(loc, value);
+          break;
+        
+        case UniformType['UVEC2']:
+          gl.uniform2ui(loc, ...value);
+          break;
+        
+        case UniformType['UVEC3']:
+          gl.uniform3ui(loc, ...value);
+          break;
+        
+        case UniformType['UVEC4']:
+          gl.uniform4ui(loc, ...value);
+          break;
+        
+        case UniformType['FLOAT']:
+          gl.uniform1f(loc, value);
+          break;
+        
+        case UniformType['VEC2']:
+          gl.uniform2f(loc, ...value);
+          break;
+        
+        case UniformType['VEC3']:
+          gl.uniform3f(loc, ...value);
+          break;
+        
+        case UniformType['VEC4']:
+          gl.uniform4f(loc, ...value);
+          break;
+        
+        case UniformType['INT']:
+          gl.uniform1i(loc, value);
+          break;
+        
+        case UniformType['IVEC2']:
+          gl.uniform2i(loc, ...value);
+          break;
+        
+        case UniformType['IVEC3']:
+          gl.uniform3i(loc, ...value);
+          break;
+        
+        case UniformType['IVEC4']:
+          gl.uniform4i(loc, ...value);
+          break;
+        
+        case UniformType['UINT' + UniformType_ArraySuffix]:
+          gl.uniform1uiv(loc, value);
+          break;
+        
+        case UniformType['UVEC2' + UniformType_ArraySuffix]:
+          gl.uniform2uiv(loc, value);
+          break;
+        
+        case UniformType['UVEC3' + UniformType_ArraySuffix]:
+          gl.uniform3uiv(loc, value);
+          break;
+        
+        case UniformType['UVEC4' + UniformType_ArraySuffix]:
+          gl.uniform4uiv(loc, value);
+          break;
+        
+        case UniformType['FLOAT' + UniformType_ArraySuffix]:
+          gl.uniform1fv(loc, value);
+          break;
+        
+        case UniformType['VEC2' + UniformType_ArraySuffix]:
+          gl.uniform2fv(loc, value);
+          break;
+        
+        case UniformType['VEC3' + UniformType_ArraySuffix]:
+          gl.uniform3fv(loc, value);
+          break;
+        
+        case UniformType['VEC4' + UniformType_ArraySuffix]:
+          gl.uniform4fv(loc, value);
+          break;
+        
+        case UniformType['INT' + UniformType_ArraySuffix]:
+          gl.uniform1iv(loc, value);
+          break;
+        
+        case UniformType['IVEC2' + UniformType_ArraySuffix]:
+          gl.uniform2iv(loc, value);
+          break;
+        
+        case UniformType['IVEC3' + UniformType_ArraySuffix]:
+          gl.uniform3iv(loc, value);
+          break;
+        
+        case UniformType['IVEC4' + UniformType_ArraySuffix]:
+          gl.uniform4iv(loc, value);
+          break;
+        
+        
+        // matrices
+        
+        case ['MAT22']:
+          gl.uniformMatrix2fv(loc, false, data);
+          break;
+        
+        case ['MAT23']:
+          gl.uniformMatrix2x3fv(loc, false, data);
+          break;
+        
+        case ['MAT24']:
+          gl.uniformMatrix2x4fv(loc, false, data);
+          break;
+        
+        case ['MAT32']:
+          gl.uniformMatrix3x2fv(loc, false, data);
+          break;
+        
+        case ['MAT33']:
+          gl.uniformMatrix3fv(loc, false, data);
+          break;
+        
+        case ['MAT34']:
+          gl.uniformMatrix3x4fv(loc, false, data);
+          break;
+        
+        case ['MAT42']:
+          gl.uniformMatrix4x2fv(loc, false, data);
+          break;
+        
+        case ['MAT43']:
+          gl.uniformMatrix4x3fv(loc, false, data);
+          break;
+        
+        case ['MAT44']:
+          gl.uniformMatrix4fv(loc, false, data);
+          break;
+        
+        case ['MAT22' + UniformType_ArraySuffix]:
+          gl.uniformMatrix2fv(loc, false, data);
+          break;
+        
+        case ['MAT23' + UniformType_ArraySuffix]:
+          gl.uniformMatrix2x3fv(loc, false, data);
+          break;
+        
+        case ['MAT24' + UniformType_ArraySuffix]:
+          gl.uniformMatrix2x4fv(loc, false, data);
+          break;
+        
+        case ['MAT32' + UniformType_ArraySuffix]:
+          gl.uniformMatrix3x2fv(loc, false, data);
+          break;
+        
+        case ['MAT33' + UniformType_ArraySuffix]:
+          gl.uniformMatrix3fv(loc, false, data);
+          break;
+        
+        case ['MAT34' + UniformType_ArraySuffix]:
+          gl.uniformMatrix3x4fv(loc, false, data);
+          break;
+        
+        case ['MAT42' + UniformType_ArraySuffix]:
+          gl.uniformMatrix4x2fv(loc, false, data);
+          break;
+        
+        case ['MAT43' + UniformType_ArraySuffix]:
+          gl.uniformMatrix4x3fv(loc, false, data);
+          break;
+        
+        case ['MAT44' + UniformType_ArraySuffix]:
+          gl.uniformMatrix4fv(loc, false, data);
+          break;
+        
+        default:
+          throw new Error(`Uniform setting not implemented for type ${uniformEntry.type}`);
+      }
+    } finally {
+      gl.useProgram(null);
     }
   }
 }
