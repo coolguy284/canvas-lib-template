@@ -43,6 +43,10 @@ export const UniformType_ArraySuffix = '_ARRAY';
 // format: [enum name, [corresponding glsl type string, ...]]
 const uniformTypeData = Object.freeze([
   // scalars / vectors
+  ['BOOLEAN', ['boolean']],
+  ['BVEC2', ['bvec2']],
+  ['BVEC3', ['bvec3']],
+  ['BVEC4', ['bvec4']],
   ['UINT', ['uint']],
   ['UVEC2', ['uvec2']],
   ['UVEC3', ['uvec3']],
@@ -55,6 +59,10 @@ const uniformTypeData = Object.freeze([
   ['IVEC2', ['ivec2']],
   ['IVEC3', ['ivec3']],
   ['IVEC4', ['ivec4']],
+  ['BOOLEAN' + UniformType_ArraySuffix, []],
+  ['BVEC2' + UniformType_ArraySuffix, []],
+  ['BVEC3' + UniformType_ArraySuffix, []],
+  ['BVEC4' + UniformType_ArraySuffix, []],
   ['UINT' + UniformType_ArraySuffix, []],
   ['UVEC2' + UniformType_ArraySuffix, []],
   ['UVEC3' + UniformType_ArraySuffix, []],
@@ -754,8 +762,29 @@ export class CanvasManager {
     gl.useProgram(this.#fullCanvasShaderData.shaderProgram);
     
     try {
+      // for setting boolean uniforms, apparently any uniform function can be used,
+      // and 0 = false and nonzero = true?:
+      // https://stackoverflow.com/questions/33690186/opengl-bool-uniform/33690786#33690786
+      // here, the signed-integer uniform functions are used
+      
       switch (uniformEntry.type) {
         // scalars / vectors
+        
+        case UniformType['BOOLEAN']:
+          gl.uniform1i(loc, value);
+          break;
+        
+        case UniformType['BVEC2']:
+          gl.uniform2i(loc, ...value);
+          break;
+        
+        case UniformType['BVEC3']:
+          gl.uniform3i(loc, ...value);
+          break;
+        
+        case UniformType['BVEC4']:
+          gl.uniform4i(loc, ...value);
+          break;
         
         case UniformType['UINT']:
           gl.uniform1ui(loc, value);
@@ -805,6 +834,22 @@ export class CanvasManager {
           gl.uniform4i(loc, ...value);
           break;
         
+        case UniformType['BOOLEAN' + UniformType_ArraySuffix]:
+          gl.uniform1iv(loc, value);
+          break;
+        
+        case UniformType['BVEC2' + UniformType_ArraySuffix]:
+          gl.uniform2iv(loc, value);
+          break;
+        
+        case UniformType['BVEC3' + UniformType_ArraySuffix]:
+          gl.uniform3iv(loc, value);
+          break;
+        
+        case UniformType['BVEC4' + UniformType_ArraySuffix]:
+          gl.uniform4iv(loc, value);
+          break;
+        
         case UniformType['UINT' + UniformType_ArraySuffix]:
           gl.uniform1uiv(loc, value);
           break;
@@ -852,7 +897,6 @@ export class CanvasManager {
         case UniformType['IVEC4' + UniformType_ArraySuffix]:
           gl.uniform4iv(loc, value);
           break;
-        
         
         // matrices
         
