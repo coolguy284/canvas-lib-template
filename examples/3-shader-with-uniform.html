@@ -38,6 +38,9 @@
         frameRate: {
           mode: FrameRateMode.RESIZE_ONLY,
         },
+        uniforms: [
+          'float currentTime',
+        ],
         shaderSegments: [
           {
             type: ShaderSegmentType.STRING,
@@ -48,13 +51,18 @@
                 outColor = vec4(
                   mod(gl_FragCoord.x / 100.0, 1.0),
                   mod(gl_FragCoord.y / iResolution.y, 1.0),
-                  0.0,
+                  currentTime,
                   1.0
                 );
               }
             `,
           },
         ],
+        triggers: {
+          render: () => {
+            man.setUniform('currentTime', Date.now() / 1000 % 1);
+          },
+        },
       });
       
       window.scriptVars = { man };

@@ -3,6 +3,8 @@ export {
   CanvasManager,
   CanvasMode,
   ShaderSegmentType,
+  UniformType_ArraySuffix,
+  UniformType,
 } from './canvas/canvas_manager.mjs';
 
 // convenience exports
@@ -11,8 +13,4 @@ export { FrameRateMode } from './canvas/enums.mjs';
 export { removeNode } from './dom_tools.mjs';
 export { Enum } from './enum.mjs';
 export { Lock } from './lock.mjs';
-
-/*
-other exports:
-canvas/render_loop.mjs: RenderLoop
-*/
+export { RenderLoop } from './canvas/render_loop.mjs';

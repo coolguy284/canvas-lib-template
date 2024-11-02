@@ -1,8 +1,10 @@
 features:
-uniforms support
+value / array uniforms
+texture uniforms
 split off gl boilerplate
 configmanager class that can handle persistence on its own, setup with a declaration of all variables and the persistence key; and can fill out a settings div
 save canvas as png, or render a larger version as png
+fullscreen option
 jsdoc everything in canvas-lib
 
 low prio:

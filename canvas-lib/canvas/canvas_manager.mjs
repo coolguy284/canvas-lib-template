@@ -38,6 +38,68 @@ export const ShaderSegmentType = Enum([
   'URL',
 ]);
 
+export const UniformType_ArraySuffix = '_ARRAY';
+
+// format: [enum name, [corresponding glsl type string, ...]]
+const uniformTypeData = Object.freeze([
+  ['UINT', ['uint']],
+  ['UVEC2', ['uvec2']],
+  ['UVEC3', ['uvec3']],
+  ['UVEC4', ['uvec4']],
+  ['FLOAT', ['float']],
+  ['VEC2', ['vec2']],
+  ['VEC3', ['vec3']],
+  ['VEC4', ['vec4']],
+  ['INT', ['int']],
+  ['IVEC2', ['ivec2']],
+  ['IVEC3', ['ivec3']],
+  ['IVEC4', ['ivec4']],
+  ['UINT' + UniformType_ArraySuffix, []],
+  ['UVEC2' + UniformType_ArraySuffix, []],
+  ['UVEC3' + UniformType_ArraySuffix, []],
+  ['UVEC4' + UniformType_ArraySuffix, []],
+  ['FLOAT' + UniformType_ArraySuffix, []],
+  ['VEC2' + UniformType_ArraySuffix, []],
+  ['VEC3' + UniformType_ArraySuffix, []],
+  ['VEC4' + UniformType_ArraySuffix, []],
+  ['INT' + UniformType_ArraySuffix, []],
+  ['IVEC2' + UniformType_ArraySuffix, []],
+  ['IVEC3' + UniformType_ArraySuffix, []],
+  ['IVEC4' + UniformType_ArraySuffix, []],
+  
+  // matrices
+  ['MAT22', ['mat2x2', 'mat2']],
+  ['MAT23', ['mat2x3']],
+  ['MAT24', ['mat2x4']],
+  ['MAT32', ['mat3x2']],
+  ['MAT33', ['mat3x3', 'mat3']],
+  ['MAT34', ['mat3x4']],
+  ['MAT42', ['mat4x2']],
+  ['MAT43', ['mat4x3']],
+  ['MAT44', ['mat4x4', 'mat4']],
+  ['MAT22' + UniformType_ArraySuffix, []],
+  ['MAT23' + UniformType_ArraySuffix, []],
+  ['MAT24' + UniformType_ArraySuffix, []],
+  ['MAT32' + UniformType_ArraySuffix, []],
+  ['MAT33' + UniformType_ArraySuffix, []],
+  ['MAT34' + UniformType_ArraySuffix, []],
+  ['MAT42' + UniformType_ArraySuffix, []],
+  ['MAT43' + UniformType_ArraySuffix, []],
+  ['MAT44' + UniformType_ArraySuffix, []],
+  
+  // textures
+  ['SAMPLER2D', ['sampler2D']],
+  ['SAMPLER2D' + UniformType_ArraySuffix, []],
+]);
+
+export const UniformType = Enum(uniformTypeData.map(x => x[0]));
+
+const uniformGlslNameToEnum = new Map(
+  uniformTypeData.map(
+    ([enumName, glslNames]) => glslNames.map(x => [x, enumName])
+  ).flat()
+);
+
 export class CanvasManager {
   // class variables
   
@@ -59,6 +121,73 @@ export class CanvasManager {
   #fullCanvasShaderData = null;
   
   // helper functions
+  
+  #parseUniformEntry(uniformEntry) {
+    let parsedUniformEntry = {};
+    
+    if (typeof uniformEntry.name == 'string') {
+      parsedUniformEntry.name = uniformEntry.name;
+    } else {
+      throw new Error(`uniformEntry.name not string: ${typeof uniformEntry.name}`);
+    }
+    
+    if (typeof uniformEntry.type == 'string' && uniformEntry.type in UniformType) {
+      parsedUniformEntry.type = uniformEntry.type;
+    } else {
+      throw new Error(`uniformEntry.type not known: ${uniformEntry.type}`);
+    }
+    
+    if (uniformEntry.type.endsWith(UniformType_ArraySuffix)) {
+      if (Number.isSafeInteger(uniformEntry.length) && uniformEntry.length > 1) {
+        parsedUniformEntry.length = uniformEntry.length;
+      } else {
+        throw new Error(`uniformEntry.length unknown type or invalid value: ${uniformEntry.type}`);
+      }
+    }
+    
+    return parsedUniformEntry;
+  }
+  
+  static #parseUniformEntryString_regex = /^([^ \[\]]+)(?:\[([1-9]\d*)\])?$/;
+  
+  #parseUniformEntryString(uniformString) {
+    let [ glslType, ...rest ] = uniformString.split(' ');
+    
+    if (rest.length != 1) {
+      throw new Error(`uniformString invalid format: ${uniformString}`);
+    }
+    
+    let end = rest[0];
+    
+    let match;
+    
+    if (!(match = CanvasManager.#parseUniformEntryString_regex.exec(end))) {
+      throw new Error(`uniformString invalid format: ${uniformString}`);
+    }
+    
+    if (!uniformGlslNameToEnum.has(glslType)) {
+      throw new Error(`uniformString type unrecognized: ${glslType}`);
+    }
+    
+    let enumType = uniformGlslNameToEnum.get(glslType);
+    
+    let varName = match[1];
+    
+    let uniformEntry = {
+      name: varName,
+      type: null,
+    };
+    
+    if (match[2]) {
+      enumType += UniformType_ArraySuffix;
+    
+      uniformEntry.length = parseInt(match[2]);
+    }
+    
+    uniformEntry.type = enumType;
+    
+    return uniformEntry;
+  }
   
   async #updateCanvasSize() {
     this.#canvasWidth = parseInt(this.#canvasStyle.width) * window.devicePixelRatio * this.#canvasPixelsPerDisplayPixel;
@@ -110,31 +239,56 @@ export class CanvasManager {
     
     let triggers = {};
     
+    let uniforms;
     let shaderSegmentStrings;
     
-    if (typeof opts.triggers != 'object' && opts.triggers != null) {
-      throw new Error('opts.triggers must be object');
-    }
-    
-    if (opts.triggers.setup == null || typeof opts.triggers.setup == 'function') {
-      triggers.setup = opts.triggers.setup;
-    } else {
-      throw new Error(`opts.triggers.setup not function or null: ${typeof opts.triggers.setup}`);
-    }
-    
-    if (opts.triggers.render == null || typeof opts.triggers.render == 'function') {
-      triggers.render = opts.triggers.render;
-    } else {
-      throw new Error(`opts.triggers.render not function ${opts.triggers.render == null ? 'null / undefined' : typeof opts.triggers.render}`);
-    }
-    
-    if (opts.triggers.tearDown == null || typeof opts.triggers.tearDown == 'function') {
-      triggers.tearDown = opts.triggers.tearDown;
-    } else {
-      throw new Error(`opts.triggers.tearDown not function or null: ${typeof opts.triggers.tearDown}`);
+    if (opts.triggers != null) {
+      if (typeof opts.triggers != 'object') {
+        throw new Error('opts.triggers must be object or null');
+      }
+      
+      if (opts.triggers.setup == null || typeof opts.triggers.setup == 'function') {
+        triggers.setup = opts.triggers.setup;
+      } else {
+        throw new Error(`opts.triggers.setup not function or null: ${typeof opts.triggers.setup}`);
+      }
+      
+      if (opts.triggers.render == null || typeof opts.triggers.render == 'function') {
+        triggers.render = opts.triggers.render;
+      } else {
+        throw new Error(`opts.triggers.render not function ${opts.triggers.render == null ? 'null / undefined' : typeof opts.triggers.render}`);
+      }
+      
+      if (opts.triggers.tearDown == null || typeof opts.triggers.tearDown == 'function') {
+        triggers.tearDown = opts.triggers.tearDown;
+      } else {
+        throw new Error(`opts.triggers.tearDown not function or null: ${typeof opts.triggers.tearDown}`);
+      }
     }
     
     if (opts.mode == CanvasMode.WEBGL_FULL_CANVAS_SHADER) {
+      uniforms = [];
+      
+      if (opts.uniforms != null) {
+        if (Array.isArray(opts.uniforms)) {
+          for (let i = 0; i < opts.uniforms.length; i++) {
+            let uniformEntry = opts.uniforms[i];
+            
+            if (typeof uniformEntry == 'object' && uniformEntry != null) {
+              uniformEntry = this.#parseUniformEntry(uniformEntry);
+            } else if (typeof uniformEntry == 'string') {
+              uniformEntry = this.#parseUniformEntryString(uniformEntry);
+            } else {
+              throw new Error(`opts.uniforms[${i}] unrecognized type: ${typeof uniformEntry}`);
+            }
+            
+            uniforms.push(uniformEntry);
+          }
+        } else {
+          throw new Error('opts.uniforms must be Array or null');
+        }
+      }
+      
       if (Array.isArray(opts.shaderSegments)) {
         shaderSegmentStrings = [];
         
@@ -344,9 +498,16 @@ export class CanvasManager {
       case CanvasMode['2D']:
       case CanvasMode.WEBGL1:
       case CanvasMode.WEBGL2:
+        if (this.#triggers.render != null) {
+          await this.#triggers.render();
+        }
         break;
       
       case CanvasMode.WEBGL_FULL_CANVAS_SHADER: {
+        if (this.#triggers.render != null) {
+          await this.#triggers.render();
+        }
+        
         // https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Tutorial/Adding_2D_content_to_a_WebGL_context
         
         let gl = this.#canvasContext;
@@ -369,10 +530,6 @@ export class CanvasManager {
       
       default:
         throw new Error('default case should not be triggered');
-    }
-    
-    if (this.#triggers.render != null) {
-      await this.#triggers.render();
     }
   }
   

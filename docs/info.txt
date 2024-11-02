@@ -6,7 +6,7 @@ CanvasManager:
         setup: <function called to set up variables / null>,
         render: <function called every render>,
         tearDown: <function called to tear down variables / null>,
-      },
+      } | null,
       frameRate: {
         mode: FrameRateMode,
         if mode == FrameRateMode.FRAME_MULT:
@@ -25,12 +25,14 @@ CanvasManager:
         },
         ...
       ],
-      #uniforms: [
-      #  {
-      #    name: <string>,
-      #    type: UniformType,
-      #    if type == UniformType....:
-      #      ...
-      #  },
-      #],
+      uniforms: [
+        <glsl variable string i.e. "vec2 variableName[2]">
+        OR
+        {
+          name: <string>,
+          type: UniformType,
+          if type endswith _ARRAY:
+            length: <integer>,
+        },
+      ] | null,
   }
