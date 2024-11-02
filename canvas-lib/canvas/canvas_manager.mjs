@@ -42,6 +42,7 @@ export const UniformType_ArraySuffix = '_ARRAY';
 
 // format: [enum name, [corresponding glsl type string, ...]]
 const uniformTypeData = Object.freeze([
+  // scalars / vectors
   ['UINT', ['uint']],
   ['UVEC2', ['uvec2']],
   ['UVEC3', ['uvec3']],
@@ -374,25 +375,6 @@ export class CanvasManager {
           
           let vertexShader = this.#fullCanvasShaderData.vertexShader = shaderManager.loadShaderFromString(gl.VERTEX_SHADER, VERTEX_SHADER_XY_ONLY_TEXT);
           
-          this.#fullCanvasShaderData.uniforms = new Map(uniforms.map(uniformEntry => {
-            if ('length' in uniformEntry) {
-              return [
-                uniformEntry.name,
-                {
-                  type: uniformEntry.type,
-                  length: uniformEntry.length,
-                },
-              ];
-            } else {
-              return [
-                uniformEntry.name,
-                {
-                  type: uniformEntry.type,
-                },
-              ];
-            }
-          }));
-          
           let fragmentShaderSource = [
             FRAGMENT_SHADER_PREFIX,
             ...uniforms.map(x => `uniform ${this.#uniformEntryToString(x)};`),
@@ -424,6 +406,27 @@ export class CanvasManager {
           this.#fullCanvasShaderData.uniformLocations = {
             iResolution: gl.getUniformLocation(shaderProgram, 'iResolution'),
           };
+          
+          this.#fullCanvasShaderData.uniforms = new Map(uniforms.map(uniformEntry => {
+            if ('length' in uniformEntry) {
+              return [
+                uniformEntry.name,
+                {
+                  type: uniformEntry.type,
+                  length: uniformEntry.length,
+                  location: gl.getUniformLocation(shaderProgram, uniformEntry.name),
+                },
+              ];
+            } else {
+              return [
+                uniformEntry.name,
+                {
+                  type: uniformEntry.type,
+                  location: gl.getUniformLocation(shaderProgram, uniformEntry.name),
+                },
+              ];
+            }
+          }));
           
           // buffer for quad coordinates
           
@@ -703,5 +706,222 @@ export class CanvasManager {
   async gracefulShutdown() {
     await this.awaitManagerEditable();
     await this.setCanvasMode({ mode: CanvasMode.NONE });
+  }
+  
+  // webgl full canvas shader specific
+  
+  getUniform(uniformName) {
+    if (typeof uniformName != 'string') {
+      throw new Error(`Error: uniformName not string: ${typeof uniformName}`);
+    }
+    
+    if (this.getCanvasMode() != CanvasMode.WEBGL_FULL_CANVAS_SHADER) {
+      throw new Error('Uniform get/set functions only available on full canvas shader mode');
+    }
+    
+    if (!this.#fullCanvasShaderData.uniforms.has(uniformName)) {
+      throw new Error(`Uniform ${uniformName} does not exist or was not user set`);
+    }
+    
+    let uniformEntry = this.#fullCanvasShaderData.uniforms.get(uniformName);
+    
+    return this.#canvasContext.getUniform(
+      this.#fullCanvasShaderData.shaderProgram,
+      uniformEntry.location
+    );
+  }
+  
+  setUniform(uniformName, value) {
+    if (typeof uniformName != 'string') {
+      throw new Error(`Error: uniformName not string: ${typeof uniformName}`);
+    }
+    
+    if (this.getCanvasMode() != CanvasMode.WEBGL_FULL_CANVAS_SHADER) {
+      throw new Error('Uniform get/set functions only available on full canvas shader mode');
+    }
+    
+    if (!this.#fullCanvasShaderData.uniforms.has(uniformName)) {
+      throw new Error(`Uniform ${uniformName} does not exist or was not user set`);
+    }
+    
+    let uniformEntry = this.#fullCanvasShaderData.uniforms.get(uniformName);
+    
+    let gl = this.#canvasContext;
+    let loc = uniformEntry.location;
+    
+    switch (uniformEntry.type) {
+      // scalars / vectors
+      
+      case UniformType['UINT']:
+        gl.uniform1ui(loc, value);
+        break;
+      
+      case UniformType['UVEC2']:
+        gl.uniform2ui(loc, ...value);
+        break;
+      
+      case UniformType['UVEC3']:
+        gl.uniform3ui(loc, ...value);
+        break;
+      
+      case UniformType['UVEC4']:
+        gl.uniform4ui(loc, ...value);
+        break;
+      
+      case UniformType['FLOAT']:
+        gl.uniform1f(loc, value);
+        break;
+      
+      case UniformType['VEC2']:
+        gl.uniform2f(loc, ...value);
+        break;
+      
+      case UniformType['VEC3']:
+        gl.uniform3f(loc, ...value);
+        break;
+      
+      case UniformType['VEC4']:
+        gl.uniform4f(loc, ...value);
+        break;
+      
+      case UniformType['INT']:
+        gl.uniform1i(loc, value);
+        break;
+      
+      case UniformType['IVEC2']:
+        gl.uniform2i(loc, ...value);
+        break;
+      
+      case UniformType['IVEC3']:
+        gl.uniform3i(loc, ...value);
+        break;
+      
+      case UniformType['IVEC4']:
+        gl.uniform4i(loc, ...value);
+        break;
+      
+      case UniformType['UINT' + UniformType_ArraySuffix]:
+        gl.uniform1uiv(loc, value);
+        break;
+      
+      case UniformType['UVEC2' + UniformType_ArraySuffix]:
+        gl.uniform2uiv(loc, value);
+        break;
+      
+      case UniformType['UVEC3' + UniformType_ArraySuffix]:
+        gl.uniform3uiv(loc, value);
+        break;
+      
+      case UniformType['UVEC4' + UniformType_ArraySuffix]:
+        gl.uniform4uiv(loc, value);
+        break;
+      
+      case UniformType['FLOAT' + UniformType_ArraySuffix]:
+        gl.uniform1fv(loc, value);
+        break;
+      
+      case UniformType['VEC2' + UniformType_ArraySuffix]:
+        gl.uniform2fv(loc, value);
+        break;
+      
+      case UniformType['VEC3' + UniformType_ArraySuffix]:
+        gl.uniform3fv(loc, value);
+        break;
+      
+      case UniformType['VEC4' + UniformType_ArraySuffix]:
+        gl.uniform4fv(loc, value);
+        break;
+      
+      case UniformType['INT' + UniformType_ArraySuffix]:
+        gl.uniform1iv(loc, value);
+        break;
+      
+      case UniformType['IVEC2' + UniformType_ArraySuffix]:
+        gl.uniform2iv(loc, value);
+        break;
+      
+      case UniformType['IVEC3' + UniformType_ArraySuffix]:
+        gl.uniform3iv(loc, value);
+        break;
+      
+      case UniformType['IVEC4' + UniformType_ArraySuffix]:
+        gl.uniform4iv(loc, value);
+        break;
+      
+      
+      // matrices
+      
+      case ['MAT22']:
+        
+        break;
+      
+      case ['MAT23']:
+        
+        break;
+      
+      case ['MAT24']:
+        
+        break;
+      
+      case ['MAT32']:
+        
+        break;
+      
+      case ['MAT33']:
+        
+        break;
+      
+      case ['MAT34']:
+        
+        break;
+      
+      case ['MAT42']:
+        
+        break;
+      
+      case ['MAT43']:
+        
+        break;
+      
+      case ['MAT44']:
+        
+        break;
+      
+      case ['MAT22' + UniformType_ArraySuffix]:
+        
+        break;
+      
+      case ['MAT23' + UniformType_ArraySuffix]:
+        
+        break;
+      
+      case ['MAT24' + UniformType_ArraySuffix]:
+        
+        break;
+      
+      case ['MAT32' + UniformType_ArraySuffix]:
+        
+        break;
+      
+      case ['MAT33' + UniformType_ArraySuffix]:
+        
+        break;
+      
+      case ['MAT34' + UniformType_ArraySuffix]:
+        
+        break;
+      
+      case ['MAT42' + UniformType_ArraySuffix]:
+        
+        break;
+      
+      case ['MAT43' + UniformType_ArraySuffix]:
+        
+        break;
+      
+      case ['MAT44' + UniformType_ArraySuffix]:
+        
+        break;
+    }
   }
 }
