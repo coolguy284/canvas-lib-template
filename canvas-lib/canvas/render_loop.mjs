@@ -244,6 +244,10 @@ export class RenderLoop {
   }
   
   clearFrameRate() {
+    if (this.renderLoopRunning()) {
+      throw new Error('Cannot reset framerate to null unless render loop is stopped');
+    }
+    
     this.#frameRate = null;
   }
   
