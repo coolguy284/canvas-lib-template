@@ -226,7 +226,7 @@ export class CanvasManager {
         // set resolution in uniform in program
           
         this.#canvasContext.useProgram(this.#fullCanvasShaderData.shaderProgram);
-        this.#canvasContext.uniform2f(this.#fullCanvasShaderData.uniformLocations.iResolution, this.#canvasWidth, this.#canvasHeight);
+        this.#canvasContext.uniform2f(this.#fullCanvasShaderData.autoUniformLocations.iResolution, this.#canvasWidth, this.#canvasHeight);
         this.#canvasContext.useProgram(null);
         break;
       
@@ -399,11 +399,11 @@ export class CanvasManager {
           
           // get variable positions
           
-          let attribLocations = this.#fullCanvasShaderData.attribLocations = {
+          let autoAttribLocations = this.#fullCanvasShaderData.autoAttribLocations = {
             vertexPosition: gl.getAttribLocation(shaderProgram, 'aVertexPosition'),
           };
           
-          this.#fullCanvasShaderData.uniformLocations = {
+          this.#fullCanvasShaderData.autoUniformLocations = {
             iResolution: gl.getUniformLocation(shaderProgram, 'iResolution'),
           };
           
@@ -448,8 +448,8 @@ export class CanvasManager {
           
           gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
           gl.bufferData(gl.ARRAY_BUFFER, positionData, gl.STATIC_DRAW);
-          gl.vertexAttribPointer(attribLocations.vertexPosition, numComponents, type, normalize, stride, offset);
-          gl.enableVertexAttribArray(attribLocations.vertexPosition);
+          gl.vertexAttribPointer(autoAttribLocations.vertexPosition, numComponents, type, normalize, stride, offset);
+          gl.enableVertexAttribArray(autoAttribLocations.vertexPosition);
           gl.bindBuffer(gl.ARRAY_BUFFER, null);
         } catch (err) {
           console.error(err);
