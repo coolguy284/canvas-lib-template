@@ -852,11 +852,11 @@ export class CanvasManager {
       // matrices
       
       case ['MAT22']:
-        
+        gl.uniformMatrix2fv(loc, false, data);
         break;
       
       case ['MAT23']:
-        
+        gl.uniformMatrix2x3fv(loc, false, data);
         break;
       
       case ['MAT24']:
