@@ -1,0 +1,72 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Basic</title>
+    
+    <style>
+      html {
+        font-family: Arial, sans-serif;
+        color: white;
+        background-color: black;
+      }
+      
+      #canvas_container {
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        
+        canvas {
+          width: 100%;
+          height: 100%;
+        }
+      }
+    </style>
+  </head>
+  
+  <body>
+    <!--<p><a href = 'examples/4-shader-with-texture-uniform.html'>WebGL Shader with Texture Uniform</a></p>-->
+    <div id = 'canvas_container'></div>
+    
+    <script type = 'module'>
+      import { CanvasManager, CanvasMode, FrameRateMode, ShaderSegmentType } from '../../canvas-lib/main.mjs';
+      
+      let man = new CanvasManager(canvas_container);
+      
+      await man.setCanvasMode({
+        mode: CanvasMode.WEBGL_FULL_CANVAS_SHADER,
+        frameRate: {
+          mode: FrameRateMode.FRAME_MULT,
+          frameSkips: 0,
+        },
+        uniforms: [
+          'float currentTime',
+          'sampler2D imageInput',
+        ],
+        shaderSegments: [
+          {
+            type: ShaderSegmentType.STRING,
+            content: `
+              out vec4 outColor;
+              
+              void main() {
+                outColor = texture(imageInput, gl_FragCoord + vec2(sin(currentTime + gl_FragCoord.x / 100), 0.0) - vec2(100.0, 100.0));
+              }
+            `,
+          },
+        ],
+        triggers: {
+          setup: async () => {
+            await man.setUniformAsync('imageInput', 'texture.png');
+          },
+          render: () => {
+            man.setUniform('currentTime', Date.now() / 1000 % 1);
+          },
+        },
+      });
+      
+      window.scriptVars = { man };
+    </script>
+  </body>
+</html>
