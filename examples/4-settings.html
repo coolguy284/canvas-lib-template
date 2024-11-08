@@ -68,8 +68,9 @@
             let ctx = canvasMgr.getContext();
             
             ctx.clearRect(0, 0, width, height);
-            ctx.fillStyle = 'red';
-            ctx.fillRect(100, 100, 200, 200);
+            ctx.fillStyle = 'white';
+            ctx.font = '2rem Arial, sans-serif';
+            ctx.fillText('text', 20, 40);
           },
         },
       });

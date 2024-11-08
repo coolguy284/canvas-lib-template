@@ -41,4 +41,10 @@ SettingsManager > constructor:
   {
     button: HTMLElement (button for toggling settings),
     div: HTMLElement (element that will be shown / hidden and populated with settings),
+    settings: [
+      {
+        
+      },
+      ...
+    ],
   }
