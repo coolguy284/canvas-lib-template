@@ -8,9 +8,9 @@ export {
 } from './canvas/canvas_manager.mjs';
 
 // convenience exports
-export { ShaderManager } from './canvas/shader_manager.mjs';
 export { FrameRateMode } from './canvas/enums.mjs';
-export { removeNode } from './dom_tools.mjs';
-export { Enum } from './enum.mjs';
-export { Lock } from './lock.mjs';
+export { ShaderManager } from './canvas/shader_manager.mjs';
 export { RenderLoop } from './canvas/render_loop.mjs';
+export { removeNode } from './misc/dom_tools.mjs';
+export { Enum } from './misc/enum.mjs';
+export { Lock } from './misc/lock.mjs';

@@ -1,4 +1,4 @@
-CanvasManager:
+CanvasManager > setMode:
   {
     mode: CanvasMode,
     if mode != CanvasMode.NONE:
@@ -35,4 +35,10 @@ CanvasManager:
             length: <integer>,
         },
       ] | null,
+  }
+
+SettingsManager > constructor:
+  {
+    button: HTMLElement (button for toggling settings),
+    div: HTMLElement (element that will be shown / hidden and populated with settings),
   }

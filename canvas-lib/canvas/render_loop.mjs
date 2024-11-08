@@ -1,4 +1,4 @@
-import { FrameRateMode } from './enums.mjs';
+import { FrameRateMode } from '../misc/enum.mjs';
 
 export class RenderLoop {
   // class variables

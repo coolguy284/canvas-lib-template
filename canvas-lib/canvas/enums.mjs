@@ -1,4 +1,4 @@
-import { Enum } from '../enum.mjs';
+import { Enum } from '../misc/enum.mjs';
 
 export const FrameRateMode = Enum([
   'NONE',

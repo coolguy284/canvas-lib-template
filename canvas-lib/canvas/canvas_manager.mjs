@@ -1,6 +1,6 @@
-import { removeNode } from '../dom_tools.mjs';
-import { Enum } from '../enum.mjs';
-import { Lock } from '../lock.mjs';
+import { removeNode } from '../misc/dom_tools.mjs';
+import { Enum } from '../misc/enum.mjs';
+import { Lock } from '../misc/lock.mjs';
 import { RenderLoop } from './render_loop.mjs';
 import { ShaderManager } from './shader_manager.mjs';
 
