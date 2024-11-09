@@ -1,4 +1,5 @@
 features:
+rename frameskips to renderskips
 texture uniforms
 split off gl boilerplate
 configmanager class that can handle persistence on its own, setup with a declaration of all variables and the persistence key; and can fill out a settings div

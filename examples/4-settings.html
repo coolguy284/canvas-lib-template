@@ -64,19 +64,28 @@
         },
         triggers: {
           render: () => {
-            let [ width, height ] = canvasMgr.getCanvasSize();
+            const [ width, height ] = canvasMgr.getCanvasSize();
             let ctx = canvasMgr.getContext();
+            
+            const lineHeight = 40;
             
             ctx.clearRect(0, 0, width, height);
             ctx.fillStyle = 'white';
             ctx.font = '2rem Arial, sans-serif';
-            ctx.fillText(`Time: ${new Date().toISOString()}`, 20, 40);
-            ctx.fillText(`Boolean: ${settingsMgr.get('Boolean')}`, 20, 80);
+            ctx.fillText(`Time: ${new Date().toISOString()}`, 20, lineHeight);
+            ctx.fillText(`Boolean: ${settingsMgr.get('Boolean')}`, 20, lineHeight * 2);
+            ctx.fillText(`Enum Select: ${settingsMgr.get('Enum Select')}`, 20, lineHeight * 3);
+            ctx.fillText(`Enum Radio: ${settingsMgr.get('Enum Radio')}`, 20, lineHeight * 4);
+            ctx.fillText(`Integer: ${settingsMgr.get('Integer')}`, 20, lineHeight * 5);
+            ctx.fillText(`Number: ${settingsMgr.get('Number')}`, 20, lineHeight * 6);
+            ctx.fillText(`Text: ${settingsMgr.get('Text')}`, 20, lineHeight * 7);
           },
         },
       });
       
-      const forceRenderFunc = () => { canvasMgr.forceRender() };
+      function forceRenderFunc() {
+        canvasMgr.forceRender();
+      }
       
       let settingsMgr = new SettingsManager({
         button: settings_btn,
@@ -84,9 +93,25 @@
         settings: [
           {
             type: SettingType.HEADER,
-            text: 'Framerate',
+            text: 'Canvas',
           },
-          // TODO
+          {
+            type: SettingType.ENUM_SELECT,
+            name: 'Framerate Mode',
+            onUpdate: forceRenderFunc,
+            values: [
+              { name: 'Option 1' },
+              { name: 'Option 2' },
+            ],
+            defaultValue: 'Option 1',
+          },
+          {
+            type: SettingType.NUMBER,
+            name: 'Subpixel Scale',
+            onUpdate: forceRenderFunc,
+            min: 0,
+            defaultValue: 'Option 1',
+          },
           {
             type: SettingType.SEPARATOR,
           },

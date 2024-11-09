@@ -46,7 +46,7 @@
             gl.scissor(100, 100, 200, 200);
           },
           render: () => {
-            let [ width, height ] = man.getCanvasSize();
+            const [ width, height ] = man.getCanvasSize();
             let gl = man.getContext();
             
             gl.clearColor(1.0, 0.0, 0.0, 1.0);

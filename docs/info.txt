@@ -82,11 +82,21 @@ SettingsManager > constructor:
             sliderPresent: <boolean>,
             if sliderPresent == true:
               sliderDraggingIsUpdate: <boolean, if true, dragging slider will call onUpdate, if false, onUpdate will only be called once slider is let go>,
+              min: <integer>,
+              max: <integer>,
+            else:
+              min: <integer> | null,
+              max: <integer> | null,
             defaultValue: <integer>,
           if type == SettingType.NUMBER:
             sliderPresent: <boolean>,
             if sliderPresent:
               sliderDraggingIsUpdate: <boolean, if true, dragging slider will call onUpdate, if false, onUpdate will only be called once slider is let go>,
+              min: <integer>,
+              max: <integer>,
+            else:
+              min: <integer> | null,
+              max: <integer> | null,
             defaultValue: <number>,
           if type == SettingType.TEXT:
             defaultValue: <string>,

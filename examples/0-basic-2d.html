@@ -40,7 +40,7 @@
         },
         triggers: {
           render: () => {
-            let [ width, height ] = man.getCanvasSize();
+            const [ width, height ] = man.getCanvasSize();
             let ctx = man.getContext();
             
             ctx.clearRect(0, 0, width, height);
