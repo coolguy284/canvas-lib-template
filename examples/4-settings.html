@@ -76,6 +76,8 @@
         },
       });
       
+      const forceRenderFunc = () => { canvasMgr.forceRender() };
+      
       let settingsMgr = new SettingsManager({
         button: settings_btn,
         div: settings_div,
@@ -95,30 +97,52 @@
           {
             type: SettingType.BOOLEAN,
             name: 'Boolean',
+            onUpdate: forceRenderFunc,
+            defaultValue: false,
           },
           {
             type: SettingType.ENUM_SELECT,
             name: 'Enum Select',
-            onUpdate: () => canvasMgr.forceReRender(),
+            onUpdate: forceRenderFunc,
             values: [
-              
+              { name: 'Option 1' },
+              { name: 'Option 2' },
             ],
+            defaultValue: 'Option 1',
           },
           {
             type: SettingType.ENUM_RADIO,
             name: 'Enum Radio',
+            onUpdate: forceRenderFunc,
+            values: [
+              { name: 'Option 1' },
+              { name: 'Option 2' },
+            ],
+            defaultValue: 'Option 1',
           },
           {
             type: SettingType.INTEGER,
             name: 'Integer',
+            onUpdate: forceRenderFunc,
+            sliderPresent: true,
+            min: 0,
+            max: 10,
+            defaultValue: 0,
           },
           {
             type: SettingType.NUMBER,
             name: 'Number',
+            onUpdate: forceRenderFunc,
+            sliderPresent: true,
+            min: 0,
+            max: 10,
+            defaultValue: 0,
           },
           {
             type: SettingType.TEXT,
             name: 'Text',
+            onUpdate: forceRenderFunc,
+            defaultValue: '',
           },
         ],
       });

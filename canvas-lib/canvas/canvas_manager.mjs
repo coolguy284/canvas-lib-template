@@ -577,11 +577,13 @@ export class CanvasManager {
     }
   }
   
+  async #forceRender() {
+    await this.#editLock.awaitAcquirable();
+    await this.#renderLoop.forceRender();
+  }
+  
   #queueForceRender() {
-    (async () => {
-      await this.#editLock.awaitAcquirable();
-      await this.#renderLoop.forceRender();
-    })();
+    this.#forceRender();
   }
   
   // public functions
@@ -711,6 +713,10 @@ export class CanvasManager {
   
   async awaitManagerEditable() {
     await this.#editLock.awaitAcquirable();
+  }
+  
+  async forceRender() {
+    await this.#forceRender();
   }
   
   async gracefulShutdown() {

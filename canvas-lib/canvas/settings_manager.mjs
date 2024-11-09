@@ -38,4 +38,12 @@ export class SettingsManager {
   set(name, value) {
     // TODO
   }
+  
+  getSettingsVisibility() {
+    // TODO
+  }
+  
+  setSettingsVisibility(visibility) {
+    // TODO
+  }
 }
