@@ -6,7 +6,7 @@ save canvas as png, or render a larger version as png
 fullscreen option
 jsdoc everything in canvas-lib
 support for more advanced webgl mode that can pass shaders into texture variables and render to framebuffers
-check for __proto__ key during enum creation
+stylesheets for full screen template including provisions for settings button / div using classes
 
 low prio:
 camera scrolling / moving lib that is a pure class that can take in functions for x and y scaling factor based on current x and y

@@ -19,5 +19,23 @@ export class SettingsManager {
     
     this.#button = opts.button;
     this.#div = opts.div;
+    
+    // TODO
+  }
+  
+  settingsList() {
+    // TODO
+  }
+  
+  has(name) {
+    // TODO
+  }
+  
+  get(name) {
+    // TODO
+  }
+  
+  set(name, value) {
+    // TODO
   }
 }

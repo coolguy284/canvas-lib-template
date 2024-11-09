@@ -3,9 +3,9 @@ CanvasManager > setMode:
     mode: CanvasMode,
     if mode != CanvasMode.NONE:
       triggers: {
-        setup: <function called to set up variables / null>,
-        render: <function called every render>,
-        tearDown: <function called to tear down variables / null>,
+        setup: <function called to set up variables> | null,
+        render: <function called every render> | null,
+        tearDown: <function called to tear down variables> | null,
       } | null,
       frameRate: {
         mode: FrameRateMode,
@@ -41,9 +41,61 @@ SettingsManager > constructor:
   {
     button: HTMLElement (button for toggling settings),
     div: HTMLElement (element that will be shown / hidden and populated with settings),
+    localStorageKey: <string> | null (for no persistence),
     settings: [
       {
+        type: SettingType,
         
+        if type in SettingType.{ BOOLEAN, ENUM_SELECT, ENUM_RADIO, INTEGER, NUMBER, TEXT }:
+          name: <string>,
+          displayName: <string> | null,
+          if localStorageKey != null:
+            forceNonPersistent: <boolean, if true then this property will not be saved persistently regardless>,
+          visibility: <function: true for setting to be visible, false otherwise> | null,
+          updateValidation: <
+            function to validate data update
+            return value:
+              null (if data valid),
+              OR
+              {
+                newValue: new value to set field to | can omit to revert field to old value,
+              },
+          > | null,
+          onUpdate: <function called on data update> | null,
+          
+          if type == SettingType.BOOLEAN:
+            defaultValue: <boolean>,
+          if type == SettingType.{ ENUM_SELECT, ENUM_RADIO }:
+            values: [
+              {
+                name: <string>,
+                displayName: <string> | null,
+              },
+              ...
+            ],
+            valuesReference: {
+              enum: <Enum, all properties of enum must be in values array>,
+              requireSameOrderAsEnum: <boolean, if true, values must be in same order as provided enum>,
+            } | null,
+            defaultValue: <string>,
+          if type == SettingType.INTEGER:
+            sliderPresent: <boolean>,
+            if sliderPresent == true:
+              sliderDraggingIsUpdate: <boolean, if true, dragging slider will call onUpdate, if false, onUpdate will only be called once slider is let go>,
+            defaultValue: <integer>,
+          if type == SettingType.NUMBER:
+            sliderPresent: <boolean>,
+            if sliderPresent:
+              sliderDraggingIsUpdate: <boolean, if true, dragging slider will call onUpdate, if false, onUpdate will only be called once slider is let go>,
+            defaultValue: <number>,
+          if type == SettingType.TEXT:
+            defaultValue: <string>,
+        
+        if type == SettingsType.{ HEADER, INFO_TEXT }:
+          text: <string>,
+        if type == SettingsType.BUTTON:
+          text: <string>,
+          onClick: <function, called on button click>,
       },
       ...
     ],

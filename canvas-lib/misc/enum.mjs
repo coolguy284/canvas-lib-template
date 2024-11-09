@@ -39,6 +39,10 @@ export function Enum(values) {
       set: () => {
         throw new Error('Enums are immutable');
       },
+      
+      deleteProperty: () => {
+        throw new Error('Enums are immutable');
+      },
     }
   );
 }

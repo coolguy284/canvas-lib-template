@@ -53,7 +53,7 @@
     <div id = 'settings_div' style = 'display: none;'></div>
     
     <script type = 'module'>
-      import { CanvasManager, CanvasMode, FrameRateMode, SettingsManager } from '../canvas-lib/main.mjs';
+      import { CanvasManager, CanvasMode, FrameRateMode, SettingsManager, SettingType } from '../canvas-lib/main.mjs';
       
       let canvasMgr = new CanvasManager(canvas_container);
       
@@ -70,7 +70,8 @@
             ctx.clearRect(0, 0, width, height);
             ctx.fillStyle = 'white';
             ctx.font = '2rem Arial, sans-serif';
-            ctx.fillText('text', 20, 40);
+            ctx.fillText(`Time: ${new Date().toISOString()}`, 20, 40);
+            ctx.fillText(`Boolean: ${settingsMgr.get('Boolean')}`, 20, 80);
           },
         },
       });
@@ -78,6 +79,48 @@
       let settingsMgr = new SettingsManager({
         button: settings_btn,
         div: settings_div,
+        settings: [
+          {
+            type: SettingType.HEADER,
+            text: 'Framerate',
+          },
+          // TODO
+          {
+            type: SettingType.SEPARATOR,
+          },
+          {
+            type: SettingType.HEADER,
+            text: 'Main',
+          },
+          {
+            type: SettingType.BOOLEAN,
+            name: 'Boolean',
+          },
+          {
+            type: SettingType.ENUM_SELECT,
+            name: 'Enum Select',
+            onUpdate: () => canvasMgr.forceReRender(),
+            values: [
+              
+            ],
+          },
+          {
+            type: SettingType.ENUM_RADIO,
+            name: 'Enum Radio',
+          },
+          {
+            type: SettingType.INTEGER,
+            name: 'Integer',
+          },
+          {
+            type: SettingType.NUMBER,
+            name: 'Number',
+          },
+          {
+            type: SettingType.TEXT,
+            name: 'Text',
+          },
+        ],
       });
       
       window.scriptVars = { canvasMgr, settingsMgr };
