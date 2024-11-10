@@ -1,4 +1,5 @@
 import { SettingType, SettingType_TrueSettings } from './enums.mjs';
+import { isEnum } from '../misc/enum.mjs';
 
 export class SettingsManager {
   // class variables
@@ -121,14 +122,82 @@ export class SettingsManager {
               }
               
               if (values.has(valueEntry.name)) {
-                throw new Error(`settings[${j}].values[${j}].name is duplicate: ${valueEntry.name}`);
+                throw new Error(`settings[${i}].values[${j}].name is duplicate: ${valueEntry.name}`);
               }
               
               values.set(valueEntry.name, valueEntry.displayName != null ? valueEntry.displayName : valueEntry.name);
               valueNames.push(valueEntry.name);
             }
             
-            if (typeof valueEntry)
+            if (typeof settingEntry.valuesReference != 'object' && settingEntry.valuesReference != null) {
+              throw new Error(`settings[${i}].valuesReference type not object or null: ${typeof settingEntry.valuesReference}`);
+            }
+            
+            if (settingEntry.valuesReference != null) {
+              if (!isEnum(settingEntry.valuesReference.enum)) {
+                throw new Error(`settings[${i}].valuesReference.enum is not an enum: ${settingEntry.valuesReference.enum}`);
+              }
+              
+              if (typeof settingEntry.valuesReference.requireSameOrderAsEnum != 'boolean') {
+                throw new Error(`settings[${i}].valuesReference.requireSameOrderAsEnum type not boolean: ${typeof settingEntry.valuesReference.requireSameOrderAsEnum}`);
+              }
+              
+              const enumValue = settingEntry.valuesReference.enum;
+              const requireSameOrderAsEnum = settingEntry.valuesReference.requireSameOrderAsEnum;
+              let valueNamesSet = new Set(valueNames);
+              let enumKeys = Object.keys(enumValue);
+              let enumKeysSet = new Set(enumKeys);
+              
+              for (let value of valueNamesSet) {
+                if (!enumKeysSet.has(value)) {
+                  throw new Error(`settings[${i}].values contains extra name not in enum: ${value}`);
+                }
+              }
+              
+              for (let enumValue of enumKeysSet) {
+                if (!valueNamesSet.has(enumValue)) {
+                  throw new Error(`settings[${i}].values missing name present in enum: ${enumValue}`);
+                }
+              }
+              
+              if (requireSameOrderAsEnum) {
+                for (let j = 0; j < valueNames.length; j++) {
+                  if (valueNames[j] != enumKeys[j]) {
+                    throw new Error(`settings[${i}].values not in same order as enum: settings[${i}].values[${j}].name (${valueNames[j]}) != Object.keys(settings[${i}].valuesReference.enum)[${j}] (${enumKeys[j]})`);
+                  }
+                }
+              }
+            }
+            
+            if (typeof settingEntry.defaultValue != 'string') {
+              throw new Error(`settings[${i}].defaultValue type not string: ${typeof settingEntry.defaultValue}`);
+            }
+            
+            if (!values.has(settingEntry.defaultValue)) {
+              throw new Error(`settings[${i}].defaultValue not present in enum: ${settingEntry.defaultValue}`);
+            }
+            
+            if (newSettingEntry.updateValidator != null) {
+              let validationResults = newSettingEntry.updateValidator(settingEntry.defaultValue);
+              
+              if (validationResults != null) {
+                let newValue = validationResults.newValue;
+                
+                if (newValue != null) {
+                  if (typeof newValue != 'string') {
+                    throw new Error(`Validator output not string: ${typeof newValue}`);
+                  }
+                  
+                  if (!values.has(newValue)) {
+                    throw new Error(`Validator output not present in enum: ${newValue}`);
+                  }
+                }
+                
+                throw new Error(`settings[${i}].defaultValue does not pass validation function: ${newValue == null ? 'Generic Failure' : newValue}`);
+              }
+            }
+            
+            newSettingEntry.defaultValue = settingEntry.defaultValue;
             break;
           }
           

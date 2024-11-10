@@ -1,3 +1,5 @@
+let activeEnums = new WeakRef();
+
 export function Enum(values) {
   if (!Array.isArray(values)) {
     throw new Error('Values must be array');
@@ -19,7 +21,7 @@ export function Enum(values) {
     }
   }
   
-  return new Proxy(
+  let enumObject = new Proxy(
     Object.freeze(
       Object.assign(
         Object.create(null),
@@ -44,5 +46,13 @@ export function Enum(values) {
         throw new Error('Enums are immutable');
       },
     }
-  );
+  )
+  
+  activeEnums.add(enumObject);
+  
+  return enumObject;
+}
+
+export function isEnum(object) {
+  return activeEnums.has(object);
 }

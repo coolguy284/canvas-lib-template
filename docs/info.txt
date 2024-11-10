@@ -158,8 +158,8 @@ SettingsManager > constructor (after parsing):
             ],
             defaultValue: <string>,
           if type == SettingType.INTEGER:
-            min: <integer> | null,
-            max: <integer> | null,
+            min: <integer>,
+            max: <integer>,
             sliderPresent: <boolean>,
             if sliderPresent == true:
               sliderMin: <integer>,
