@@ -79,24 +79,34 @@ SettingsManager > constructor:
             } | null,
             defaultValue: <string>,
           if type == SettingType.INTEGER:
+            min: <integer> | null,
+            max: <integer> | null,
             sliderPresent: <boolean>,
             if sliderPresent == true:
+              sliderMin: <integer> | null,
+              sliderMax: <integer> | null,
+              sliderMapping: {
+                sliderToValue: <function, that takes number from 0 to 1 representing slider position and outputs value of setting>,
+                valueToSlider: <function, that takes value of setting and outputs number from 0 to 1 representing slider position>,
+                sliderIncrements: <integer > 0> | Infinity,
+              } | null (if present, sliderMin and sliderMax cannot be defined),
+              largeShaderAndNumberBox: <boolean, if true, large shader and number box>,
               sliderDraggingIsUpdate: <boolean, if true, dragging slider will call onUpdate, if false, onUpdate will only be called once slider is let go>,
-              min: <integer>,
-              max: <integer>,
-            else:
-              min: <integer> | null,
-              max: <integer> | null,
             defaultValue: <integer>,
           if type == SettingType.NUMBER:
+            min: <number> | null,
+            max: <number> | null,
             sliderPresent: <boolean>,
-            if sliderPresent:
+            if sliderPresent == true:
+              sliderMin: <number> | null,
+              sliderMax: <number> | null,
+              sliderMapping: {
+                sliderToValue: <function, that takes number from 0 to 1 representing slider position and outputs value of setting>,
+                valueToSlider: <function, that takes value of setting and outputs number from 0 to 1 representing slider position>,
+                sliderIncrements: <integer > 0> | Infinity,
+              } | null (if present, sliderMin and sliderMax cannot be defined),
+              largeShaderAndNumberBox: <boolean, if true, large shader and number box>,
               sliderDraggingIsUpdate: <boolean, if true, dragging slider will call onUpdate, if false, onUpdate will only be called once slider is let go>,
-              min: <integer>,
-              max: <integer>,
-            else:
-              min: <integer> | null,
-              max: <integer> | null,
             defaultValue: <number>,
           if type == SettingType.TEXT:
             defaultValue: <string>,
