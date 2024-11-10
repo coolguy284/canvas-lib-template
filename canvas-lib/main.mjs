@@ -12,6 +12,7 @@ export { FrameRateMode, SettingType } from './canvas/enums.mjs';
 export { SettingsManager } from './canvas/settings_manager.mjs';
 export { ShaderManager } from './canvas/shader_manager.mjs';
 export { RenderLoop } from './canvas/render_loop.mjs';
-export { removeNode } from './misc/dom_tools.mjs';
+export { removeAllNodes /* TODO: Currently unused */, removeNode } from './misc/dom_tools.mjs';
 export { Enum } from './misc/enum.mjs';
 export { Lock } from './misc/lock.mjs';
+export { ReadOnlySet } from './misc/read_only_set.mjs';

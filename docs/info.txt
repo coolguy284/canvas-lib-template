@@ -52,8 +52,8 @@ SettingsManager > constructor:
           if localStorageKey != null:
             forceNonPersistent: <boolean, if true then this property will not be saved persistently regardless>,
           visibility: <function: true for setting to be visible, false otherwise> | null,
-          updateValidation: <
-            function to validate data update
+          updateValidator: <
+            function to validate data update, passed in new value of data
             return value:
               null (if data valid),
               OR
@@ -61,7 +61,7 @@ SettingsManager > constructor:
                 newValue: new value to set field to | can omit to revert field to old value,
               },
           > | null,
-          onUpdate: <function called on data update> | null,
+          onUpdate: <function called on data update, passed new value of data> | null,
           
           if type == SettingType.BOOLEAN:
             defaultValue: <boolean>,
@@ -74,7 +74,7 @@ SettingsManager > constructor:
               ...
             ],
             valuesReference: {
-              enum: <Enum, all properties of enum must be in values array>,
+              enum: <Enum, all properties of enum must be in values array with no extra properties in values array>,
               requireSameOrderAsEnum: <boolean, if true, values must be in same order as provided enum>,
             } | null,
             defaultValue: <string>,
@@ -86,9 +86,9 @@ SettingsManager > constructor:
               sliderMin: <integer> | null,
               sliderMax: <integer> | null,
               sliderMapping: {
-                sliderToValue: <function, that takes number from 0 to 1 representing slider position and outputs value of setting>,
+                sliderToValue: <function, that takes integer representing slider position and outputs value of setting>,
                 valueToSlider: <function, that takes value of setting and outputs number from 0 to 1 representing slider position>,
-                sliderIncrements: <integer > 0> | Infinity,
+                sliderIncrements: <integer > 0>,
               } | null (if present, sliderMin and sliderMax cannot be defined),
               largeShaderAndNumberBox: <boolean, if true, large shader and number box>,
               sliderDraggingIsUpdate: <boolean, if true, dragging slider will call onUpdate, if false, onUpdate will only be called once slider is let go>,
@@ -96,10 +96,91 @@ SettingsManager > constructor:
           if type == SettingType.NUMBER:
             min: <number> | null,
             max: <number> | null,
+            infinityAcceptable: <boolean>,
+            nanAcceptable: <boolean>,
             sliderPresent: <boolean>,
             if sliderPresent == true:
               sliderMin: <number> | null,
               sliderMax: <number> | null,
+              sliderMapping: {
+                sliderToValue: <function, that takes number from 0 to 1 representing slider position and outputs value of setting>,
+                valueToSlider: <function, that takes value of setting and outputs number from 0 to 1 representing slider position>,
+                sliderIncrements: <integer > 0> | Infinity,
+              } | null (if present, sliderMin and sliderMax cannot be defined),
+              largeShaderAndNumberBox: <boolean, if true, large shader and number box>,
+              sliderDraggingIsUpdate: <boolean, if true, dragging slider will call onUpdate, if false, onUpdate will only be called once slider is let go>,
+            defaultValue: <number>,
+          if type == SettingType.TEXT:
+            defaultValue: <string>,
+        
+        if type == SettingsType.{ HEADER, INFO_TEXT }:
+          text: <string>,
+        if type == SettingsType.BUTTON:
+          text: <string>,
+          onClick: <function, called on button click>,
+      },
+      ...
+    ],
+  }
+
+SettingsManager > constructor (after parsing):
+  {
+    button: HTMLElement (button for toggling settings),
+    div: HTMLElement (element that will be shown / hidden and populated with settings),
+    localStorageKey: <string> | null (for no persistence),
+    settings: [
+      {
+        type: SettingType,
+        
+        if type in SettingType.{ BOOLEAN, ENUM_SELECT, ENUM_RADIO, INTEGER, NUMBER, TEXT }:
+          name: <string>,
+          displayName: <string>,
+          if localStorageKey != null:
+            forceNonPersistent: <boolean, if true then this property will not be saved persistently regardless>,
+          visibility: <function: true for setting to be visible, false otherwise> | null,
+          updateValidator: <
+            function to validate data update, passed in new value of data
+            return value:
+              null (if data valid),
+              OR
+              {
+                newValue: new value to set field to | can omit to revert field to old value,
+              },
+          > | null,
+          onUpdate: <function called on data update, passed new value of data> | null,
+          
+          if type == SettingType.BOOLEAN:
+            defaultValue: <boolean>,
+          if type == SettingType.{ ENUM_SELECT, ENUM_RADIO }:
+            values: Map [
+              [ <string: name>, displayName: <string: displayName> ],
+              ...
+            ],
+            defaultValue: <string>,
+          if type == SettingType.INTEGER:
+            min: <integer> | null,
+            max: <integer> | null,
+            sliderPresent: <boolean>,
+            if sliderPresent == true:
+              sliderMin: <integer>,
+              sliderMax: <integer>,
+              sliderMapping: {
+                sliderToValue: <function, that takes integer representing slider position and outputs value of setting>,
+                valueToSlider: <function, that takes value of setting and outputs number from 0 to 1 representing slider position>,
+                sliderIncrements: <integer > 0>,
+              } | null (if present, sliderMin and sliderMax cannot be defined),
+              largeShaderAndNumberBox: <boolean, if true, large shader and number box>,
+              sliderDraggingIsUpdate: <boolean, if true, dragging slider will call onUpdate, if false, onUpdate will only be called once slider is let go>,
+            defaultValue: <integer>,
+          if type == SettingType.NUMBER:
+            min: <number> | null,
+            max: <number> | null,
+            infinityAcceptable: <boolean>,
+            nanAcceptable: <boolean>,
+            sliderPresent: <boolean>,
+            if sliderPresent == true:
+              sliderMin: <number>,
+              sliderMax: <number>,
               sliderMapping: {
                 sliderToValue: <function, that takes number from 0 to 1 representing slider position and outputs value of setting>,
                 valueToSlider: <function, that takes value of setting and outputs number from 0 to 1 representing slider position>,

@@ -1,4 +1,5 @@
 import { Enum } from '../misc/enum.mjs';
+import { ReadOnlySet } from '../misc/read_only_set.mjs';
 
 export const FrameRateMode = Enum([
   'NONE',
@@ -23,4 +24,13 @@ export const SettingType = Enum([
   
   // active
   'BUTTON',
+]);
+
+export const SettingType_TrueSettings = new ReadOnlySet([
+  SettingType.BOOLEAN,
+  SettingType.ENUM_SELECT,
+  SettingType.ENUM_RADIO,
+  SettingType.INTEGER,
+  SettingType.NUMBER,
+  SettingType.TEXT,
 ]);
