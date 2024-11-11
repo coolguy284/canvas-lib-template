@@ -112,6 +112,7 @@ SettingsManager > constructor:
               sliderDraggingIsUpdate: <boolean, if true, dragging slider will call onUpdate, if false, onUpdate will only be called once slider is let go>,
             defaultValue: <number>,
           if type == SettingType.TEXT:
+            multiline: <boolean, if true, multiline input field will be used; if false, newline characters are not allowed>,
             defaultValue: <string>,
         
         if type == SettingType.{ HEADER, INFO_TEXT }:
@@ -138,7 +139,6 @@ SettingsManager > constructor (after parsing):
           displayName: <string>,
           if localStorageKey != null:
             forceNonPersistent: <boolean, if true then this property will not be saved persistently regardless>,
-          visibility: <function: true for setting to be visible, false otherwise> | null,
           updateValidator: <
             function to validate data update, passed in new value of data
             return value:
@@ -152,6 +152,7 @@ SettingsManager > constructor (after parsing):
           
           if type == SettingType.BOOLEAN:
             defaultValue: <boolean>,
+            value: <boolean> (TODO),
           if type == SettingType.ENUM:
             values: [
               <string: name>,
@@ -162,18 +163,23 @@ SettingsManager > constructor (after parsing):
               ...
             ],
             defaultValue: <string>,
+            value: <boolstringean> (TODO),
           if type == SettingType.INTEGER:
             min: <integer>,
             max: <integer>,
             defaultValue: <integer>,
+            value: <integer> (TODO),
           if type == SettingType.NUMBER:
             min: <number> | null,
             max: <number> | null,
             infinityAcceptable: <boolean>,
             nanAcceptable: <boolean>,
             defaultValue: <number>,
+            value: <number> (TODO),
           if type == SettingType.TEXT:
+            multiline: <boolean, if true, multiline input field will be used; if false, newline characters are not allowed>,
             defaultValue: <string>,
+            value: <string> (TODO),
         },
       ],
       ...
@@ -183,6 +189,7 @@ SettingsManager > constructor (after parsing):
         <string: name>,
         {
           displayName: <string>,
+          visibility: <function: true for setting to be visible, false otherwise> | null,
           if type == SettingType.ENUM:
             valueNames: Map [
               [ <string: name>, displayName: <string: displayName> ],

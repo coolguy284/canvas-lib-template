@@ -1,4 +1,5 @@
 import { SettingEnumUIType, SettingType, SettingType_TrueSettings } from './enums.mjs';
+import { removeAllNodes } from '../misc/dom_tools.mjs';
 import { isEnum } from '../misc/enum.mjs';
 
 export class SettingsManager {
@@ -7,6 +8,7 @@ export class SettingsManager {
   #button;
   #div;
   #localStorageKey;
+  #settingsMap;
   
   // helper functions
   
@@ -23,7 +25,7 @@ export class SettingsManager {
         
         if (newValue != null) {
           if (typeof newValue != 'boolean') {
-            throw new Error(`Validator output not boolean: ${typeof newValue}`);
+            throw new Error(`validator output not boolean: ${typeof newValue}`);
           }
         }
         
@@ -57,11 +59,11 @@ export class SettingsManager {
         
         if (newValue != null) {
           if (typeof newValue != 'string') {
-            throw new Error(`Validator output not string: ${typeof newValue}`);
+            throw new Error(`validator output not string: ${typeof newValue}`);
           }
           
           if (!enumValuesSet.has(newValue)) {
-            throw new Error(`Validator output not present in enum: ${newValue}`);
+            throw new Error(`validator output not present in enum: ${newValue}`);
           }
         }
         
@@ -80,15 +82,63 @@ export class SettingsManager {
   
   static #validateInt(value, min, max, updateValidator, allowValueCoercion) {
     if (!Number.isSafeInteger(value)) {
-      // TODO
+      throw new Error(`value not integer: ${value}`);
     }
     
+    if (value < min) {
+      throw new Error(`value (${value}) < min (${min})`);
+    }
+    
+    if (value > max) {
+      throw new Error(`value (${value}) > max (${max})`);
+    }
+    
+    if (updateValidator != null) {
+      let validationResults = updateValidator(value);
+      
+      if (validationResults != null) {
+        let newValue = validationResults.newValue;
+        
+        if (newValue != null) {
+          if (!Number.isSafeInteger(newValue)) {
+            throw new Error(`validator output not integer: ${newValue}`);
+          }
+          
+          if (newValue < min) {
+            throw new Error(`validator output (${newValue}) < min (${min})`);
+          }
+          
+          if (newValue > max) {
+            throw new Error(`validator output (${newValue}) > max (${max})`);
+          }
+        }
+        
+        if (allowValueCoercion) {
+          return newValue;
+        } else {
+          throw new Error(`value does not pass validation function: ${newValue == null ? 'Generic Failure' : 'Converted to: ' + newValue}`);
+        }
+      }
+    }
+    
+    if (allowValueCoercion) {
+      return value;
+    }
+  }
+  
+  static #validateNumber(value /* TODO */, updateValidator, allowValueCoercion) {
     // TODO
   }
   
-  static #validateText(value, updateValidator, allowValueCoercion) {
+  static #validateText(value, multiline, updateValidator, allowValueCoercion) {
     if (typeof value != 'string') {
       throw new Error(`value type not string: ${typeof value}`);
+    }
+    
+    if (!multiline) {
+      if (value.includes('\n') || value.includes('\r')) {
+        throw new Error(`text not multiline but value includes newlines: ${value}`);
+      }
     }
     
     if (updateValidator != null) {
@@ -99,7 +149,13 @@ export class SettingsManager {
         
         if (newValue != null) {
           if (typeof newValue != 'string') {
-            throw new Error(`Validator output not string: ${typeof newValue}`);
+            throw new Error(`validator output not string: ${typeof newValue}`);
+          }
+          
+          if (!multiline) {
+            if (newValue.includes('\n') || newValue.includes('\r')) {
+              throw new Error(`text not multiline but validator output includes newlines: ${newValue}`);
+            }
           }
         }
         
@@ -171,7 +227,7 @@ export class SettingsManager {
           throw new Error(`settings[${i}].visibility type not function or null: ${typeof settingEntry.visibility}`);
         }
         
-        newSettingEntry.visibility = settingEntry.visibility != null ? settingEntry.visibility : null;
+        settingUiProperties.visibility = settingEntry.visibility != null ? settingEntry.visibility : null;
         
         if (typeof settingEntry.updateValidator != 'function' && settingEntry.updateValidator != null) {
           throw new Error(`settings[${i}].updateValidator type not function or null: ${typeof settingEntry.updateValidator}`);
@@ -310,10 +366,80 @@ export class SettingsManager {
             settingUiProperties.sliderPresent = settingEntry.sliderPresent;
             
             if (settingUiProperties.sliderPresent) {
-              // TODO
+              if (typeof settingEntry.sliderMapping != 'object' && settingEntry.sliderMapping != null) {
+                throw new Error(`settings[${i}].sliderMapping not object or null: ${typeof settingEntry.sliderMapping}`);
+              }
+              
+              if (settingEntry.sliderMapping != null) {
+                if (typeof settingEntry.sliderMapping.sliderToValue != 'function') {
+                  throw new Error(`settings[${i}].sliderMapping.sliderToValue not function: ${typeof settingEntry.sliderMapping.sliderToValue}`);
+                }
+                
+                if (typeof settingEntry.sliderMapping.valueToSlider != 'function') {
+                  throw new Error(`settings[${i}].sliderMapping.valueToSlider not function: ${typeof settingEntry.sliderMapping.valueToSlider}`);
+                }
+                
+                if (!Number.isSafeInteger(settingEntry.sliderMapping.sliderIncrements)) {
+                  throw new Error(`settings[${i}].sliderMapping.sliderIncrements not integer: ${settingEntry.sliderMapping.sliderIncrements}`);
+                }
+                
+                if (settingEntry.sliderMapping.sliderIncrements <= 0) {
+                  throw new Error(`settings[${i}].sliderMapping.sliderIncrements must be greater than zero: ${settingEntry.sliderMapping.sliderIncrements}`);
+                }
+                
+                settingUiProperties.sliderMapping = {
+                  sliderToValue: settingEntry.sliderMapping.sliderToValue,
+                  valueToSlider: settingEntry.sliderMapping.valueToSlider,
+                  sliderIncrements: settingEntry.sliderMapping.sliderIncrements,
+                };
+              } else {
+                settingUiProperties.sliderMapping = null;
+              }
+              
+              if (!Number.isSafeInteger(settingEntry.sliderMin) && settingEntry.sliderMin != null) {
+                throw new Error(`settings[${i}].sliderMin not integer or null: ${settingEntry.sliderMin}`);
+              }
+              
+              if (!Number.isSafeInteger(settingEntry.sliderMax) && settingEntry.sliderMax != null) {
+                throw new Error(`settings[${i}].sliderMax not integer or null: ${settingEntry.sliderMax}`);
+              }
+              
+              if (settingUiProperties.sliderMapping != null) {
+                if (settingEntry.sliderMin != null) {
+                  throw new Error(`settings[${i}].sliderMapping set but settings[${i}].sliderMin not null`);
+                }
+                
+                if (settingEntry.sliderMax != null) {
+                  throw new Error(`settings[${i}].sliderMapping set but settings[${i}].sliderMax not null`);
+                }
+                
+                settingUiProperties.sliderMin = null;
+                settingUiProperties.sliderMax = null;
+              } else {
+                if (settingEntry.sliderMin == null && settingEntry.min == null) {
+                  throw new Error(`both settings[${i}].sliderMin and settings[${i}].min not specified and settings[${i}].sliderMapping not set`);
+                }
+                
+                if (settingEntry.sliderMax == null && settingEntry.max == null) {
+                  throw new Error(`both settings[${i}].sliderMax and settings[${i}].max not specified and settings[${i}].sliderMapping not set`);
+                }
+                
+                settingUiProperties.sliderMin = settingEntry.sliderMin;
+                settingUiProperties.sliderMax = settingEntry.sliderMax;
+              }
+              
+              if (typeof settingEntry.largeSliderAndNumberBox != 'boolean') {
+                throw new Error(`settings[${i}].largeSliderAndNumberBox not boolean: ${settingEntry.largeSliderAndNumberBox}`);
+              }
+              
+              settingUiProperties.largeSliderAndNumberBox = settingEntry.largeSliderAndNumberBox;
+              
+              if (typeof settingEntry.sliderDraggingIsUpdate != 'boolean') {
+                throw new Error(`settings[${i}].sliderDraggingIsUpdate not boolean: ${settingEntry.sliderDraggingIsUpdate}`);
+              }
+              
+              settingUiProperties.sliderDraggingIsUpdate = settingEntry.sliderDraggingIsUpdate;
             }
-            
-            // TODO
             
             SettingsManager.#validateInt(settingEntry.defaultValue, newSettingEntry.min, newSettingEntry.max, newSettingEntry.updateValidator, false);
             
@@ -325,7 +451,13 @@ export class SettingsManager {
             break;
           
           case SettingType.TEXT:
-            SettingsManager.#validateText(settingEntry.defaultValue, newSettingEntry.updateValidator, false);
+            if (typeof settingEntry.multiline != 'boolean') {
+              throw new Error(`settings[${i}].multiline not boolean: ${settingEntry.multiline}`);
+            }
+            
+            newSettingEntry.multiline = settingEntry.multiline;
+            
+            SettingsManager.#validateText(settingEntry.defaultValue, newSettingEntry.multiline, newSettingEntry.updateValidator, false);
             
             newSettingEntry.defaultValue = settingEntry.defaultValue;
             break;
@@ -333,6 +465,8 @@ export class SettingsManager {
           default:
             throw new Error('default case not possible, all options accounted for');
         }
+        
+        newSettingEntry.value = null;
         
         settingsMap.set(settingEntry.name, newSettingEntry);
         settingsUiPropertiesMap.set(settingEntry.name, settingUiProperties);
@@ -364,6 +498,12 @@ export class SettingsManager {
     };
   }
   
+  #createUI(uiEntries, settingsUiPropertiesMap) {
+    removeAllNodes(this.#div);
+    
+    // TODO
+  }
+  
   // public functions
   
   constructor(opts) {
@@ -379,11 +519,18 @@ export class SettingsManager {
       throw new Error('opts.localStorageKey is not string or null');
     }
     
-    let { settingsMap, uiEntries } = SettingsManager.#parseSettings(opts.settings, opts.localStorageKey != null);
+    let {
+      settingsMap,
+      settingsUiPropertiesMap,
+      uiEntries
+    } = SettingsManager.#parseSettings(opts.settings, opts.localStorageKey != null);
     
     this.#button = opts.button;
     this.#div = opts.div;
     this.#localStorageKey = opts.localStorageKey;
+    this.#settingsMap = settingsMap;
+    
+    this.#createUI(uiEntries, settingsUiPropertiesMap);
   }
   
   settingsList() {
@@ -391,22 +538,50 @@ export class SettingsManager {
   }
   
   has(name) {
-    // TODO
+    if (typeof name != 'string') {
+      throw new Error(`Type of name not string: ${typeof name}`);
+    }
+    
+    return this.#settingsMap.has(name);
   }
   
   get(name) {
-    // TODO
+    if (typeof name != 'string') {
+      throw new Error(`Type of name not string: ${typeof name}`);
+    }
+    
+    if (!this.#settingsMap.has(name)) {
+      throw new Error(`Setting ${name} does not exist`);
+    }
+    
+    return this.#settingsMap.get(name).value;
   }
   
   set(name, value) {
+    if (typeof name != 'string') {
+      throw new Error(`Type of name not string: ${typeof name}`);
+    }
+    
     // TODO
   }
   
   getSettingsVisibility() {
-    // TODO
+    return this.#div.style.display != 'none';
   }
   
   setSettingsVisibility(visibility) {
-    // TODO
+    if (typeof visibility != 'string') {
+      throw new Error(`Type of visibility not bool: ${typeof visibility}`);
+    }
+    
+    if (visibility) {
+      if (this.#div.style.display == 'none') {
+        this.#div.style.display = '';
+      }
+    } else {
+      if (this.#div.style.display != 'none') {
+        this.#div.style.display = 'none';
+      }
+    }
   }
 }
