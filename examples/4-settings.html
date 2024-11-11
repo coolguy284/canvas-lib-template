@@ -53,7 +53,7 @@
     <div id = 'settings_div' style = 'display: none;'></div>
     
     <script type = 'module'>
-      import { CanvasManager, CanvasMode, FrameRateMode, SettingsManager, SettingType } from '../canvas-lib/main.mjs';
+      import { CanvasManager, CanvasMode, FrameRateMode, SettingsManager, SettingEnumUIType, SettingType } from '../canvas-lib/main.mjs';
       
       let canvasMgr = new CanvasManager(canvas_container);
       
@@ -96,13 +96,14 @@
             text: 'Canvas',
           },
           {
-            type: SettingType.ENUM_SELECT,
+            type: SettingType.ENUM,
             name: 'Framerate Mode',
             onUpdate: forceRenderFunc,
             values: [
               { name: 'Option 1' },
               { name: 'Option 2' },
             ],
+            uiMode: SettingEnumUIType.SELECT,
             defaultValue: 'Option 1',
           },
           {
@@ -126,23 +127,25 @@
             defaultValue: false,
           },
           {
-            type: SettingType.ENUM_SELECT,
+            type: SettingType.ENUM,
             name: 'Enum Select',
             onUpdate: forceRenderFunc,
             values: [
               { name: 'Option 1' },
               { name: 'Option 2' },
             ],
+            uiMode: SettingEnumUIType.SELECT,
             defaultValue: 'Option 1',
           },
           {
-            type: SettingType.ENUM_RADIO,
+            type: SettingType.ENUM,
             name: 'Enum Radio',
             onUpdate: forceRenderFunc,
             values: [
               { name: 'Option 1' },
               { name: 'Option 2' },
             ],
+            uiMode: SettingEnumUIType.RADIO,
             defaultValue: 'Option 1',
           },
           {

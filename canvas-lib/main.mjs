@@ -8,7 +8,7 @@ export {
 } from './canvas/canvas_manager.mjs';
 
 // convenience exports
-export { FrameRateMode, SettingType } from './canvas/enums.mjs';
+export { FrameRateMode, SettingEnumUIType, SettingType, SettingType_TrueSettings } from './canvas/enums.mjs';
 export { SettingsManager } from './canvas/settings_manager.mjs';
 export { ShaderManager } from './canvas/shader_manager.mjs';
 export { RenderLoop } from './canvas/render_loop.mjs';

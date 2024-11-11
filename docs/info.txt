@@ -46,7 +46,7 @@ SettingsManager > constructor:
       {
         type: SettingType,
         
-        if type in SettingType.{ BOOLEAN, ENUM_SELECT, ENUM_RADIO, INTEGER, NUMBER, TEXT }:
+        if type in SettingType.{ BOOLEAN, ENUM, INTEGER, NUMBER, TEXT }:
           name: <string>,
           displayName: <string> | null,
           if localStorageKey != null:
@@ -65,7 +65,7 @@ SettingsManager > constructor:
           
           if type == SettingType.BOOLEAN:
             defaultValue: <boolean>,
-          if type == SettingType.{ ENUM_SELECT, ENUM_RADIO }:
+          if type == SettingType.ENUM:
             values: [
               {
                 name: <string>,
@@ -77,6 +77,7 @@ SettingsManager > constructor:
               enum: <Enum, all properties of enum must be in values array with no extra properties in values array>,
               requireSameOrderAsEnum: <boolean, if true, values must be in same order as provided enum>,
             } | null,
+            uiMode: SettingEnumUIType,
             defaultValue: <string>,
           if type == SettingType.INTEGER:
             min: <integer> | null,
@@ -90,7 +91,7 @@ SettingsManager > constructor:
                 valueToSlider: <function, that takes value of setting and outputs number from 0 to 1 representing slider position>,
                 sliderIncrements: <integer > 0>,
               } | null (if present, sliderMin and sliderMax cannot be defined),
-              largeShaderAndNumberBox: <boolean, if true, large shader and number box>,
+              largeSliderAndNumberBox: <boolean, if true, slider and number box both are width of full line>,
               sliderDraggingIsUpdate: <boolean, if true, dragging slider will call onUpdate, if false, onUpdate will only be called once slider is let go>,
             defaultValue: <integer>,
           if type == SettingType.NUMBER:
@@ -107,15 +108,15 @@ SettingsManager > constructor:
                 valueToSlider: <function, that takes value of setting and outputs number from 0 to 1 representing slider position>,
                 sliderIncrements: <integer > 0> | Infinity,
               } | null (if present, sliderMin and sliderMax cannot be defined),
-              largeShaderAndNumberBox: <boolean, if true, large shader and number box>,
+              largeSliderAndNumberBox: <boolean, if true, slider and number box both are width of full line>,
               sliderDraggingIsUpdate: <boolean, if true, dragging slider will call onUpdate, if false, onUpdate will only be called once slider is let go>,
             defaultValue: <number>,
           if type == SettingType.TEXT:
             defaultValue: <string>,
         
-        if type == SettingsType.{ HEADER, INFO_TEXT }:
+        if type == SettingType.{ HEADER, INFO_TEXT }:
           text: <string>,
-        if type == SettingsType.BUTTON:
+        if type == SettingType.BUTTON:
           text: <string>,
           onClick: <function, called on button click>,
       },
@@ -128,12 +129,12 @@ SettingsManager > constructor (after parsing):
     button: HTMLElement (button for toggling settings),
     div: HTMLElement (element that will be shown / hidden and populated with settings),
     localStorageKey: <string> | null (for no persistence),
-    settings: [
-      {
-        type: SettingType,
-        
-        if type in SettingType.{ BOOLEAN, ENUM_SELECT, ENUM_RADIO, INTEGER, NUMBER, TEXT }:
-          name: <string>,
+    settingsMap: Map [
+      [
+        <string: name>,
+        {
+          type: SettingType in SettingType.{ BOOLEAN, ENUM, INTEGER, NUMBER, TEXT },
+          
           displayName: <string>,
           if localStorageKey != null:
             forceNonPersistent: <boolean, if true then this property will not be saved persistently regardless>,
@@ -151,15 +152,44 @@ SettingsManager > constructor (after parsing):
           
           if type == SettingType.BOOLEAN:
             defaultValue: <boolean>,
-          if type == SettingType.{ ENUM_SELECT, ENUM_RADIO }:
-            values: Map [
-              [ <string: name>, displayName: <string: displayName> ],
+          if type == SettingType.ENUM:
+            values: [
+              <string: name>,
+              ...
+            ],
+            valuesSet: Set [
+              <string: name>,
               ...
             ],
             defaultValue: <string>,
           if type == SettingType.INTEGER:
             min: <integer>,
             max: <integer>,
+            defaultValue: <integer>,
+          if type == SettingType.NUMBER:
+            min: <number> | null,
+            max: <number> | null,
+            infinityAcceptable: <boolean>,
+            nanAcceptable: <boolean>,
+            defaultValue: <number>,
+          if type == SettingType.TEXT:
+            defaultValue: <string>,
+        },
+      ],
+      ...
+    ],
+    settingsUiPropertiesMap: Map [
+      [
+        <string: name>,
+        {
+          displayName: <string>,
+          if type == SettingType.ENUM:
+            valueNames: Map [
+              [ <string: name>, displayName: <string: displayName> ],
+              ...
+            ],
+            uiMode: SettingEnumUIType,
+          if type == SettingType.INTEGER:
             sliderPresent: <boolean>,
             if sliderPresent == true:
               sliderMin: <integer>,
@@ -171,12 +201,7 @@ SettingsManager > constructor (after parsing):
               } | null (if present, sliderMin and sliderMax cannot be defined),
               largeShaderAndNumberBox: <boolean, if true, large shader and number box>,
               sliderDraggingIsUpdate: <boolean, if true, dragging slider will call onUpdate, if false, onUpdate will only be called once slider is let go>,
-            defaultValue: <integer>,
           if type == SettingType.NUMBER:
-            min: <number> | null,
-            max: <number> | null,
-            infinityAcceptable: <boolean>,
-            nanAcceptable: <boolean>,
             sliderPresent: <boolean>,
             if sliderPresent == true:
               sliderMin: <number>,
@@ -188,16 +213,18 @@ SettingsManager > constructor (after parsing):
               } | null (if present, sliderMin and sliderMax cannot be defined),
               largeShaderAndNumberBox: <boolean, if true, large shader and number box>,
               sliderDraggingIsUpdate: <boolean, if true, dragging slider will call onUpdate, if false, onUpdate will only be called once slider is let go>,
-            defaultValue: <number>,
-          if type == SettingType.TEXT:
-            defaultValue: <string>,
-        
-        if type == SettingsType.{ HEADER, INFO_TEXT }:
-          text: <string>,
-        if type == SettingsType.BUTTON:
-          text: <string>,
-          onClick: <function, called on button click>,
-      },
+        },
+      ],
       ...
+    ],
+    uiEntries: [
+      type: <SettingType in SettingType in SettingType.{ ENUM, HEADER, INFO_TEXT, BUTTON }> | null (for other SettingType values),
+      if type == null:
+        name: <string key in settingsMap>,
+      if type == SettingType.{ HEADER, INFO_TEXT }:
+        text: <string>,
+      if type == SettingType.BUTTON:
+        text: <string>,
+        onClick: <function, called on button click>,
     ],
   }

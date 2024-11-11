@@ -11,8 +11,7 @@ export const FrameRateMode = Enum([
 export const SettingType = Enum([
   // actual settings
   'BOOLEAN',
-  'ENUM_SELECT',
-  'ENUM_RADIO',
+  'ENUM',
   'INTEGER',
   'NUMBER',
   'TEXT',
@@ -26,10 +25,14 @@ export const SettingType = Enum([
   'BUTTON',
 ]);
 
+export const SettingEnumUIType = Enum([
+  'SELECT',
+  'RADIO',
+]);
+
 export const SettingType_TrueSettings = new ReadOnlySet([
   SettingType.BOOLEAN,
-  SettingType.ENUM_SELECT,
-  SettingType.ENUM_RADIO,
+  SettingType.ENUM,
   SettingType.INTEGER,
   SettingType.NUMBER,
   SettingType.TEXT,
