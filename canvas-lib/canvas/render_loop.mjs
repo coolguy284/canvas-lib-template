@@ -144,11 +144,18 @@ export class RenderLoop {
           
           case FrameRateMode.MILLISECOND:
             resolveToCall = await new Promise(r => {
-              setTimeout(r, this.#frameRate.delay);
-              this.#skipRenderLoopWaitResolveFunc = r;
+              let timeoutID = setTimeout(() => {
+                r();
+                this.#skipRenderLoopWaitResolveFunc = null;
+              }, this.#frameRate.delay);
+              
+              this.#skipRenderLoopWaitResolveFunc = () => {
+                r();
+                clearTimeout(timeoutID);
+                this.#skipRenderLoopWaitResolveFunc = null;
+              };
             });
             
-            this.#skipRenderLoopWaitResolveFunc = null;
             break;
           
           default:
