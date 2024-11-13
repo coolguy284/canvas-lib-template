@@ -25,18 +25,18 @@ export class SettingsManager {
       let validationResults = updateValidator(value);
       
       if (validationResults != null) {
-        let newValue = validationResults.newValue;
+        let adjustedNewValue = validationResults.adjustedNewValue;
         
-        if (newValue != null) {
-          if (typeof newValue != 'boolean') {
-            throw new Error(`validator output not boolean: ${typeof newValue}`);
+        if (adjustedNewValue != null) {
+          if (typeof adjustedNewValue != 'boolean') {
+            throw new Error(`validator output not boolean: ${typeof adjustedNewValue}`);
           }
         }
         
         if (allowValueCoercion) {
-          return newValue;
+          return adjustedNewValue;
         } else {
-          throw new Error(`value does not pass validation function: ${newValue == null ? 'Generic Failure' : 'Converted to: ' + newValue}`);
+          throw new Error(`value does not pass validation function: ${adjustedNewValue == null ? 'Generic Failure' : 'Converted to: ' + adjustedNewValue}`);
         }
       }
     }
@@ -64,22 +64,22 @@ export class SettingsManager {
       let validationResults = updateValidator(value);
       
       if (validationResults != null) {
-        let newValue = validationResults.newValue;
+        let adjustedNewValue = validationResults.adjustedNewValue;
         
-        if (newValue != null) {
-          if (typeof newValue != 'string') {
-            throw new Error(`validator output not string: ${typeof newValue}`);
+        if (adjustedNewValue != null) {
+          if (typeof adjustedNewValue != 'string') {
+            throw new Error(`validator output not string: ${typeof adjustedNewValue}`);
           }
           
-          if (!enumValuesSet.has(newValue)) {
-            throw new Error(`validator output not present in enum: ${newValue}`);
+          if (!enumValuesSet.has(adjustedNewValue)) {
+            throw new Error(`validator output not present in enum: ${adjustedNewValue}`);
           }
         }
         
         if (allowValueCoercion) {
-          return newValue;
+          return adjustedNewValue;
         } else {
-          throw new Error(`value does not pass validation function: ${newValue == null ? 'Generic Failure' : 'Converted to: ' + newValue}`);
+          throw new Error(`value does not pass validation function: ${adjustedNewValue == null ? 'Generic Failure' : 'Converted to: ' + adjustedNewValue}`);
         }
       }
     }
@@ -112,26 +112,26 @@ export class SettingsManager {
       let validationResults = updateValidator(value);
       
       if (validationResults != null) {
-        let newValue = validationResults.newValue;
+        let adjustedNewValue = validationResults.adjustedNewValue;
         
-        if (newValue != null) {
-          if (!Number.isSafeInteger(newValue)) {
-            throw new Error(`validator output not integer: ${newValue}`);
+        if (adjustedNewValue != null) {
+          if (!Number.isSafeInteger(adjustedNewValue)) {
+            throw new Error(`validator output not integer: ${adjustedNewValue}`);
           }
           
-          if (min != null && newValue < min) {
-            throw new Error(`validator output (${newValue}) < min (${min})`);
+          if (min != null && adjustedNewValue < min) {
+            throw new Error(`validator output (${adjustedNewValue}) < min (${min})`);
           }
           
-          if (max != null && newValue > max) {
-            throw new Error(`validator output (${newValue}) > max (${max})`);
+          if (max != null && adjustedNewValue > max) {
+            throw new Error(`validator output (${adjustedNewValue}) > max (${max})`);
           }
         }
         
         if (allowValueCoercion) {
-          return newValue;
+          return adjustedNewValue;
         } else {
-          throw new Error(`value does not pass validation function: ${newValue == null ? 'Generic Failure' : 'Converted to: ' + newValue}`);
+          throw new Error(`value does not pass validation function: ${adjustedNewValue == null ? 'Generic Failure' : 'Converted to: ' + adjustedNewValue}`);
         }
       }
     }
@@ -176,32 +176,32 @@ export class SettingsManager {
       let validationResults = updateValidator(value);
       
       if (validationResults != null) {
-        let newValue = validationResults.newValue;
+        let adjustedNewValue = validationResults.adjustedNewValue;
         
-        if (newValue != null) {
-          if (Number.isNaN(newValue)) {
+        if (adjustedNewValue != null) {
+          if (Number.isNaN(adjustedNewValue)) {
             if (!nanAcceptable) {
               throw new Error(`validator output is NaN but NaN values are not allowed`);
             }
           } else {
-            if (!Number.isFinite(newValue) && !infinityAcceptable) {
-              throw new Error(`validator output is [+-] Infinity but Infinity values are not allowed: ${newValue}`);
+            if (!Number.isFinite(adjustedNewValue) && !infinityAcceptable) {
+              throw new Error(`validator output is [+-] Infinity but Infinity values are not allowed: ${adjustedNewValue}`);
             }
             
-            if (min != null && newValue < min) {
-              throw new Error(`validator output (${newValue}) < min (${min})`);
+            if (min != null && adjustedNewValue < min) {
+              throw new Error(`validator output (${adjustedNewValue}) < min (${min})`);
             }
             
-            if (max != null && newValue > max) {
-              throw new Error(`validator output (${newValue}) > max (${max})`);
+            if (max != null && adjustedNewValue > max) {
+              throw new Error(`validator output (${adjustedNewValue}) > max (${max})`);
             }
           }
         }
         
         if (allowValueCoercion) {
-          return newValue;
+          return adjustedNewValue;
         } else {
-          throw new Error(`value does not pass validation function: ${newValue == null ? 'Generic Failure' : 'Converted to: ' + newValue}`);
+          throw new Error(`value does not pass validation function: ${adjustedNewValue == null ? 'Generic Failure' : 'Converted to: ' + adjustedNewValue}`);
         }
       }
     }
@@ -231,24 +231,24 @@ export class SettingsManager {
       let validationResults = updateValidator(value);
       
       if (validationResults != null) {
-        let newValue = validationResults.newValue;
+        let adjustedNewValue = validationResults.adjustedNewValue;
         
-        if (newValue != null) {
-          if (typeof newValue != 'string') {
-            throw new Error(`validator output not string: ${typeof newValue}`);
+        if (adjustedNewValue != null) {
+          if (typeof adjustedNewValue != 'string') {
+            throw new Error(`validator output not string: ${typeof adjustedNewValue}`);
           }
           
           if (!multiline) {
-            if (newValue.includes('\n') || newValue.includes('\r')) {
-              throw new Error(`text not multiline but validator output includes newlines: ${newValue}`);
+            if (adjustedNewValue.includes('\n') || adjustedNewValue.includes('\r')) {
+              throw new Error(`text not multiline but validator output includes newlines: ${adjustedNewValue}`);
             }
           }
         }
         
         if (allowValueCoercion) {
-          return newValue;
+          return adjustedNewValue;
         } else {
-          throw new Error(`value does not pass validation function: ${newValue == null ? 'Generic Failure' : 'Converted to: ' + newValue}`);
+          throw new Error(`value does not pass validation function: ${adjustedNewValue == null ? 'Generic Failure' : 'Converted to: ' + adjustedNewValue}`);
         }
       }
     }
@@ -849,6 +849,10 @@ export class SettingsManager {
     };
   }
   
+  #initialSettingValuesLoad() {
+    // TODO
+  }
+  
   #createUI(uiEntries, settingsUiPropertiesMap) {
     removeAllNodes(this.#div);
     
@@ -880,6 +884,10 @@ export class SettingsManager {
     this.#div = opts.div;
     this.#localStorageKey = opts.localStorageKey;
     this.#settingsMap = settingsMap;
+    
+    this.#initialSettingValuesLoad();
+    
+    // TODO (bind settings button click to toggle settings)
     
     this.#createUI(uiEntries, settingsUiPropertiesMap);
   }
@@ -913,6 +921,12 @@ export class SettingsManager {
       throw new Error(`Type of name not string: ${typeof name}`);
     }
     
+    if (!this.#settingsMap.has(name)) {
+      throw new Error(`Setting ${name} does not exist`);
+    }
+    
+    let settingEntry = this.#settingsMap.get(name);
+    
     // TODO
   }
   
@@ -921,7 +935,7 @@ export class SettingsManager {
   }
   
   setSettingsVisibility(visibility) {
-    if (typeof visibility != 'string') {
+    if (typeof visibility != 'boolean') {
       throw new Error(`Type of visibility not bool: ${typeof visibility}`);
     }
     
@@ -934,5 +948,9 @@ export class SettingsManager {
         this.#div.style.display = 'none';
       }
     }
+  }
+  
+  toggleSettingsVisibility() {
+    this.setSettingsVisibility(!this.getSettingsVisibility());
   }
 }

@@ -53,12 +53,13 @@ SettingsManager > constructor:
             forceNonPersistent: <boolean, if true then this property will not be saved persistently regardless>,
           visibility: <function() -> boolean; true for setting to be visible, false otherwise> | null,
           updateValidator: <
-            function to validate data update, passed in new value of data
+            function(newValue, oldValue) -> (null | {} | { adjustedNewValue })
+            to validate data update, passed in new value of data
             return value:
               null (if data valid),
               OR
               {
-                newValue: new value to set field to | can omit to revert field to old value,
+                adjustedNewValue: new value to set field to | can omit to revert field to old value,
               },
           > | null,
           onUpdate: <function(data: <type is type of settings[i].defaultValue>) -> undefined; called on data update, passed new value of data> | null,
@@ -103,6 +104,7 @@ SettingsManager > constructor:
             if sliderPresent == true:
               sliderMin: <number> | null,
               sliderMax: <number> | null,
+              sliderStepSize: <number: 0 <= x < Infinity>,
               sliderMapping: {
                 sliderToValue: <function(sliderPosition: number) -> number (value); that takes number from 0 to 1 representing slider position and outputs value of setting>,
                 valueToSlider: <function(value: number) -> number (sliderPosition); that takes value of setting and outputs number from 0 to 1 representing slider position>,
@@ -140,12 +142,13 @@ SettingsManager > constructor (after parsing):
           if localStorageKey != null:
             forceNonPersistent: <boolean, if true then this property will not be saved persistently regardless>,
           updateValidator: <
-            function to validate data update, passed in new value of data
+            function(newValue, oldValue) -> (null | {} | { adjustedNewValue })
+            to validate data update, passed in new value of data
             return value:
               null (if data valid),
               OR
               {
-                newValue: new value to set field to | can omit to revert field to old value,
+                adjustedNewValue: new value to set field to | can omit to revert field to old value,
               },
           > | null,
           onUpdate: <function(data: <type is type of settings[i].defaultValue>) -> undefined; called on data update, passed new value of data> | null,
@@ -213,6 +216,7 @@ SettingsManager > constructor (after parsing):
             if sliderPresent == true:
               sliderMin: <number>,
               sliderMax: <number>,
+              sliderStepSize: <number: 0 <= x < Infinity>,
               sliderMapping: {
                 sliderToValue: <function(sliderPosition: number) -> number (value); that takes number from 0 to 1 representing slider position and outputs value of setting>,
                 valueToSlider: <function(value: number) -> number (sliderPosition); that takes value of setting and outputs number from 0 to 1 representing slider position>,

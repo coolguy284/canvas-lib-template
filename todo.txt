@@ -1,5 +1,6 @@
 features:
 settingsmanager
+  persistence value loading
   filling out settings div
   functionality to settings div
     queue up variable updates to div components until settings div is shown again
@@ -10,6 +11,7 @@ stylesheets for full screen template including provisions for settings button / 
 add subpixel scale to settings test
 move fps and subpixel scale from settings test to separate function
 jsdoc everything in canvas-lib
+clear all TODOs in codebase
 
 low prio:
 save canvas as png, or render a larger version as png
