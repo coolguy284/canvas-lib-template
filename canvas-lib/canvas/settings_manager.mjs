@@ -737,6 +737,8 @@ export class SettingsManager {
             throw new Error('default case not possible, all options accounted for');
         }
         
+        // set to null for now, will be overwritten later during
+        // persistence loading stage; before construction of SettingsManager is complete
         newSettingEntry.value = null;
         
         settingsMap.set(settingEntry.name, newSettingEntry);
@@ -749,11 +751,30 @@ export class SettingsManager {
         switch (settingEntry.type) {
           case SettingType.HEADER:
           case SettingType.INFO_TEXT:
-            // TODO
+            if (typeof settingEntry.text != 'string') {
+              throw new Error(`settings[${i}].text not string: ${typeof settingEntry.text}`);
+            }
+            
+            uiEntries.push({
+              type: settingEntry.type,
+              text: settingEntry.text,
+            });
             break;
           
           case SettingType.BUTTON:
-            // TODO
+            if (typeof settingEntry.text != 'string') {
+              throw new Error(`settings[${i}].text not string: ${typeof settingEntry.text}`);
+            }
+            
+            if (typeof settingEntry.onClick != 'function') {
+              throw new Error(`settings[${i}].onClick not function: ${typeof settingEntry.onClick}`);
+            }
+            
+            uiEntries.push({
+              type: settingEntry.type,
+              text: settingEntry.text,
+              onClick: settingEntry.onClick,
+            });
             break;
           
           default:

@@ -1,5 +1,8 @@
 features:
-configmanager class that can handle persistence on its own, setup with a declaration of all variables and the persistence key; and can fill out a settings div
+settingsmanager
+  filling out settings div
+  functionality to settings div
+  persistence
 texture uniforms
 split off gl boilerplate
 stylesheets for full screen template including provisions for settings button / div using classes
