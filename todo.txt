@@ -1,14 +1,17 @@
 features:
+convert validate functions to take opts as object
+configmanager class that can handle persistence on its own, setup with a declaration of all variables and the persistence key; and can fill out a settings div
 texture uniforms
 split off gl boilerplate
-configmanager class that can handle persistence on its own, setup with a declaration of all variables and the persistence key; and can fill out a settings div
-save canvas as png, or render a larger version as png
-fullscreen option
-jsdoc everything in canvas-lib
-support for more advanced webgl mode that can pass shaders into texture variables and render to framebuffers
 stylesheets for full screen template including provisions for settings button / div using classes
+add subpixel scale to settings test
+move fps and subpixel scale from settings test to separate function
+jsdoc everything in canvas-lib
 
 low prio:
+save canvas as png, or render a larger version as png
+fullscreen option
+support for more advanced webgl mode that can pass shaders into texture variables and render to framebuffers
 camera scrolling / moving lib that is a pure class that can take in functions for x and y scaling factor based on current x and y
 
 don't care:

@@ -85,11 +85,11 @@ export class SettingsManager {
       throw new Error(`value not integer: ${value}`);
     }
     
-    if (value < min) {
+    if (min != null && value < min) {
       throw new Error(`value (${value}) < min (${min})`);
     }
     
-    if (value > max) {
+    if (max != null && value > max) {
       throw new Error(`value (${value}) > max (${max})`);
     }
     
@@ -104,11 +104,11 @@ export class SettingsManager {
             throw new Error(`validator output not integer: ${newValue}`);
           }
           
-          if (newValue < min) {
+          if (min != null && newValue < min) {
             throw new Error(`validator output (${newValue}) < min (${min})`);
           }
           
-          if (newValue > max) {
+          if (max != null && newValue > max) {
             throw new Error(`validator output (${newValue}) > max (${max})`);
           }
         }
@@ -126,8 +126,66 @@ export class SettingsManager {
     }
   }
   
-  static #validateNumber(value /* TODO */, updateValidator, allowValueCoercion) {
-    // TODO
+  static #validateNumber(value, min, max, infinityAcceptable, nanAcceptable, updateValidator, allowValueCoercion) {
+    if (typeof value != 'number') {
+      throw new Error(`value not number: ${typeof value}`);
+    }
+    
+    if (Number.isNaN(value)) {
+      if (!nanAcceptable) {
+        throw new Error(`value is NaN but NaN values are not allowed`);
+      }
+    } else {
+      if (!Number.isFinite(value) && !infinityAcceptable) {
+        throw new Error(`value is [+-] Infinity but Infinity values are not allowed: ${value}`);
+      }
+      
+      if (min != null && value < min) {
+        throw new Error(`value (${value}) < min (${min})`);
+      }
+      
+      if (max != null && value > max) {
+        throw new Error(`value (${value}) > max (${max})`);
+      }
+    }
+    
+    if (updateValidator != null) {
+      let validationResults = updateValidator(value);
+      
+      if (validationResults != null) {
+        let newValue = validationResults.newValue;
+        
+        if (newValue != null) {
+          if (Number.isNaN(newValue)) {
+            if (!nanAcceptable) {
+              throw new Error(`validator output is NaN but NaN values are not allowed`);
+            }
+          } else {
+            if (!Number.isFinite(newValue) && !infinityAcceptable) {
+              throw new Error(`validator output is [+-] Infinity but Infinity values are not allowed: ${newValue}`);
+            }
+            
+            if (min != null && newValue < min) {
+              throw new Error(`validator output (${newValue}) < min (${min})`);
+            }
+            
+            if (max != null && newValue > max) {
+              throw new Error(`validator output (${newValue}) > max (${max})`);
+            }
+          }
+        }
+        
+        if (allowValueCoercion) {
+          return newValue;
+        } else {
+          throw new Error(`value does not pass validation function: ${newValue == null ? 'Generic Failure' : 'Converted to: ' + newValue}`);
+        }
+      }
+    }
+    
+    if (allowValueCoercion) {
+      return value;
+    }
   }
   
   static #validateText(value, multiline, updateValidator, allowValueCoercion) {
@@ -447,7 +505,164 @@ export class SettingsManager {
             break;
           
           case SettingType.NUMBER:
-            // TODO
+            if (typeof settingEntry.infinityAcceptable != 'boolean') {
+              throw new Error(`settings[${i}].infinityAcceptable not boolean: ${typeof settingEntry.infinityAcceptable}`);
+            }
+            
+            newSettingEntry.infinityAcceptable = settingEntry.infinityAcceptable;
+            
+            if (typeof settingEntry.nanAcceptable != 'boolean') {
+              throw new Error(`settings[${i}].nanAcceptable not boolean: ${typeof settingEntry.nanAcceptable}`);
+            }
+            
+            newSettingEntry.nanAcceptable = settingEntry.nanAcceptable;
+            
+            if (typeof settingEntry.min != 'number' && settingEntry.min != null) {
+              throw new Error(`settings[${i}].min not number or null: ${settingEntry.min}`);
+            }
+            
+            if (settingEntry.min != null) {
+              if (Number.isNaN(settingEntry.min)) {
+                throw new Error(`settings[${i}].min is NaN`);
+              }
+              
+              if (settingEntry.min == Infinity && !newSettingEntry.infinityAcceptable) {
+                throw new Error(`settings[${i}].min is +Infinity but infinity values are not allowed`);
+              }
+              
+              if (settingEntry.min == -Infinity) {
+                newSettingEntry.min = null;
+              } else {
+                newSettingEntry.min = settingEntry.min;
+              }
+            } else {
+              newSettingEntry.min = null;
+            }
+            
+            if (typeof settingEntry.max != 'number' && settingEntry.max != null) {
+              throw new Error(`settings[${i}].max not number or null: ${settingEntry.max}`);
+            }
+            
+            if (settingEntry.max != null) {
+              if (Number.isNaN(settingEntry.max)) {
+                throw new Error(`settings[${i}].max is NaN`);
+              }
+              
+              if (settingEntry.max == Infinity && !newSettingEntry.infinityAcceptable) {
+                throw new Error(`settings[${i}].max is +Infinity but infinity values are not allowed`);
+              }
+              
+              if (settingEntry.max == -Infinity) {
+                newSettingEntry.max = null;
+              } else {
+                newSettingEntry.max = settingEntry.max;
+              }
+            } else {
+              newSettingEntry.max = null;
+            }
+            
+            if (typeof settingEntry.sliderPresent != 'boolean') {
+              throw new Error(`settings[${i}].sliderPresent not boolean: ${typeof settingEntry.sliderPresent}`);
+            }
+            
+            settingUiProperties.sliderPresent = settingEntry.sliderPresent;
+            
+            if (settingUiProperties.sliderPresent) {
+              if (typeof settingEntry.sliderMapping != 'object' && settingEntry.sliderMapping != null) {
+                throw new Error(`settings[${i}].sliderMapping not object or null: ${typeof settingEntry.sliderMapping}`);
+              }
+              
+              if (settingEntry.sliderMapping != null) {
+                if (typeof settingEntry.sliderMapping.sliderToValue != 'function') {
+                  throw new Error(`settings[${i}].sliderMapping.sliderToValue not function: ${typeof settingEntry.sliderMapping.sliderToValue}`);
+                }
+                
+                if (typeof settingEntry.sliderMapping.valueToSlider != 'function') {
+                  throw new Error(`settings[${i}].sliderMapping.valueToSlider not function: ${typeof settingEntry.sliderMapping.valueToSlider}`);
+                }
+                
+                if (!Number.isSafeInteger(settingEntry.sliderMapping.sliderIncrements) && settingEntry.sliderMapping.sliderIncrements != Infinity) {
+                  throw new Error(`settings[${i}].sliderMapping.sliderIncrements not integer or infinity: ${settingEntry.sliderMapping.sliderIncrements}`);
+                }
+                
+                if (settingEntry.sliderMapping.sliderIncrements != Infinity && settingEntry.sliderMapping.sliderIncrements <= 0) {
+                  throw new Error(`settings[${i}].sliderMapping.sliderIncrements must be greater than zero: ${settingEntry.sliderMapping.sliderIncrements}`);
+                }
+                
+                settingUiProperties.sliderMapping = {
+                  sliderToValue: settingEntry.sliderMapping.sliderToValue,
+                  valueToSlider: settingEntry.sliderMapping.valueToSlider,
+                  sliderIncrements: settingEntry.sliderMapping.sliderIncrements,
+                };
+              } else {
+                settingUiProperties.sliderMapping = null;
+              }
+              
+              if (typeof settingEntry.sliderMin != 'number' && settingEntry.sliderMin != null) {
+                throw new Error(`settings[${i}].sliderMin not number or null: ${typeof settingEntry.sliderMin}`);
+              }
+              
+              if (typeof settingEntry.sliderMax != 'number' && settingEntry.sliderMax != null) {
+                throw new Error(`settings[${i}].sliderMax not number or null: ${typeof settingEntry.sliderMax}`);
+              }
+              
+              if (settingEntry.sliderMin != null) {
+                if (Number.isNaN(settingEntry.sliderMin)) {
+                  throw new Error(`settings[${i}].sliderMin is NaN`);
+                }
+                
+                if (!Number.isFinite(settingEntry.sliderMin)) {
+                  throw new Error(`settings[${i}].sliderMin is [+-] Infinity: ${settingEntry.sliderMin}`);
+                }
+              }
+              
+              if (settingEntry.sliderMax != null) {
+                if (Number.isNaN(settingEntry.sliderMax)) {
+                  throw new Error(`settings[${i}].sliderMax is NaN`);
+                }
+                
+                if (!Number.isFinite(settingEntry.sliderMax)) {
+                  throw new Error(`settings[${i}].sliderMax is [+-] Infinity: ${settingEntry.sliderMax}`);
+                }
+              }
+              
+              settingUiProperties.sliderMin = settingEntry.sliderMin != null ? settingEntry.sliderMin : null;
+              settingUiProperties.sliderMax = settingEntry.sliderMax != null ? settingEntry.sliderMax : null;
+              
+              if (settingUiProperties.sliderMapping != null) {
+                if (settingEntry.sliderMin != null) {
+                  throw new Error(`settings[${i}].sliderMapping set but settings[${i}].sliderMin not null`);
+                }
+                
+                if (settingEntry.sliderMax != null) {
+                  throw new Error(`settings[${i}].sliderMapping set but settings[${i}].sliderMax not null`);
+                }
+              } else {
+                if (settingEntry.sliderMin == null && settingEntry.min == null) {
+                  throw new Error(`both settings[${i}].sliderMin and settings[${i}].min not specified and settings[${i}].sliderMapping not set`);
+                }
+                
+                if (settingEntry.sliderMax == null && settingEntry.max == null) {
+                  throw new Error(`both settings[${i}].sliderMax and settings[${i}].max not specified and settings[${i}].sliderMapping not set`);
+                }
+              }
+              
+              if (typeof settingEntry.largeSliderAndNumberBox != 'boolean') {
+                throw new Error(`settings[${i}].largeSliderAndNumberBox not boolean: ${settingEntry.largeSliderAndNumberBox}`);
+              }
+              
+              settingUiProperties.largeSliderAndNumberBox = settingEntry.largeSliderAndNumberBox;
+              
+              if (typeof settingEntry.sliderDraggingIsUpdate != 'boolean') {
+                throw new Error(`settings[${i}].sliderDraggingIsUpdate not boolean: ${settingEntry.sliderDraggingIsUpdate}`);
+              }
+              
+              settingUiProperties.sliderDraggingIsUpdate = settingEntry.sliderDraggingIsUpdate;
+            }
+            
+            SettingsManager.#validateNumber(settingEntry.defaultValue, newSettingEntry.min, newSettingEntry.max, newSettingEntry.infinityAcceptable, newSettingEntry.nanAcceptable, newSettingEntry.updateValidator, false);
+            
+            newSettingEntry.defaultValue = settingEntry.defaultValue;
             break;
           
           case SettingType.TEXT:
