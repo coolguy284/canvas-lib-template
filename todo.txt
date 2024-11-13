@@ -14,6 +14,7 @@ jsdoc everything in canvas-lib
 clear all TODOs in codebase
 
 low prio:
+validate that multiline text input does not contain \r, or maybe silently convert to \n
 save canvas as png, or render a larger version as png
   helper function to add this to settings as well
 fullscreen option

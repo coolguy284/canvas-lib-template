@@ -14,6 +14,7 @@ export class SettingsManager {
   
   static #validateBool({
     value,
+    oldValue,
     updateValidator,
     allowValueCoercion,
   }) {
@@ -22,7 +23,7 @@ export class SettingsManager {
     }
     
     if (updateValidator != null) {
-      let validationResults = updateValidator(value);
+      let validationResults = updateValidator(value, oldValue);
       
       if (validationResults != null) {
         let adjustedNewValue = validationResults.adjustedNewValue;
@@ -31,10 +32,14 @@ export class SettingsManager {
           if (typeof adjustedNewValue != 'boolean') {
             throw new Error(`validator output not boolean: ${typeof adjustedNewValue}`);
           }
+        } else {
+          if (oldValue == null) {
+            throw new Error('validator output revert to old value, but old value is null');
+          }
         }
         
         if (allowValueCoercion) {
-          return adjustedNewValue;
+          return adjustedNewValue != null ? adjustedNewValue : oldValue;
         } else {
           throw new Error(`value does not pass validation function: ${adjustedNewValue == null ? 'Generic Failure' : 'Converted to: ' + adjustedNewValue}`);
         }
@@ -48,6 +53,7 @@ export class SettingsManager {
   
   static #validateEnum({
     value,
+    oldValue,
     enumValuesSet,
     updateValidator,
     allowValueCoercion,
@@ -61,7 +67,7 @@ export class SettingsManager {
     }
     
     if (updateValidator != null) {
-      let validationResults = updateValidator(value);
+      let validationResults = updateValidator(value, oldValue);
       
       if (validationResults != null) {
         let adjustedNewValue = validationResults.adjustedNewValue;
@@ -74,10 +80,14 @@ export class SettingsManager {
           if (!enumValuesSet.has(adjustedNewValue)) {
             throw new Error(`validator output not present in enum: ${adjustedNewValue}`);
           }
+        } else {
+          if (oldValue == null) {
+            throw new Error('validator output revert to old value, but old value is null');
+          }
         }
         
         if (allowValueCoercion) {
-          return adjustedNewValue;
+          return adjustedNewValue != null ? adjustedNewValue : oldValue;
         } else {
           throw new Error(`value does not pass validation function: ${adjustedNewValue == null ? 'Generic Failure' : 'Converted to: ' + adjustedNewValue}`);
         }
@@ -91,6 +101,7 @@ export class SettingsManager {
   
   static #validateInt({
     value,
+    oldValue,
     min,
     max,
     updateValidator,
@@ -109,7 +120,7 @@ export class SettingsManager {
     }
     
     if (updateValidator != null) {
-      let validationResults = updateValidator(value);
+      let validationResults = updateValidator(value, oldValue);
       
       if (validationResults != null) {
         let adjustedNewValue = validationResults.adjustedNewValue;
@@ -126,10 +137,14 @@ export class SettingsManager {
           if (max != null && adjustedNewValue > max) {
             throw new Error(`validator output (${adjustedNewValue}) > max (${max})`);
           }
+        } else {
+          if (oldValue == null) {
+            throw new Error('validator output revert to old value, but old value is null');
+          }
         }
         
         if (allowValueCoercion) {
-          return adjustedNewValue;
+          return adjustedNewValue != null ? adjustedNewValue : oldValue;
         } else {
           throw new Error(`value does not pass validation function: ${adjustedNewValue == null ? 'Generic Failure' : 'Converted to: ' + adjustedNewValue}`);
         }
@@ -143,6 +158,7 @@ export class SettingsManager {
   
   static #validateNumber({
     value,
+    oldValue,
     min,
     max,
     infinityAcceptable,
@@ -173,7 +189,7 @@ export class SettingsManager {
     }
     
     if (updateValidator != null) {
-      let validationResults = updateValidator(value);
+      let validationResults = updateValidator(value, oldValue);
       
       if (validationResults != null) {
         let adjustedNewValue = validationResults.adjustedNewValue;
@@ -196,10 +212,14 @@ export class SettingsManager {
               throw new Error(`validator output (${adjustedNewValue}) > max (${max})`);
             }
           }
+        } else {
+          if (oldValue == null) {
+            throw new Error('validator output revert to old value, but old value is null');
+          }
         }
         
         if (allowValueCoercion) {
-          return adjustedNewValue;
+          return adjustedNewValue != null ? adjustedNewValue : oldValue;
         } else {
           throw new Error(`value does not pass validation function: ${adjustedNewValue == null ? 'Generic Failure' : 'Converted to: ' + adjustedNewValue}`);
         }
@@ -213,6 +233,7 @@ export class SettingsManager {
   
   static #validateText({
     value,
+    oldValue,
     multiline,
     updateValidator,
     allowValueCoercion,
@@ -228,7 +249,7 @@ export class SettingsManager {
     }
     
     if (updateValidator != null) {
-      let validationResults = updateValidator(value);
+      let validationResults = updateValidator(value, oldValue);
       
       if (validationResults != null) {
         let adjustedNewValue = validationResults.adjustedNewValue;
@@ -243,10 +264,14 @@ export class SettingsManager {
               throw new Error(`text not multiline but validator output includes newlines: ${adjustedNewValue}`);
             }
           }
+        } else {
+          if (oldValue == null) {
+            throw new Error('validator output revert to old value, but old value is null');
+          }
         }
         
         if (allowValueCoercion) {
-          return adjustedNewValue;
+          return adjustedNewValue != null ? adjustedNewValue : oldValue;
         } else {
           throw new Error(`value does not pass validation function: ${adjustedNewValue == null ? 'Generic Failure' : 'Converted to: ' + adjustedNewValue}`);
         }
@@ -331,6 +356,7 @@ export class SettingsManager {
           case SettingType.BOOLEAN:
             SettingsManager.#validateBool({
               value: settingEntry.defaultValue,
+              oldValue: null,
               updateValidator: newSettingEntry.updateValidator,
               allowValueCoercion: false,
             });
@@ -424,6 +450,7 @@ export class SettingsManager {
             
             SettingsManager.#validateEnum({
               value: settingEntry.defaultValue,
+              oldValue: null,
               enumValuesSet: valuesSet,
               updateValidator: newSettingEntry.updateValidator,
               allowValueCoercion: false,
@@ -565,6 +592,7 @@ export class SettingsManager {
             
             SettingsManager.#validateInt({
               value: settingEntry.defaultValue,
+              oldValue: null,
               min: newSettingEntry.min,
               min: newSettingEntry.max,
               updateValidator: newSettingEntry.updateValidator,
@@ -776,6 +804,7 @@ export class SettingsManager {
             
             SettingsManager.#validateNumber({
               value: settingEntry.defaultValue,
+              oldValue: null,
               min: newSettingEntry.min,
               max: newSettingEntry.max,
               infinityAcceptable: newSettingEntry.infinityAcceptable,
@@ -796,6 +825,7 @@ export class SettingsManager {
             
             SettingsManager.#validateText({
               value: settingEntry.defaultValue,
+              oldValue: null,
               multiline: newSettingEntry.multiline,
               updateValidator: newSettingEntry.updateValidator,
               allowValueCoercion: false,
@@ -902,6 +932,10 @@ export class SettingsManager {
     // TODO (bind settings button click to toggle settings)
     
     this.#createUI(uiEntries, settingsUiPropertiesMap);
+    
+    // TODO remove
+    
+    //throw new Error(`SettingManager is currently non-functional`);
   }
   
   settingsList() {

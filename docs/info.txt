@@ -53,7 +53,7 @@ SettingsManager > constructor:
             forceNonPersistent: <boolean, if true then this property will not be saved persistently regardless>,
           visibility: <function() -> boolean; true for setting to be visible, false otherwise> | null,
           updateValidator: <
-            function(newValue, oldValue) -> (null | {} | { adjustedNewValue })
+            function(newValue, oldValue: <null if no old value>) -> (null | {} (only if oldValue is not null) | { adjustedNewValue })
             to validate data update, passed in new value of data
             return value:
               null (if data valid),
@@ -150,7 +150,7 @@ SettingsManager > constructor (after parsing):
           if localStorageKey != null:
             forceNonPersistent: <boolean, if true then this property will not be saved persistently regardless>,
           updateValidator: <
-            function(newValue, oldValue) -> (null | {} | { adjustedNewValue })
+            function(newValue, oldValue: <null if no old value>) -> (null | {} (only if oldValue is not null) | { adjustedNewValue })
             to validate data update, passed in new value of data
             return value:
               null (if data valid),
