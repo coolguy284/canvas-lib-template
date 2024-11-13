@@ -904,6 +904,10 @@ export class SettingsManager {
   // public functions
   
   constructor(opts) {
+    // TODO remove
+    
+    throw new Error(`SettingsManager is currently non-functional`);
+    
     if (!(opts.button instanceof HTMLElement)) {
       throw new Error('opts.button not instance of HTMLElement');
     }
@@ -932,10 +936,6 @@ export class SettingsManager {
     // TODO (bind settings button click to toggle settings)
     
     this.#createUI(uiEntries, settingsUiPropertiesMap);
-    
-    // TODO remove
-    
-    //throw new Error(`SettingManager is currently non-functional`);
   }
   
   settingsList() {
