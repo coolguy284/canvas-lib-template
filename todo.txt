@@ -2,6 +2,7 @@ features:
 settingsmanager
   filling out settings div
   functionality to settings div
+    queue up variable updates to div components until settings div is shown again
   persistence
 texture uniforms
 split off gl boilerplate

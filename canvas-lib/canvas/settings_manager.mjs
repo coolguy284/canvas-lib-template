@@ -454,6 +454,10 @@ export class SettingsManager {
               newSettingEntry.max = Number.MAX_SAFE_INTEGER;
             }
             
+            if (newSettingEntry.min > newSettingEntry.max) {
+              throw new Error(`settings[${i}].min (${newSettingEntry.min}) > settings[${i}].max (${newSettingEntry.max})`);
+            }
+            
             if (typeof settingEntry.sliderPresent != 'boolean') {
               throw new Error(`settings[${i}].sliderPresent not boolean: ${typeof settingEntry.sliderPresent}`);
             }
@@ -519,8 +523,31 @@ export class SettingsManager {
                   throw new Error(`both settings[${i}].sliderMax and settings[${i}].max not specified and settings[${i}].sliderMapping not set`);
                 }
                 
-                settingUiProperties.sliderMin = settingEntry.sliderMin;
-                settingUiProperties.sliderMax = settingEntry.sliderMax;
+                settingUiProperties.sliderMin = settingEntry.sliderMin != null ? settingEntry.sliderMin : newSettingEntry.min;
+                settingUiProperties.sliderMax = settingEntry.sliderMax != null ? settingEntry.sliderMax : newSettingEntry.max;
+              }
+              
+              // if sliderMin is not null, so is sliderMax, so only need to check one
+              if (settingUiProperties.sliderMin != null) {
+                if (settingUiProperties.sliderMin > settingUiProperties.sliderMax) {
+                  throw new Error(`settings[${i}].sliderMin (${settingUiProperties.sliderMin}) > settings[${i}].sliderMax (${settingUiProperties.sliderMax})`);
+                }
+                
+                if (newSettingEntry.min != null && settingUiProperties.sliderMin < newSettingEntry.min) {
+                  throw new Error(`settings[${i}].sliderMin (${settingUiProperties.sliderMin}) < settings[${i}].min (${newSettingEntry.min})`);
+                }
+                
+                if (newSettingEntry.max != null && settingUiProperties.sliderMin > newSettingEntry.max) {
+                  throw new Error(`settings[${i}].sliderMin (${settingUiProperties.sliderMin}) > settings[${i}].max (${newSettingEntry.max})`);
+                }
+                
+                if (newSettingEntry.min != null && settingUiProperties.sliderMax < newSettingEntry.min) {
+                  throw new Error(`settings[${i}].sliderMax (${settingUiProperties.sliderMax}) < settings[${i}].min (${newSettingEntry.min})`);
+                }
+                
+                if (newSettingEntry.max != null && settingUiProperties.sliderMax > newSettingEntry.max) {
+                  throw new Error(`settings[${i}].sliderMax (${settingUiProperties.sliderMax}) > settings[${i}].max (${newSettingEntry.max})`);
+                }
               }
               
               if (typeof settingEntry.largeSliderAndNumberBox != 'boolean') {
@@ -604,6 +631,12 @@ export class SettingsManager {
               newSettingEntry.max = null;
             }
             
+            if (newSettingEntry.min != null && newSettingEntry.max != null) {
+              if (newSettingEntry.min > newSettingEntry.max) {
+                throw new Error(`settings[${i}].min (${newSettingEntry.min}) > settings[${i}].max (${newSettingEntry.max})`);
+              }
+            }
+            
             if (typeof settingEntry.sliderPresent != 'boolean') {
               throw new Error(`settings[${i}].sliderPresent not boolean: ${typeof settingEntry.sliderPresent}`);
             }
@@ -669,9 +702,6 @@ export class SettingsManager {
                 }
               }
               
-              settingUiProperties.sliderMin = settingEntry.sliderMin != null ? settingEntry.sliderMin : null;
-              settingUiProperties.sliderMax = settingEntry.sliderMax != null ? settingEntry.sliderMax : null;
-              
               if (settingUiProperties.sliderMapping != null) {
                 if (settingEntry.sliderMin != null) {
                   throw new Error(`settings[${i}].sliderMapping set but settings[${i}].sliderMin not null`);
@@ -680,6 +710,9 @@ export class SettingsManager {
                 if (settingEntry.sliderMax != null) {
                   throw new Error(`settings[${i}].sliderMapping set but settings[${i}].sliderMax not null`);
                 }
+                
+                settingUiProperties.sliderMin = null;
+                settingUiProperties.sliderMax = null;
               } else {
                 if (settingEntry.sliderMin == null && settingEntry.min == null) {
                   throw new Error(`both settings[${i}].sliderMin and settings[${i}].min not specified and settings[${i}].sliderMapping not set`);
@@ -687,6 +720,32 @@ export class SettingsManager {
                 
                 if (settingEntry.sliderMax == null && settingEntry.max == null) {
                   throw new Error(`both settings[${i}].sliderMax and settings[${i}].max not specified and settings[${i}].sliderMapping not set`);
+                }
+                
+                settingUiProperties.sliderMin = settingEntry.sliderMin != null ? settingEntry.sliderMin : newSettingEntry.min;
+                settingUiProperties.sliderMax = settingEntry.sliderMax != null ? settingEntry.sliderMax : newSettingEntry.max;
+              }
+              
+              // if sliderMin is not null, so is sliderMax, so only need to check one
+              if (settingUiProperties.sliderMin != null) {
+                if (settingUiProperties.sliderMin > settingUiProperties.sliderMax) {
+                  throw new Error(`settings[${i}].sliderMin (${settingUiProperties.sliderMin}) > settings[${i}].sliderMax (${settingUiProperties.sliderMax})`);
+                }
+                
+                if (newSettingEntry.min != null && settingUiProperties.sliderMin < newSettingEntry.min) {
+                  throw new Error(`settings[${i}].sliderMin (${settingUiProperties.sliderMin}) < settings[${i}].min (${newSettingEntry.min})`);
+                }
+                
+                if (newSettingEntry.max != null && settingUiProperties.sliderMin > newSettingEntry.max) {
+                  throw new Error(`settings[${i}].sliderMin (${settingUiProperties.sliderMin}) > settings[${i}].max (${newSettingEntry.max})`);
+                }
+                
+                if (newSettingEntry.min != null && settingUiProperties.sliderMax < newSettingEntry.min) {
+                  throw new Error(`settings[${i}].sliderMax (${settingUiProperties.sliderMax}) < settings[${i}].min (${newSettingEntry.min})`);
+                }
+                
+                if (newSettingEntry.max != null && settingUiProperties.sliderMax > newSettingEntry.max) {
+                  throw new Error(`settings[${i}].sliderMax (${settingUiProperties.sliderMax}) > settings[${i}].max (${newSettingEntry.max})`);
                 }
               }
               
@@ -814,7 +873,7 @@ export class SettingsManager {
     let {
       settingsMap,
       settingsUiPropertiesMap,
-      uiEntries
+      uiEntries,
     } = SettingsManager.#parseSettings(opts.settings, opts.localStorageKey != null);
     
     this.#button = opts.button;

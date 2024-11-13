@@ -3,9 +3,9 @@ CanvasManager > setMode:
     mode: CanvasMode,
     if mode != CanvasMode.NONE:
       triggers: {
-        setup: <function called to set up variables> | null,
-        render: <function called every render> | null,
-        tearDown: <function called to tear down variables> | null,
+        setup: <function() -> undefined; called to set up variables> | null,
+        render: <function() -> undefined; called every render> | null,
+        tearDown: <function() -> undefined; called to tear down variables> | null,
       } | null,
       frameRate: {
         mode: FrameRateMode,
@@ -51,7 +51,7 @@ SettingsManager > constructor:
           displayName: <string> | null,
           if localStorageKey != null:
             forceNonPersistent: <boolean, if true then this property will not be saved persistently regardless>,
-          visibility: <function: true for setting to be visible, false otherwise> | null,
+          visibility: <function() -> boolean; true for setting to be visible, false otherwise> | null,
           updateValidator: <
             function to validate data update, passed in new value of data
             return value:
@@ -61,7 +61,7 @@ SettingsManager > constructor:
                 newValue: new value to set field to | can omit to revert field to old value,
               },
           > | null,
-          onUpdate: <function called on data update, passed new value of data> | null,
+          onUpdate: <function(data: <type is type of settings[i].defaultValue>) -> undefined; called on data update, passed new value of data> | null,
           
           if type == SettingType.BOOLEAN:
             defaultValue: <boolean>,
@@ -87,8 +87,8 @@ SettingsManager > constructor:
               sliderMin: <integer> | null,
               sliderMax: <integer> | null,
               sliderMapping: {
-                sliderToValue: <function, that takes integer representing slider position and outputs value of setting>,
-                valueToSlider: <function, that takes value of setting and outputs number from 0 to 1 representing slider position>,
+                sliderToValue: <function(sliderPosition: integer) -> integer (value); that takes integer from 0 to sliderIncrements representing slider position and outputs value of setting>,
+                valueToSlider: <function(value: integer) -> integer (sliderPosition); that takes value of setting and outputs integer from 0 to sliderIncrements representing slider position>,
                 sliderIncrements: <integer > 0>,
               } | null (if present, sliderMin and sliderMax cannot be defined),
               largeSliderAndNumberBox: <boolean, if true, slider and number box both are width of full line>,
@@ -104,8 +104,8 @@ SettingsManager > constructor:
               sliderMin: <number> | null,
               sliderMax: <number> | null,
               sliderMapping: {
-                sliderToValue: <function, that takes number from 0 to 1 representing slider position and outputs value of setting>,
-                valueToSlider: <function, that takes value of setting and outputs number from 0 to 1 representing slider position>,
+                sliderToValue: <function(sliderPosition: number) -> number (value); that takes number from 0 to 1 representing slider position and outputs value of setting>,
+                valueToSlider: <function(value: number) -> number (sliderPosition); that takes value of setting and outputs number from 0 to 1 representing slider position>,
                 sliderIncrements: <integer > 0> | Infinity,
               } | null (if present, sliderMin and sliderMax cannot be defined),
               largeSliderAndNumberBox: <boolean, if true, slider and number box both are width of full line>,
@@ -119,7 +119,7 @@ SettingsManager > constructor:
           text: <string>,
         if type == SettingType.BUTTON:
           text: <string>,
-          onClick: <function, called on button click>,
+          onClick: <function() -> undefined; called on button click>,
       },
       ...
     ],
@@ -148,7 +148,7 @@ SettingsManager > constructor (after parsing):
                 newValue: new value to set field to | can omit to revert field to old value,
               },
           > | null,
-          onUpdate: <function called on data update, passed new value of data> | null,
+          onUpdate: <function(data: <type is type of settings[i].defaultValue>) -> undefined; called on data update, passed new value of data> | null,
           
           if type == SettingType.BOOLEAN:
             defaultValue: <boolean>,
@@ -189,7 +189,7 @@ SettingsManager > constructor (after parsing):
         <string: name>,
         {
           displayName: <string>,
-          visibility: <function: true for setting to be visible, false otherwise> | null,
+          visibility: <function() -> boolean; true for setting to be visible, false otherwise> | null,
           if type == SettingType.ENUM:
             valueNames: Map [
               [ <string: name>, displayName: <string: displayName> ],
@@ -202,8 +202,8 @@ SettingsManager > constructor (after parsing):
               sliderMin: <integer>,
               sliderMax: <integer>,
               sliderMapping: {
-                sliderToValue: <function, that takes integer representing slider position and outputs value of setting>,
-                valueToSlider: <function, that takes value of setting and outputs number from 0 to 1 representing slider position>,
+                sliderToValue: <function(sliderPosition: integer) -> integer (value); that takes integer representing slider position and outputs value of setting>,
+                valueToSlider: <function(value: integer) -> integer (sliderPosition); that takes value of setting and outputs number from 0 to 1 representing slider position>,
                 sliderIncrements: <integer > 0>,
               } | null (if present, sliderMin and sliderMax cannot be defined),
               largeShaderAndNumberBox: <boolean, if true, large shader and number box>,
@@ -214,8 +214,8 @@ SettingsManager > constructor (after parsing):
               sliderMin: <number>,
               sliderMax: <number>,
               sliderMapping: {
-                sliderToValue: <function, that takes number from 0 to 1 representing slider position and outputs value of setting>,
-                valueToSlider: <function, that takes value of setting and outputs number from 0 to 1 representing slider position>,
+                sliderToValue: <function(sliderPosition: number) -> number (value); that takes number from 0 to 1 representing slider position and outputs value of setting>,
+                valueToSlider: <function(value: number) -> number (sliderPosition); that takes value of setting and outputs number from 0 to 1 representing slider position>,
                 sliderIncrements: <integer > 0> | Infinity,
               } | null (if present, sliderMin and sliderMax cannot be defined),
               largeShaderAndNumberBox: <boolean, if true, large shader and number box>,
@@ -232,6 +232,6 @@ SettingsManager > constructor (after parsing):
         text: <string>,
       if type == SettingType.BUTTON:
         text: <string>,
-        onClick: <function, called on button click>,
+        onClick: <function() -> undefined; called on button click>,
     ],
   }
