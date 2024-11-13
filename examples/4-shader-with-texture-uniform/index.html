@@ -57,7 +57,8 @@
         ],
         triggers: {
           setup: async () => {
-            await man.setUniformAsync('imageInput', 'texture.png');
+            await man.loadTexture('texture.png');
+            man.setUniform('imageInput', 'texture.png');
           },
           render: () => {
             man.setUniform('currentTime', Date.now() / 1000 % 1);

@@ -979,11 +979,29 @@ export class CanvasManager {
           gl.uniformMatrix4fv(loc, false, data);
           break;
         
+        case UniformType['SAMPLER2D']:
+          throw new Error('Sampler2d unimplemented');
+          gl.uniform1i(loc, data);
+          break;
+        
+        case UniformType['SAMPLER2D' + UniformType_ArraySuffix]:
+          throw new Error('Sampler2d unimplemented');
+          gl.uniform1iv(loc, data);
+          break;
+        
         default:
           throw new Error(`Uniform setting not implemented for type ${uniformEntry.type}`);
       }
     } finally {
       gl.useProgram(null);
     }
+  }
+  
+  async loadTexture({ data, alias }) {
+    // TODO
+  }
+  
+  deleteTexture(alias) {
+    // TODO
   }
 }
