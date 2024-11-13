@@ -1,5 +1,4 @@
 features:
-convert validate functions to take opts as object
 configmanager class that can handle persistence on its own, setup with a declaration of all variables and the persistence key; and can fill out a settings div
 texture uniforms
 split off gl boilerplate

@@ -12,7 +12,11 @@ export class SettingsManager {
   
   // helper functions
   
-  static #validateBool(value, updateValidator, allowValueCoercion) {
+  static #validateBool({
+    value,
+    updateValidator,
+    allowValueCoercion,
+  }) {
     if (typeof value != 'boolean') {
       throw new Error(`value type not boolean: ${typeof value}`);
     }
@@ -42,7 +46,12 @@ export class SettingsManager {
     }
   }
   
-  static #validateEnum(value, enumValuesSet, updateValidator, allowValueCoercion) {
+  static #validateEnum({
+    value,
+    enumValuesSet,
+    updateValidator,
+    allowValueCoercion,
+  }) {
     if (typeof value != 'string') {
       throw new Error(`settings[${i}].defaultValue type not string: ${typeof value}`);
     }
@@ -80,7 +89,13 @@ export class SettingsManager {
     }
   }
   
-  static #validateInt(value, min, max, updateValidator, allowValueCoercion) {
+  static #validateInt({
+    value,
+    min,
+    max,
+    updateValidator,
+    allowValueCoercion,
+  }) {
     if (!Number.isSafeInteger(value)) {
       throw new Error(`value not integer: ${value}`);
     }
@@ -126,7 +141,15 @@ export class SettingsManager {
     }
   }
   
-  static #validateNumber(value, min, max, infinityAcceptable, nanAcceptable, updateValidator, allowValueCoercion) {
+  static #validateNumber({
+    value,
+    min,
+    max,
+    infinityAcceptable,
+    nanAcceptable,
+    updateValidator,
+    allowValueCoercion,
+  }) {
     if (typeof value != 'number') {
       throw new Error(`value not number: ${typeof value}`);
     }
@@ -188,7 +211,12 @@ export class SettingsManager {
     }
   }
   
-  static #validateText(value, multiline, updateValidator, allowValueCoercion) {
+  static #validateText({
+    value,
+    multiline,
+    updateValidator,
+    allowValueCoercion,
+  }) {
     if (typeof value != 'string') {
       throw new Error(`value type not string: ${typeof value}`);
     }
@@ -301,7 +329,11 @@ export class SettingsManager {
         
         switch (settingEntry.type) {
           case SettingType.BOOLEAN:
-            SettingsManager.#validateBool(settingEntry.defaultValue, newSettingEntry.updateValidator, false);
+            SettingsManager.#validateBool({
+              value: settingEntry.defaultValue,
+              updateValidator: newSettingEntry.updateValidator,
+              allowValueCoercion: false,
+            });
             
             newSettingEntry.defaultValue = settingEntry.defaultValue;
             break;
@@ -390,7 +422,12 @@ export class SettingsManager {
               throw new Error(`settings[${i}].uiMode not in SettingEnumUIType: ${settingEntry.uiMode}`);
             }
             
-            SettingsManager.#validateEnum(settingEntry.defaultValue, valuesSet, newSettingEntry.updateValidator, false);
+            SettingsManager.#validateEnum({
+              value: settingEntry.defaultValue,
+              enumValuesSet: valuesSet,
+              updateValidator: newSettingEntry.updateValidator,
+              allowValueCoercion: false,
+            });
             
             newSettingEntry.defaultValue = settingEntry.defaultValue;
             break;
@@ -499,7 +536,13 @@ export class SettingsManager {
               settingUiProperties.sliderDraggingIsUpdate = settingEntry.sliderDraggingIsUpdate;
             }
             
-            SettingsManager.#validateInt(settingEntry.defaultValue, newSettingEntry.min, newSettingEntry.max, newSettingEntry.updateValidator, false);
+            SettingsManager.#validateInt({
+              value: settingEntry.defaultValue,
+              min: newSettingEntry.min,
+              min: newSettingEntry.max,
+              updateValidator: newSettingEntry.updateValidator,
+              allowValueCoercion: false,
+            });
             
             newSettingEntry.defaultValue = settingEntry.defaultValue;
             break;
@@ -660,7 +703,15 @@ export class SettingsManager {
               settingUiProperties.sliderDraggingIsUpdate = settingEntry.sliderDraggingIsUpdate;
             }
             
-            SettingsManager.#validateNumber(settingEntry.defaultValue, newSettingEntry.min, newSettingEntry.max, newSettingEntry.infinityAcceptable, newSettingEntry.nanAcceptable, newSettingEntry.updateValidator, false);
+            SettingsManager.#validateNumber({
+              value: settingEntry.defaultValue,
+              min: newSettingEntry.min,
+              max: newSettingEntry.max,
+              infinityAcceptable: newSettingEntry.infinityAcceptable,
+              nanAcceptable: newSettingEntry.nanAcceptable,
+              updateValidator: newSettingEntry.updateValidator,
+              allowValueCoercion: false,
+            });
             
             newSettingEntry.defaultValue = settingEntry.defaultValue;
             break;
@@ -672,7 +723,12 @@ export class SettingsManager {
             
             newSettingEntry.multiline = settingEntry.multiline;
             
-            SettingsManager.#validateText(settingEntry.defaultValue, newSettingEntry.multiline, newSettingEntry.updateValidator, false);
+            SettingsManager.#validateText({
+              value: settingEntry.defaultValue,
+              multiline: newSettingEntry.multiline,
+              updateValidator: newSettingEntry.updateValidator,
+              allowValueCoercion: false,
+            });
             
             newSettingEntry.defaultValue = settingEntry.defaultValue;
             break;
