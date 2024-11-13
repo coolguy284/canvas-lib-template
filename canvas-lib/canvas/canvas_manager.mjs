@@ -1,6 +1,7 @@
 import { removeNode } from '../misc/dom_tools.mjs';
 import { Enum } from '../misc/enum.mjs';
 import { Lock } from '../misc/lock.mjs';
+import { fetchAsText } from '../misc/network_tools.mjs';
 import { RenderLoop } from './render_loop.mjs';
 import { ShaderManager } from './shader_manager.mjs';
 
@@ -336,7 +337,7 @@ export class CanvasManager {
                 throw new Error(`opts.shaderSegments[${i}].url not string`);
               }
               
-              shaderSegmentStrings.push(await (await fetch(segment.url)).text());
+              shaderSegmentStrings.push(await fetchAsText(segment.url));
               break;
           }
         }
