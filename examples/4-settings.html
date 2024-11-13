@@ -76,9 +76,13 @@
             ctx.fillText(`Boolean: ${settingsMgr.get('Boolean')}`, 20, lineHeight * 2);
             ctx.fillText(`Enum Select: ${settingsMgr.get('Enum Select')}`, 20, lineHeight * 3);
             ctx.fillText(`Enum Radio: ${settingsMgr.get('Enum Radio')}`, 20, lineHeight * 4);
-            ctx.fillText(`Integer: ${settingsMgr.get('Integer')}`, 20, lineHeight * 5);
-            ctx.fillText(`Number: ${settingsMgr.get('Number')}`, 20, lineHeight * 6);
-            ctx.fillText(`Text: ${settingsMgr.get('Text')}`, 20, lineHeight * 7);
+            ctx.fillText(`Integer 1: ${settingsMgr.get('Integer 1')}`, 20, lineHeight * 5);
+            ctx.fillText(`Integer 2: ${settingsMgr.get('Integer 2')}`, 20, lineHeight * 6);
+            ctx.fillText(`Integer 3: ${settingsMgr.get('Integer 3')}`, 20, lineHeight * 7);
+            ctx.fillText(`Number 1: ${settingsMgr.get('Number 1')}`, 20, lineHeight * 8);
+            ctx.fillText(`Number 2: ${settingsMgr.get('Number 2')}`, 20, lineHeight * 9);
+            ctx.fillText(`Number 3: ${settingsMgr.get('Number 3')}`, 20, lineHeight * 10);
+            ctx.fillText(`Text: ${settingsMgr.get('Text')}`, 20, lineHeight * 11);
           },
         },
       });
@@ -100,8 +104,10 @@
             name: 'Framerate Mode',
             onUpdate: forceRenderFunc,
             values: [
-              { name: 'Option 1' },
-              { name: 'Option 2' },
+              { name: 'None' },
+              { name: 'Resize Only' },
+              { name: 'Frame Multiplier' },
+              { name: 'Millisecond Delay' },
             ],
             uiMode: SettingEnumUIType.SELECT,
             defaultValue: 'Option 1',
@@ -150,7 +156,42 @@
           },
           {
             type: SettingType.INTEGER,
-            name: 'Integer',
+            name: 'Integer 1',
+            onUpdate: forceRenderFunc,
+            min: 0,
+            max: 10,
+            defaultValue: 0,
+          },
+          {
+            type: SettingType.INTEGER,
+            name: 'Integer 2',
+            onUpdate: forceRenderFunc,
+            sliderPresent: true,
+            min: 0,
+            max: 10,
+            defaultValue: 0,
+          },
+          {
+            type: SettingType.INTEGER,
+            name: 'Integer 3',
+            onUpdate: forceRenderFunc,
+            sliderPresent: true,
+            largeSliderAndNumberBox: true,
+            min: 0,
+            max: 10,
+            defaultValue: 0,
+          },
+          {
+            type: SettingType.NUMBER,
+            name: 'Number 1',
+            onUpdate: forceRenderFunc,
+            min: 0,
+            max: 10,
+            defaultValue: 0,
+          },
+          {
+            type: SettingType.NUMBER,
+            name: 'Number 2',
             onUpdate: forceRenderFunc,
             sliderPresent: true,
             min: 0,
@@ -159,9 +200,10 @@
           },
           {
             type: SettingType.NUMBER,
-            name: 'Number',
+            name: 'Number 3',
             onUpdate: forceRenderFunc,
             sliderPresent: true,
+            largeSliderAndNumberBox: true,
             min: 0,
             max: 10,
             defaultValue: 0,
@@ -170,6 +212,7 @@
             type: SettingType.TEXT,
             name: 'Text',
             onUpdate: forceRenderFunc,
+            multiline: true,
             defaultValue: '',
           },
         ],

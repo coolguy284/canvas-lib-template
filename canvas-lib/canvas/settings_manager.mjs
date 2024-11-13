@@ -749,6 +749,18 @@ export class SettingsManager {
                 }
               }
               
+              if (typeof settingEntry.sliderStepSize != 'number') {
+                throw new Error(`settings[${i}].sliderStepSize not number: ${typeof settingEntry.sliderStepSize}`);
+              }
+              
+              if (Number.isNaN(settingEntry.sliderStepSize)) {
+                throw new Error(`settings[${i}].sliderStepSize is NaN`);
+              }
+              
+              if (settingEntry.sliderStepSize < 0 || settingEntry.sliderStepSize == Infinity) {
+                throw new Error(`settings[${i}].sliderStepSize out of range 0 <= x < Infinity: ${settingEntry.sliderStepSize}`);
+              }
+              
               if (typeof settingEntry.largeSliderAndNumberBox != 'boolean') {
                 throw new Error(`settings[${i}].largeSliderAndNumberBox not boolean: ${settingEntry.largeSliderAndNumberBox}`);
               }

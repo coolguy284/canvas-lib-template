@@ -9,13 +9,15 @@ texture uniforms
 split off gl boilerplate
 stylesheets for full screen template including provisions for settings button / div using classes
 add subpixel scale to settings test
-move fps and subpixel scale from settings test to separate function
+move fps and subpixel scale from settings example to separate function
 jsdoc everything in canvas-lib
 clear all TODOs in codebase
 
 low prio:
 save canvas as png, or render a larger version as png
+  helper function to add this to settings as well
 fullscreen option
+  helper function to add this to settings as well
 support for more advanced webgl mode that can pass shaders into texture variables and render to framebuffers
 camera scrolling / moving lib that is a pure class that can take in functions for x and y scaling factor based on current x and y
 

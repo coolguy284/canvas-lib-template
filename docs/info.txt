@@ -114,7 +114,15 @@ SettingsManager > constructor:
               sliderDraggingIsUpdate: <boolean, if true, dragging slider will call onUpdate, if false, onUpdate will only be called once slider is let go>,
             defaultValue: <number>,
           if type == SettingType.TEXT:
-            multiline: <boolean, if true, multiline input field will be used; if false, newline characters are not allowed>,
+            multiline: <
+              boolean
+              if true:
+                multiline input field will be used
+                WARNING: The carriage return character ('\r') is silently converted to a newline ('\n') when setting the .value property of the underlying textarea. This is an underlying feature of the behavior of a textarea and is largely unavoidable. Calling SettingsManager.set(settingName, <string>) on a string with carriage returns will work and can even be read back using SettingsManager.get(), however, any user-inputted update to the textarea will silently convert the carriage returns to newlines as they were converted to newlines implicitly in the textarea anyway.
+              if false:
+                single line input field will be used
+                newline characters are not allowed in value
+            >,
             defaultValue: <string>,
         
         if type == SettingType.{ HEADER, INFO_TEXT }:
@@ -180,7 +188,15 @@ SettingsManager > constructor (after parsing):
             defaultValue: <number>,
             value: <number> (TODO),
           if type == SettingType.TEXT:
-            multiline: <boolean, if true, multiline input field will be used; if false, newline characters are not allowed>,
+            multiline: <
+              boolean
+              if true:
+                multiline input field will be used
+                WARNING: The carriage return character ('\r') is silently converted to a newline ('\n') when setting the .value property of the underlying textarea. This is an underlying feature of the behavior of a textarea and is largely unavoidable. Calling SettingsManager.set(settingName, <string>) on a string with carriage returns will work and can even be read back using SettingsManager.get(), however, any user-inputted update to the textarea will silently convert the carriage returns to newlines as they were converted to newlines implicitly in the textarea anyway.
+              if false:
+                single line input field will be used
+                newline characters are not allowed in value
+            >,
             defaultValue: <string>,
             value: <string> (TODO),
         },
@@ -209,7 +225,7 @@ SettingsManager > constructor (after parsing):
                 valueToSlider: <function(value: integer) -> integer (sliderPosition); that takes value of setting and outputs number from 0 to 1 representing slider position>,
                 sliderIncrements: <integer > 0>,
               } | null (if present, sliderMin and sliderMax cannot be defined),
-              largeShaderAndNumberBox: <boolean, if true, large shader and number box>,
+              largeSliderAndNumberBox: <boolean, if true, slider and number box both are width of full line>,
               sliderDraggingIsUpdate: <boolean, if true, dragging slider will call onUpdate, if false, onUpdate will only be called once slider is let go>,
           if type == SettingType.NUMBER:
             sliderPresent: <boolean>,
@@ -222,7 +238,7 @@ SettingsManager > constructor (after parsing):
                 valueToSlider: <function(value: number) -> number (sliderPosition); that takes value of setting and outputs number from 0 to 1 representing slider position>,
                 sliderIncrements: <integer > 0> | Infinity,
               } | null (if present, sliderMin and sliderMax cannot be defined),
-              largeShaderAndNumberBox: <boolean, if true, large shader and number box>,
+              largeSliderAndNumberBox: <boolean, if true, slider and number box both are width of full line>,
               sliderDraggingIsUpdate: <boolean, if true, dragging slider will call onUpdate, if false, onUpdate will only be called once slider is let go>,
         },
       ],
