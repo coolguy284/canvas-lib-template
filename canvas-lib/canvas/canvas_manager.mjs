@@ -296,6 +296,8 @@ export class CanvasManager {
       
       if (opts.uniforms != null) {
         if (Array.isArray(opts.uniforms)) {
+          let uniformNames = new Set();
+          
           for (let i = 0; i < opts.uniforms.length; i++) {
             let uniformEntry = opts.uniforms[i];
             
@@ -307,7 +309,39 @@ export class CanvasManager {
               throw new Error(`opts.uniforms[${i}] unrecognized type: ${typeof uniformEntry}`);
             }
             
+            if (uniformNames.has(uniformEntry.name)) {
+              throw new Error(`opts.uniforms[${i}].name taken: ${uniformEntry.name}`);
+            }
+            
             uniforms.push(uniformEntry);
+            uniformNames.add(uniformEntry.name);
+            
+            if (uniformEntry.type == UniformType['SAMPLER2D']) {
+              let resolutionUniformEntry = {
+                name: `${uniformEntry.name}_resolution`,
+                type: UniformType['VEC2'],
+              };
+              
+              if (uniformNames.has(resolutionUniformEntry.name)) {
+                throw new Error(`(opts.uniforms[${i}].name + '_resolution') taken: ${resolutionUniformEntry.name}`);
+              }
+              
+              uniforms.push(resolutionUniformEntry);
+              uniformNames.add(resolutionUniformEntry.name);
+            } else if (uniformEntry.type == UniformType['SAMPLER2D' + UniformType_ArraySuffix]) {
+              let resolutionUniformEntry = {
+                name: `${uniformEntry.name}_resolution`,
+                type: UniformType['VEC2' + UniformType_ArraySuffix],
+                length: uniformEntry.length,
+              };
+              
+              if (uniformNames.has(resolutionUniformEntry.name)) {
+                throw new Error(`(opts.uniforms[${i}].name + '_resolution') taken: ${resolutionUniformEntry.name}`);
+              }
+              
+              uniforms.push(resolutionUniformEntry);
+              uniformNames.add(resolutionUniformEntry.name);
+            }
           }
         } else {
           throw new Error('opts.uniforms must be Array or null');
@@ -998,17 +1032,30 @@ export class CanvasManager {
           break;
         
         case UniformType['SAMPLER2D']: {
-          let texID = this.#fullCanvasShaderData.textureManager.getTextureID(value);
+          let texID;
+          
+          try {
+            texID = this.#fullCanvasShaderData.textureManager.getTextureID(value);
+          } catch (err) {
+            throw new Error(`value[${i}] invalid, error resulted: ${err.toString()}`);
+          }
+          
+          let { width, height } = this.#fullCanvasShaderData.textureManager.getTextureDimensions(value);
+          
+          let resolutionLoc = this.#fullCanvasShaderData.uniforms.get(`${uniformName}_resolution`).location;
+          
           gl.uniform1i(loc, texID);
+          gl.uniform2f(resolutionLoc, width, height);
           break;
         }
         
-        case UniformType['SAMPLER2D' + UniformType_ArraySuffix]:
+        case UniformType['SAMPLER2D' + UniformType_ArraySuffix]: {
           if (!Array.isArray(value)) {
             throw new Error(`Sampler2d[] (array) enum must be set with array of texture names`);
           }
           
-          let parsedData = [];
+          let texIDs = [];
+          let widthAndHeight = [];
           
           for (let i = 0; i < value.length; i++) {
             let textureAlias = value[i];
@@ -1021,11 +1068,18 @@ export class CanvasManager {
               throw new Error(`value[${i}] invalid, error resulted: ${err.toString()}`);
             }
             
-            parsedData.push(texID);
+            let { width, height } = this.#fullCanvasShaderData.textureManager.getTextureDimensions(value);
+            
+            texIDs.push(texID);
+            widthAndHeight.push({ width, height });
           }
           
-          gl.uniform1iv(loc, parsedData);
+          let resolutionLoc = this.#fullCanvasShaderData.uniforms.get(`${uniformName}_resolution`).location;
+          
+          gl.uniform1iv(loc, texIDs);
+          gl.uniform1fv(resolutionLoc, widthAndHeight.map(({ width, height}) => [width, height]).flat());
           break;
+        }
         
         default:
           throw new Error(`Uniform setting not implemented for type ${uniformEntry.type}`);

@@ -1,3 +1,14 @@
+CanvasManager notes:
+  for full screen shader mode, some special variables are present in the fragment shader:
+    vec2 gl_FragCoord:
+      intrinsic to OpenGL, contains the x and y coordinate of the current pixel as floats, in pixels, not -1 to 1 normalized.
+    vec2 u_resolution:
+      set by CanvasManager, contains the width and height of the canvas as floats
+    vec2 <sampler2d name>_resolution:
+      set by CanvasManager, contains the width and height of the image referred to by the sampler2d as floats
+    vec2 <sampler2d[] name>_resolution[]:
+      set by CanvasManager, contains the width and height of each image in the sampler2d array as floats
+
 CanvasManager > setMode:
   {
     mode: CanvasMode,

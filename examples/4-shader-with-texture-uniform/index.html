@@ -53,7 +53,7 @@
                 if (gl_FragCoord.y < 50.0) {
                   outColor = vec4(1.0, gl_FragCoord.x / iResolution.x, gl_FragCoord.x / iResolution.x, 1.0);
                 } else {
-                  outColor = texture(imageInput, gl_FragCoord.xy / 100.0 * vec2(1.0, -1.0) + vec2(sin(currentTime + gl_FragCoord.x / 100.0) * 1.0, 0.0) - vec2(1.5, -2.0));
+                  outColor = texture(imageInput, gl_FragCoord.xy / imageInput_resolution * vec2(1.0, -1.0) + vec2(sin(currentTime + gl_FragCoord.x / 100.0) * 1.0, 0.0) - vec2(1.5, -2.0));
                 }
               }
             `,
