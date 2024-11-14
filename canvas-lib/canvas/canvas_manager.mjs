@@ -8,6 +8,8 @@ import { TextureManager } from './texture_manager.mjs';
 
 // https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Tutorial/Adding_2D_content_to_a_WebGL_context
 
+const vertexPositionShaderVar = 'a_vertexPosition';
+
 const ALL_SHADER_PREFIX = `
   #version 300 es
   precision highp float;
@@ -15,10 +17,10 @@ const ALL_SHADER_PREFIX = `
 
 const VERTEX_SHADER_XY_ONLY_TEXT =
   ALL_SHADER_PREFIX + `
-  in vec4 a_vertexPosition;
+  in vec4 ${vertexPositionShaderVar};
   
   void main() {
-    gl_Position = vec4(a_vertexPosition.xy, 0.0, 1.0);
+    gl_Position = vec4(${vertexPositionShaderVar}.xy, 0.0, 1.0);
   }
 `.trim();
 
@@ -446,7 +448,7 @@ export class CanvasManager {
           // get variable positions
           
           let autoAttribLocations = this.#fullCanvasShaderData.autoAttribLocations = {
-            vertexPosition: gl.getAttribLocation(shaderProgram, 'a_vertexPosition'),
+            vertexPosition: gl.getAttribLocation(shaderProgram, vertexPositionShaderVar),
           };
           
           this.#fullCanvasShaderData.autoUniformLocations = {
