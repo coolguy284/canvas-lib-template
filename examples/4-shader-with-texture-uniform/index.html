@@ -50,7 +50,11 @@
               out vec4 outColor;
               
               void main() {
-                outColor = texture(imageInput, gl_FragCoord.xy + vec2(sin(currentTime + gl_FragCoord.x / 100.0), 0.0) - vec2(100.0, 100.0));
+                if (gl_FragCoord.y < 50.0) {
+                  outColor = vec4(1.0, gl_FragCoord.x / iResolution.x, gl_FragCoord.x / iResolution.x, 1.0);
+                } else {
+                  outColor = texture(imageInput, gl_FragCoord.xy + vec2(sin(currentTime + gl_FragCoord.x / 100.0), 0.0) - vec2(100.0, 100.0));
+                }
               }
             `,
           },

@@ -926,99 +926,99 @@ export class CanvasManager {
         // matrices
         
         case ['MAT22']:
-          gl.uniformMatrix2fv(loc, false, data);
+          gl.uniformMatrix2fv(loc, false, value);
           break;
         
         case ['MAT23']:
-          gl.uniformMatrix2x3fv(loc, false, data);
+          gl.uniformMatrix2x3fv(loc, false, value);
           break;
         
         case ['MAT24']:
-          gl.uniformMatrix2x4fv(loc, false, data);
+          gl.uniformMatrix2x4fv(loc, false, value);
           break;
         
         case ['MAT32']:
-          gl.uniformMatrix3x2fv(loc, false, data);
+          gl.uniformMatrix3x2fv(loc, false, value);
           break;
         
         case ['MAT33']:
-          gl.uniformMatrix3fv(loc, false, data);
+          gl.uniformMatrix3fv(loc, false, value);
           break;
         
         case ['MAT34']:
-          gl.uniformMatrix3x4fv(loc, false, data);
+          gl.uniformMatrix3x4fv(loc, false, value);
           break;
         
         case ['MAT42']:
-          gl.uniformMatrix4x2fv(loc, false, data);
+          gl.uniformMatrix4x2fv(loc, false, value);
           break;
         
         case ['MAT43']:
-          gl.uniformMatrix4x3fv(loc, false, data);
+          gl.uniformMatrix4x3fv(loc, false, value);
           break;
         
         case ['MAT44']:
-          gl.uniformMatrix4fv(loc, false, data);
+          gl.uniformMatrix4fv(loc, false, value);
           break;
         
         case ['MAT22' + UniformType_ArraySuffix]:
-          gl.uniformMatrix2fv(loc, false, data);
+          gl.uniformMatrix2fv(loc, false, value);
           break;
         
         case ['MAT23' + UniformType_ArraySuffix]:
-          gl.uniformMatrix2x3fv(loc, false, data);
+          gl.uniformMatrix2x3fv(loc, false, value);
           break;
         
         case ['MAT24' + UniformType_ArraySuffix]:
-          gl.uniformMatrix2x4fv(loc, false, data);
+          gl.uniformMatrix2x4fv(loc, false, value);
           break;
         
         case ['MAT32' + UniformType_ArraySuffix]:
-          gl.uniformMatrix3x2fv(loc, false, data);
+          gl.uniformMatrix3x2fv(loc, false, value);
           break;
         
         case ['MAT33' + UniformType_ArraySuffix]:
-          gl.uniformMatrix3fv(loc, false, data);
+          gl.uniformMatrix3fv(loc, false, value);
           break;
         
         case ['MAT34' + UniformType_ArraySuffix]:
-          gl.uniformMatrix3x4fv(loc, false, data);
+          gl.uniformMatrix3x4fv(loc, false, value);
           break;
         
         case ['MAT42' + UniformType_ArraySuffix]:
-          gl.uniformMatrix4x2fv(loc, false, data);
+          gl.uniformMatrix4x2fv(loc, false, value);
           break;
         
         case ['MAT43' + UniformType_ArraySuffix]:
-          gl.uniformMatrix4x3fv(loc, false, data);
+          gl.uniformMatrix4x3fv(loc, false, value);
           break;
         
         case ['MAT44' + UniformType_ArraySuffix]:
-          gl.uniformMatrix4fv(loc, false, data);
+          gl.uniformMatrix4fv(loc, false, value);
           break;
         
         case UniformType['SAMPLER2D']: {
-          let texID = this.#fullCanvasShaderData.textureManager.getIDOfTexture(data);
+          let texID = this.#fullCanvasShaderData.textureManager.getIDOfTexture(value);
           gl.uniform1i(loc, texID);
           break;
         }
         
         case UniformType['SAMPLER2D' + UniformType_ArraySuffix]:
-          if (!Array.isArray(data)) {
+          if (!Array.isArray(value)) {
             throw new Error(`Sampler2d[] (array) enum must be set with array of texture names`);
           }
           
           let parsedData = [];
           
-          for (let i = 0; i < data.length; i++) {
-            let textureAlias = data[i];
+          for (let i = 0; i < value.length; i++) {
+            let textureAlias = value[i];
             
             let texID;
             
             try {
               texID = this.#fullCanvasShaderData.textureManager.getIDOfTexture(textureAlias);
             } catch (err) {
-              throw new Error(`data[${i}] invalid, error resulted: ${err.toString()}`);
+              throw new Error(`value[${i}] invalid, error resulted: ${err.toString()}`);
             }
             
             parsedData.push(texID);
@@ -1051,7 +1051,13 @@ export class CanvasManager {
     return this.#fullCanvasShaderData.textureManager.hasTexture(alias);
   }
   
-  async loadTexture({ data, alias }) {
+  async loadTexture(opts) {
+    if (typeof opts == 'string') {
+      opts = { data: opts };
+    }
+    
+    let { data, alias } = opts;
+    
     if (this.getCanvasMode() != CanvasMode.WEBGL_FULL_CANVAS_SHADER) {
       throw new Error('texture functions only available on full canvas shader mode');
     }

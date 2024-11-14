@@ -8,13 +8,13 @@ export class TextureManager {
   // helper functions
   
   #nextUnusedTextureUnitID() {
-    for (let i = 0; i < gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS; i++) {
+    for (let i = 0; i < this.#gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS; i++) {
       if (!this.#texturesByID.has(i)) {
         return i;
       }
     }
     
-    throw new Error(`all ${gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS} texture units bound`);
+    throw new Error(`all ${this.#gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS} texture units bound`);
   }
   
   // public functions
@@ -96,7 +96,7 @@ export class TextureManager {
     textureEntry.bindPointID = this.#nextUnusedTextureUnitID();
       
     this.#gl.activeTexture(this.#gl.TEXTURE0 + textureEntry.bindPointID);
-    this.#gl.bindTexture(this.#gl.TEXTURE_2D, texture);
+    this.#gl.bindTexture(this.#gl.TEXTURE_2D, textureEntry.texture);
     
     const texTarget = this.#gl.TEXTURE_2D;
     const texLevel = 0; // mipmap level
@@ -116,7 +116,7 @@ export class TextureManager {
     
     Object.freeze(textureEntry);
     
-    this.#texturesByAlias.set(alias, textureEntry);
+    this.#texturesByAlias.set(parsedAlias, textureEntry);
     this.#texturesByID.set(textureEntry.bindPointID, textureEntry);
   }
   
