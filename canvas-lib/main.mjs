@@ -9,9 +9,10 @@ export {
 
 // convenience exports
 export { FrameRateMode, SettingEnumUIType, SettingType, SettingType_TrueSettings } from './canvas/enums.mjs';
+export { RenderLoop } from './canvas/render_loop.mjs';
 export { SettingsManager } from './canvas/settings_manager.mjs';
 export { ShaderManager } from './canvas/shader_manager.mjs';
-export { RenderLoop } from './canvas/render_loop.mjs';
+export { TextureManager } from './canvas/texture_manager.mjs';
 export { removeAllNodes /* TODO: Currently unused */, removeNode } from './misc/dom_tools.mjs';
 export { Enum, isEnum } from './misc/enum.mjs';
 export { Lock } from './misc/lock.mjs';

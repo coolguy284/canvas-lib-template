@@ -20,10 +20,14 @@ export class TextureManager {
   // public functions
   
   constructor(gl) {
+    if (!(this.#gl instanceof WebGL2RenderingContext)) {
+      throw new Error('gl must be a WebGL2 rendering context');
+    }
+    
     this.#gl = gl;
   }
   
-  currentTextures() {
+  currentTextureNames() {
     return Array.from(this.#texturesByAlias.keys());
   }
   
@@ -35,10 +39,7 @@ export class TextureManager {
     return this.#texturesByAlias.has(alias);
   }
   
-  async loadTexture({
-    data,
-    alias,
-  }) {
+  async loadTexture({ data, alias }) {
     let parsedAlias;
     let imageSource;
     

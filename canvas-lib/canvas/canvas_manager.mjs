@@ -4,6 +4,7 @@ import { Lock } from '../misc/lock.mjs';
 import { fetchAsText } from '../misc/network_tools.mjs';
 import { RenderLoop } from './render_loop.mjs';
 import { ShaderManager } from './shader_manager.mjs';
+import { TextureManager } from './texture_manager.mjs';
 
 // https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Tutorial/Adding_2D_content_to_a_WebGL_context
 
@@ -380,6 +381,8 @@ export class CanvasManager {
           
           this.#fullCanvasShaderData = {};
           
+          this.#fullCanvasShaderData.textureManager = new TextureManager(this.#canvasContext);
+          
           let shaderManager = this.#fullCanvasShaderData.shaderManager = new ShaderManager(gl);
           
           let vertexShader = this.#fullCanvasShaderData.vertexShader = shaderManager.loadShaderFromString(gl.VERTEX_SHADER, VERTEX_SHADER_XY_ONLY_TEXT);
@@ -517,6 +520,9 @@ export class CanvasManager {
         this.#fullCanvasShaderData.fragmentShader = null;
         this.#fullCanvasShaderData.shaderManager = null;
         this.#fullCanvasShaderData.uniforms = null;
+        
+        this.#fullCanvasShaderData.textureManager.deleteAllTextures();
+        this.#fullCanvasShaderData.textureManager = null;
         
         this.#fullCanvasShaderData = null;
         break;
@@ -979,14 +985,34 @@ export class CanvasManager {
           gl.uniformMatrix4fv(loc, false, data);
           break;
         
-        case UniformType['SAMPLER2D']:
-          throw new Error('Sampler2d unimplemented');
-          gl.uniform1i(loc, data);
+        case UniformType['SAMPLER2D']: {
+          let texID = this.#fullCanvasShaderData.textureManager.getIDOfTexture(data);
+          gl.uniform1i(loc, texID);
           break;
+        }
         
         case UniformType['SAMPLER2D' + UniformType_ArraySuffix]:
-          throw new Error('Sampler2d unimplemented');
-          gl.uniform1iv(loc, data);
+          if (!Array.isArray(data)) {
+            throw new Error(`Sampler2d[] (array) enum must be set with array of texture names`);
+          }
+          
+          let parsedData = [];
+          
+          for (let i = 0; i < data.length; i++) {
+            let textureAlias = data[i];
+            
+            let texID;
+            
+            try {
+              texID = this.#fullCanvasShaderData.textureManager.getIDOfTexture(textureAlias);
+            } catch (err) {
+              throw new Error(`data[${i}] invalid, error resulted: ${err.toString()}`);
+            }
+            
+            parsedData.push(texID);
+          }
+          
+          gl.uniform1iv(loc, parsedData);
           break;
         
         default:
@@ -997,11 +1023,51 @@ export class CanvasManager {
     }
   }
   
+  currentTextureNames() {
+    if (this.getCanvasMode() != CanvasMode.WEBGL_FULL_CANVAS_SHADER) {
+      throw new Error('texture functions only available on full canvas shader mode');
+    }
+    
+    return this.#fullCanvasShaderData.textureManager.currentTextureNames();
+  }
+  
+  hasTexture(alias) {
+    if (this.getCanvasMode() != CanvasMode.WEBGL_FULL_CANVAS_SHADER) {
+      throw new Error('texture functions only available on full canvas shader mode');
+    }
+    
+    return this.#fullCanvasShaderData.textureManager.hasTexture(alias);
+  }
+  
   async loadTexture({ data, alias }) {
-    // TODO
+    if (this.getCanvasMode() != CanvasMode.WEBGL_FULL_CANVAS_SHADER) {
+      throw new Error('texture functions only available on full canvas shader mode');
+    }
+    
+    await this.#fullCanvasShaderData.textureManager.loadTexture({ data, alias });
   }
   
   deleteTexture(alias) {
-    // TODO
+    if (this.getCanvasMode() != CanvasMode.WEBGL_FULL_CANVAS_SHADER) {
+      throw new Error('texture functions only available on full canvas shader mode');
+    }
+    
+    this.#fullCanvasShaderData.textureManager.deleteTexture(alias);
+  }
+  
+  deleteAllTextures() {
+    if (this.getCanvasMode() != CanvasMode.WEBGL_FULL_CANVAS_SHADER) {
+      throw new Error('texture functions only available on full canvas shader mode');
+    }
+    
+    this.#fullCanvasShaderData.textureManager.deleteAllTextures();
+  }
+  
+  getIDOfTexture(alias) {
+    if (this.getCanvasMode() != CanvasMode.WEBGL_FULL_CANVAS_SHADER) {
+      throw new Error('texture functions only available on full canvas shader mode');
+    }
+    
+    return this.#fullCanvasShaderData.textureManager.getIDOfTexture(alias);
   }
 }
