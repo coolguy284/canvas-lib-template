@@ -15,10 +15,10 @@ const ALL_SHADER_PREFIX = `
 
 const VERTEX_SHADER_XY_ONLY_TEXT =
   ALL_SHADER_PREFIX + `
-  in vec4 aVertexPosition;
+  in vec4 a_vertexPosition;
   
   void main() {
-    gl_Position = vec4(aVertexPosition.xy, 0.0, 1.0);
+    gl_Position = vec4(a_vertexPosition.xy, 0.0, 1.0);
   }
 `.trim();
 
@@ -446,7 +446,7 @@ export class CanvasManager {
           // get variable positions
           
           let autoAttribLocations = this.#fullCanvasShaderData.autoAttribLocations = {
-            vertexPosition: gl.getAttribLocation(shaderProgram, 'aVertexPosition'),
+            vertexPosition: gl.getAttribLocation(shaderProgram, 'a_vertexPosition'),
           };
           
           this.#fullCanvasShaderData.autoUniformLocations = {
