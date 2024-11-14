@@ -1,4 +1,4 @@
-let activeEnums = new WeakRef();
+let activeEnums = new WeakSet();
 
 export function Enum(values) {
   if (!Array.isArray(values)) {
