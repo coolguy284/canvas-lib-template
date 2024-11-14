@@ -24,7 +24,7 @@ const VERTEX_SHADER_XY_ONLY_TEXT =
 
 const FRAGMENT_SHADER_PREFIX =
   ALL_SHADER_PREFIX + `
-  uniform vec2 iResolution;
+  uniform vec2 u_resolution;
 `;
 
 export const CanvasMode = Enum([
@@ -236,7 +236,7 @@ export class CanvasManager {
         // set resolution in uniform in program
           
         this.#canvasContext.useProgram(this.#fullCanvasShaderData.shaderProgram);
-        this.#canvasContext.uniform2f(this.#fullCanvasShaderData.autoUniformLocations.iResolution, this.#canvasWidth, this.#canvasHeight);
+        this.#canvasContext.uniform2f(this.#fullCanvasShaderData.autoUniformLocations.u_resolution, this.#canvasWidth, this.#canvasHeight);
         this.#canvasContext.useProgram(null);
         break;
       
@@ -450,7 +450,7 @@ export class CanvasManager {
           };
           
           this.#fullCanvasShaderData.autoUniformLocations = {
-            iResolution: gl.getUniformLocation(shaderProgram, 'iResolution'),
+            u_resolution: gl.getUniformLocation(shaderProgram, 'u_resolution'),
           };
           
           this.#fullCanvasShaderData.uniforms = new Map(uniforms.map(uniformEntry => {

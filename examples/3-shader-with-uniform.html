@@ -51,7 +51,7 @@
               void main() {
                 outColor = vec4(
                   mod(gl_FragCoord.x / 100.0, 1.0),
-                  mod(gl_FragCoord.y / iResolution.y, 1.0),
+                  mod(gl_FragCoord.y / u_resolution.y, 1.0),
                   currentTime,
                   1.0
                 );
