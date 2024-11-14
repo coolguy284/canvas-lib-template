@@ -2,15 +2,19 @@ export class TextureManager {
   // class variables
   
   #gl;
-  #textures = new Map();
-  #usedTextureUnits = [];
+  #texturesByAlias = new Map();
+  #texturesByID = new Map();
   
   // helper functions
   
   #nextUnusedTextureUnitID() {
-    this.#usedTextureUnits
+    for (let i = 0; i < gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS; i++) {
+      if (!this.#texturesByID.has(i)) {
+        return i;
+      }
+    }
     
-    // TODO
+    throw new Error(`all ${gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS} texture units bound`);
   }
   
   // public functions
@@ -19,10 +23,21 @@ export class TextureManager {
     this.#gl = gl;
   }
   
+  currentTextures() {
+    return Array.from(this.#texturesByAlias.keys());
+  }
+  
+  hasTexture(alias) {
+    if (typeof alias != 'string') {
+      throw new Error(`alias not string: ${typeof alias}`);
+    }
+    
+    return this.#texturesByAlias.has(alias);
+  }
+  
   async loadTexture({
     data,
     alias,
-    bindToTextureUnit,
   }) {
     let parsedAlias;
     let imageSource;
@@ -34,7 +49,7 @@ export class TextureManager {
       
       parsedAlias = alias != null ? alias : data;
     
-      if (this.#textures.has(parsedAlias)) {
+      if (this.#texturesByAlias.has(parsedAlias)) {
         throw new Error(`texture alias already exists: ${parsedAlias}`);
       }
       
@@ -55,26 +70,32 @@ export class TextureManager {
       
       parsedAlias = alias;
     
-      if (this.#textures.has(parsedAlias)) {
+      if (this.#texturesByAlias.has(parsedAlias)) {
         throw new Error(`texture alias already exists: ${parsedAlias}`);
       }
       
       imageSource = data;
     }
     
-    if (typeof bindToTextureUnit != 'boolean') {
-      throw new Error(`bindToTextureUnit not boolean: ${typeof bindToTextureUnit}`);
-    }
-    
     let textureEntry = {
       texture: null,
+      bindPointID: null,
       width: null,
       height: null,
     };
     
+    // all valid classes for textureEntry have a width and height property
+    textureEntry.width = imageSource.width;
+    textureEntry.height = imageSource.height;
+    
     // https://webgl2fundamentals.org/webgl/lessons/webgl-image-processing.html
     
     textureEntry.texture = this.#gl.createTexture();
+    
+    textureEntry.bindPointID = this.#nextUnusedTextureUnitID();
+      
+    this.#gl.activeTexture(this.#gl.TEXTURE0 + textureEntry.bindPointID);
+    this.#gl.bindTexture(this.#gl.TEXTURE_2D, texture);
     
     const texTarget = this.#gl.TEXTURE_2D;
     const texLevel = 0; // mipmap level
@@ -87,26 +108,54 @@ export class TextureManager {
       texInternalFormat,
       texFormat,
       texType,
-      image
+      imageSource
     );
     
-    if (bindToTextureUnit) {
-      let nextUnitID = this.#nextUnusedTextureUnitID();
-      
-      this.#gl.activeTexture(this.#gl.TEXTURE0 + nextUnitID);
-      this.#gl.bindTexture(this.#gl.TEXTURE_2D, texture);
-    }
+    this.#gl.activeTexture(this.#gl.TEXTURE0);
     
     Object.freeze(textureEntry);
     
-    this.#textures.set(alias, textureEntry);
+    this.#texturesByAlias.set(alias, textureEntry);
+    this.#texturesByID.set(textureEntry.bindPointID, textureEntry);
   }
   
   deleteTexture(alias) {
+    if (typeof alias != 'string') {
+      throw new Error(`alias not string: ${typeof alias}`);
+    }
     
+    if (!this.#texturesByAlias.has(alias)) {
+      throw new Error(`no texture with given alias: ${alias}`);
+    }
+    
+    let textureEntry = this.#texturesByAlias.get(alias);
+    
+    this.#gl.activeTexture(this.#gl.TEXTURE0 + textureEntry.bindPointID);
+    this.#gl.bindTexture(this.#gl.TEXTURE_2D, null);
+    
+    this.#gl.activeTexture(this.#gl.TEXTURE0);
+    
+    this.#gl.deleteTexture(textureEntry.texture);
+    
+    this.#texturesByAlias.delete(alias);
+    this.#texturesByID.delete(textureEntry.bindPointID);
   }
   
   deleteAllTextures() {
+    for (let alias of this.#texturesByAlias.keys()) {
+      this.deleteTexture(alias);
+    }
+  }
+  
+  getIDOfTexture(alias) {
+    if (typeof alias != 'string') {
+      throw new Error(`alias not string: ${typeof alias}`);
+    }
     
+    if (!this.#texturesByAlias.has(alias)) {
+      throw new Error(`no texture with given alias: ${alias}`);
+    }
+    
+    return this.#texturesByAlias.get(alias).bindPointID;
   }
 }
