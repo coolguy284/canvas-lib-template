@@ -480,7 +480,13 @@ export class CanvasManager {
     
     if (this.#triggers.setup != null) {
       try {
-        await this.#triggers.setup();
+        // temporarily release lock during call to setup
+        this.#editLock.release();
+        try {
+          await this.#triggers.setup();
+        } finally {
+          this.#editLock.acquire();
+        }
       } catch (err) {
         console.error(err);
         this.gracefulShutdown();
@@ -492,7 +498,13 @@ export class CanvasManager {
   async #destroyCanvas() {
     if (this.#triggers.tearDown != null) {
       try {
-        await this.#triggers.tearDown();
+        // temporarily release lock during call to tearDown
+        this.#editLock.release();
+        try {
+          await this.#triggers.tearDown();
+        } finally {
+          this.#editLock.acquire();
+        }
       } catch (err) {
         console.error(err);
       }
