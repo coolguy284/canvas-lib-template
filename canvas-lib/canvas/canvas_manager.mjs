@@ -8,7 +8,8 @@ import { TextureManager } from './texture_manager.mjs';
 
 // https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Tutorial/Adding_2D_content_to_a_WebGL_context
 
-const vertexPositionShaderVar = 'a_vertexPosition';
+const vertexShaderPositionVar = 'a_vertexPosition';
+export const fragmentShaderResolutionVar = 'u_resolution';
 
 const ALL_SHADER_PREFIX = `
   #version 300 es
@@ -17,16 +18,16 @@ const ALL_SHADER_PREFIX = `
 
 const VERTEX_SHADER_XY_ONLY_TEXT =
   ALL_SHADER_PREFIX + `
-  in vec4 ${vertexPositionShaderVar};
+  in vec4 ${vertexShaderPositionVar};
   
   void main() {
-    gl_Position = vec4(${vertexPositionShaderVar}.xy, 0.0, 1.0);
+    gl_Position = vec4(${vertexShaderPositionVar}.xy, 0.0, 1.0);
   }
 `.trim();
 
 const FRAGMENT_SHADER_PREFIX =
   ALL_SHADER_PREFIX + `
-  uniform vec2 u_resolution;
+  uniform vec2 ${fragmentShaderResolutionVar};
 `;
 
 export const CanvasMode = Enum([
@@ -448,11 +449,11 @@ export class CanvasManager {
           // get variable positions
           
           let autoAttribLocations = this.#fullCanvasShaderData.autoAttribLocations = {
-            vertexPosition: gl.getAttribLocation(shaderProgram, vertexPositionShaderVar),
+            vertexPosition: gl.getAttribLocation(shaderProgram, vertexShaderPositionVar),
           };
           
           this.#fullCanvasShaderData.autoUniformLocations = {
-            resolution: gl.getUniformLocation(shaderProgram, 'u_resolution'),
+            resolution: gl.getUniformLocation(shaderProgram, fragmentShaderResolutionVar),
           };
           
           this.#fullCanvasShaderData.uniforms = new Map(uniforms.map(uniformEntry => {
