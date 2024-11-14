@@ -381,7 +381,7 @@ export class CanvasManager {
           
           this.#fullCanvasShaderData = {};
           
-          this.#fullCanvasShaderData.textureManager = new TextureManager(this.#canvasContext);
+          this.#fullCanvasShaderData.textureManager = new TextureManager(gl);
           
           let shaderManager = this.#fullCanvasShaderData.shaderManager = new ShaderManager(gl);
           

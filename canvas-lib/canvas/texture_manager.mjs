@@ -20,7 +20,7 @@ export class TextureManager {
   // public functions
   
   constructor(gl) {
-    if (!(this.#gl instanceof WebGL2RenderingContext)) {
+    if (!(gl instanceof WebGL2RenderingContext)) {
       throw new Error('gl must be a WebGL2 rendering context');
     }
     
