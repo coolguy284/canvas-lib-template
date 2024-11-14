@@ -148,7 +148,7 @@ export class TextureManager {
     }
   }
   
-  getIDOfTexture(alias) {
+  getTextureID(alias) {
     if (typeof alias != 'string') {
       throw new Error(`alias not string: ${typeof alias}`);
     }
@@ -158,5 +158,22 @@ export class TextureManager {
     }
     
     return this.#texturesByAlias.get(alias).bindPointID;
+  }
+  
+  getTextureDimensions(alias) {
+    if (typeof alias != 'string') {
+      throw new Error(`alias not string: ${typeof alias}`);
+    }
+    
+    if (!this.#texturesByAlias.has(alias)) {
+      throw new Error(`no texture with given alias: ${alias}`);
+    }
+    
+    let textureEntry = this.#texturesByAlias.get(alias);
+    
+    return {
+      width: textureEntry.width,
+      height: textureEntry.height,
+    };
   }
 }

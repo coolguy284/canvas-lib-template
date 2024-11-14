@@ -998,7 +998,7 @@ export class CanvasManager {
           break;
         
         case UniformType['SAMPLER2D']: {
-          let texID = this.#fullCanvasShaderData.textureManager.getIDOfTexture(value);
+          let texID = this.#fullCanvasShaderData.textureManager.getTextureID(value);
           gl.uniform1i(loc, texID);
           break;
         }
@@ -1016,7 +1016,7 @@ export class CanvasManager {
             let texID;
             
             try {
-              texID = this.#fullCanvasShaderData.textureManager.getIDOfTexture(textureAlias);
+              texID = this.#fullCanvasShaderData.textureManager.getTextureID(textureAlias);
             } catch (err) {
               throw new Error(`value[${i}] invalid, error resulted: ${err.toString()}`);
             }
@@ -1081,11 +1081,19 @@ export class CanvasManager {
     this.#fullCanvasShaderData.textureManager.deleteAllTextures();
   }
   
-  getIDOfTexture(alias) {
+  getTextureID(alias) {
     if (this.getCanvasMode() != CanvasMode.WEBGL_FULL_CANVAS_SHADER) {
       throw new Error('texture functions only available on full canvas shader mode');
     }
     
-    return this.#fullCanvasShaderData.textureManager.getIDOfTexture(alias);
+    return this.#fullCanvasShaderData.textureManager.getTextureID(alias);
+  }
+  
+  getTextureDimensions(alias) {
+    if (this.getCanvasMode() != CanvasMode.WEBGL_FULL_CANVAS_SHADER) {
+      throw new Error('texture functions only available on full canvas shader mode');
+    }
+    
+    return this.#fullCanvasShaderData.textureManager.getTextureDimensions(alias);
   }
 }
