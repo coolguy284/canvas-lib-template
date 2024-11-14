@@ -234,9 +234,9 @@ export class CanvasManager {
         this.#canvasContext.viewport(0, 0, this.#canvasWidth, this.#canvasHeight);
         
         // set resolution in uniform in program
-          
+        
         this.#canvasContext.useProgram(this.#fullCanvasShaderData.shaderProgram);
-        this.#canvasContext.uniform2f(this.#fullCanvasShaderData.autoUniformLocations.u_resolution, this.#canvasWidth, this.#canvasHeight);
+        this.#canvasContext.uniform2f(this.#fullCanvasShaderData.autoUniformLocations.resolution, this.#canvasWidth, this.#canvasHeight);
         this.#canvasContext.useProgram(null);
         break;
       
@@ -450,7 +450,7 @@ export class CanvasManager {
           };
           
           this.#fullCanvasShaderData.autoUniformLocations = {
-            u_resolution: gl.getUniformLocation(shaderProgram, 'u_resolution'),
+            resolution: gl.getUniformLocation(shaderProgram, 'u_resolution'),
           };
           
           this.#fullCanvasShaderData.uniforms = new Map(uniforms.map(uniformEntry => {
