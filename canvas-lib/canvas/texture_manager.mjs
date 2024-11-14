@@ -112,6 +112,13 @@ export class TextureManager {
       imageSource
     );
     
+    // change downscale filter to not use mipmaps as mipmaps are not set
+    this.#gl.texParameteri(this.#gl.TEXTURE_2D, this.#gl.TEXTURE_MIN_FILTER, this.#gl.LINEAR);
+    
+    // clamp if access past image edge instead of wrapping
+    this.#gl.texParameteri(this.#gl.TEXTURE_2D, this.#gl.TEXTURE_WRAP_S, this.#gl.CLAMP_TO_EDGE);
+    this.#gl.texParameteri(this.#gl.TEXTURE_2D, this.#gl.TEXTURE_WRAP_T, this.#gl.CLAMP_TO_EDGE);
+    
     this.#gl.activeTexture(this.#gl.TEXTURE0);
     
     Object.freeze(textureEntry);
