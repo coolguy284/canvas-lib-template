@@ -65,7 +65,7 @@ export class ShaderManager {
     }
     
     this.#gl.deleteShader(shader);
-    this.#shaders.remove(shader);
+    this.#shaders.delete(shader);
   }
   
   deleteAllShaders() {

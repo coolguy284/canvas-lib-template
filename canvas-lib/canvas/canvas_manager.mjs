@@ -546,12 +546,12 @@ export class CanvasManager {
     
     removeNode(this.#canvas);
     
+    this.#resizeObserver.unobserve(this.#canvas);
     this.#canvas = null;
     this.#canvasContext = null;
     this.#canvasWidth = null;
     this.#canvasHeight = null;
     this.#canvasStyle = null;
-    this.#resizeObserver.unobserve(this.#canvas);
     this.#resizeObserver = null;
     this.#renderLoop.clearFrameRate();
   }
