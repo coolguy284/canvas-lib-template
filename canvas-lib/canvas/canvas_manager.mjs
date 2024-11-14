@@ -10,6 +10,7 @@ import { TextureManager } from './texture_manager.mjs';
 
 const vertexShaderPositionVar = 'a_vertexPosition';
 export const fragmentShaderResolutionVar = 'u_resolution';
+export const fragmentShaderTextureResolutionSuffix = '_resolution';
 
 const ALL_SHADER_PREFIX = `
   #version 300 es
@@ -321,25 +322,25 @@ export class CanvasManager {
             
             if (uniformEntry.type == UniformType['SAMPLER2D']) {
               let resolutionUniformEntry = {
-                name: `${uniformEntry.name}_resolution`,
+                name: `${uniformEntry.name}${fragmentShaderTextureResolutionSuffix}`,
                 type: UniformType['VEC2'],
               };
               
               if (uniformNames.has(resolutionUniformEntry.name)) {
-                throw new Error(`(opts.uniforms[${i}].name + '_resolution') taken: ${resolutionUniformEntry.name}`);
+                throw new Error(`(opts.uniforms[${i}].name + '${fragmentShaderTextureResolutionSuffix}') taken: ${resolutionUniformEntry.name}`);
               }
               
               uniforms.push(resolutionUniformEntry);
               uniformNames.add(resolutionUniformEntry.name);
             } else if (uniformEntry.type == UniformType['SAMPLER2D' + UniformType_ArraySuffix]) {
               let resolutionUniformEntry = {
-                name: `${uniformEntry.name}_resolution`,
+                name: `${uniformEntry.name}${fragmentShaderTextureResolutionSuffix}`,
                 type: UniformType['VEC2' + UniformType_ArraySuffix],
                 length: uniformEntry.length,
               };
               
               if (uniformNames.has(resolutionUniformEntry.name)) {
-                throw new Error(`(opts.uniforms[${i}].name + '_resolution') taken: ${resolutionUniformEntry.name}`);
+                throw new Error(`(opts.uniforms[${i}].name + '${fragmentShaderTextureResolutionSuffix}') taken: ${resolutionUniformEntry.name}`);
               }
               
               uniforms.push(resolutionUniformEntry);
@@ -1045,7 +1046,7 @@ export class CanvasManager {
           
           let { width, height } = this.#fullCanvasShaderData.textureManager.getTextureDimensions(value);
           
-          let resolutionLoc = this.#fullCanvasShaderData.uniforms.get(`${uniformName}_resolution`).location;
+          let resolutionLoc = this.#fullCanvasShaderData.uniforms.get(`${uniformName}${fragmentShaderTextureResolutionSuffix}`).location;
           
           gl.uniform1i(loc, texID);
           gl.uniform2f(resolutionLoc, width, height);
@@ -1077,7 +1078,7 @@ export class CanvasManager {
             widthAndHeight.push({ width, height });
           }
           
-          let resolutionLoc = this.#fullCanvasShaderData.uniforms.get(`${uniformName}_resolution`).location;
+          let resolutionLoc = this.#fullCanvasShaderData.uniforms.get(`${uniformName}${fragmentShaderTextureResolutionSuffix}`).location;
           
           gl.uniform1iv(loc, texIDs);
           gl.uniform1fv(resolutionLoc, widthAndHeight.map(({ width, height}) => [width, height]).flat());
