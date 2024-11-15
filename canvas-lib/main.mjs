@@ -1,8 +1,6 @@
 // primary exports
 export {
   CanvasManager,
-  CanvasMode,
-  ShaderSegmentType,
   UniformType,
   UniformType_ArraySuffix,
 } from './canvas/canvas_manager.mjs';
@@ -13,10 +11,12 @@ export {
   FRAGMENT_SHADER_TEXTURE_RESOLUTION_SUFFIX,
 } from './canvas/canvas_manager.mjs';
 export {
+  CanvasMode,
   FrameRateMode,
   SettingEnumUIType,
   SettingType,
-  SettingType_TrueSettings
+  SettingType_TrueSettings,
+  ShaderSegmentType,
 } from './canvas/enums.mjs';
 export { RenderLoop } from './canvas/render_loop.mjs';
 export { SettingsManager } from './canvas/settings_manager.mjs';

@@ -1,12 +1,33 @@
 import { Enum } from '../misc/enum.mjs';
 import { ReadOnlySet } from '../misc/read_only_set.mjs';
 
+// CanvasManager enums
+
+export const CanvasMode = Enum([
+  'NONE',
+  '2D',
+  'WEBGL1',
+  'WEBGL2',
+  'WEBGL_FULL_CANVAS_SHADER',
+]);
+
+// RenderLoop enums
+
 export const FrameRateMode = Enum([
   'NONE',
   'RESIZE_ONLY',
   'FRAME_MULT',
   'MILLISECOND',
 ]);
+
+// WebGL enums
+
+export const ShaderSegmentType = Enum([
+  'STRING',
+  'URL',
+]);
+
+// SettingsManager enums
 
 export const SettingType = Enum([
   // actual settings

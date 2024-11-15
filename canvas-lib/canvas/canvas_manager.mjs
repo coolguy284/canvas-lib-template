@@ -5,6 +5,7 @@ import { fetchAsText } from '../misc/network_tools.mjs';
 import { RenderLoop } from './render_loop.mjs';
 import { ShaderManager } from './shader_manager.mjs';
 import { TextureManager } from './texture_manager.mjs';
+import { CanvasMode, ShaderSegmentType } from './enums.mjs';
 
 // https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Tutorial/Adding_2D_content_to_a_WebGL_context
 
@@ -30,19 +31,6 @@ const FRAGMENT_SHADER_PREFIX =
   ALL_SHADER_PREFIX + `
   uniform vec2 ${FRAGMENT_SHADER_RESOLUTION_VAR};
 `;
-
-export const CanvasMode = Enum([
-  'NONE',
-  '2D',
-  'WEBGL1',
-  'WEBGL2',
-  'WEBGL_FULL_CANVAS_SHADER',
-]);
-
-export const ShaderSegmentType = Enum([
-  'STRING',
-  'URL',
-]);
 
 export const UniformType_ArraySuffix = '_ARRAY';
 
