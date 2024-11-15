@@ -1,113 +1,21 @@
 import { removeNode } from '../misc/dom_tools.mjs';
-import { Enum } from '../misc/enum.mjs';
 import { Lock } from '../misc/lock.mjs';
 import { fetchAsText } from '../misc/network_tools.mjs';
 import { RenderLoop } from './render_loop.mjs';
 import { ShaderManager } from './shader_manager.mjs';
 import { TextureManager } from './texture_manager.mjs';
 import { CanvasMode, ShaderSegmentType } from './enums.mjs';
-
-// https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Tutorial/Adding_2D_content_to_a_WebGL_context
-
-const VERTEX_SHADER_POSITION_VAR = 'a_vertexPosition';
-export const FRAGMENT_SHADER_RESOLUTION_VAR = 'u_resolution';
-export const FRAGMENT_SHADER_TEXTURE_RESOLUTION_SUFFIX = '_resolution';
-
-const ALL_SHADER_PREFIX = `
-  #version 300 es
-  precision highp float;
-`.trim();
-
-const VERTEX_SHADER_XY_ONLY_TEXT =
-  ALL_SHADER_PREFIX + `
-  in vec4 ${VERTEX_SHADER_POSITION_VAR};
-  
-  void main() {
-    gl_Position = vec4(${VERTEX_SHADER_POSITION_VAR}.xy, 0.0, 1.0);
-  }
-`.trim();
-
-const FRAGMENT_SHADER_PREFIX =
-  ALL_SHADER_PREFIX + `
-  uniform vec2 ${FRAGMENT_SHADER_RESOLUTION_VAR};
-`;
-
-export const UniformType_ArraySuffix = '_ARRAY';
-
-// format: [enum name, [corresponding glsl type string, ...]]
-const uniformTypeData = Object.freeze([
-  // scalars / vectors
-  ['BOOLEAN', ['boolean']],
-  ['BVEC2', ['bvec2']],
-  ['BVEC3', ['bvec3']],
-  ['BVEC4', ['bvec4']],
-  ['UINT', ['uint']],
-  ['UVEC2', ['uvec2']],
-  ['UVEC3', ['uvec3']],
-  ['UVEC4', ['uvec4']],
-  ['FLOAT', ['float']],
-  ['VEC2', ['vec2']],
-  ['VEC3', ['vec3']],
-  ['VEC4', ['vec4']],
-  ['INT', ['int']],
-  ['IVEC2', ['ivec2']],
-  ['IVEC3', ['ivec3']],
-  ['IVEC4', ['ivec4']],
-  ['BOOLEAN' + UniformType_ArraySuffix, []],
-  ['BVEC2' + UniformType_ArraySuffix, []],
-  ['BVEC3' + UniformType_ArraySuffix, []],
-  ['BVEC4' + UniformType_ArraySuffix, []],
-  ['UINT' + UniformType_ArraySuffix, []],
-  ['UVEC2' + UniformType_ArraySuffix, []],
-  ['UVEC3' + UniformType_ArraySuffix, []],
-  ['UVEC4' + UniformType_ArraySuffix, []],
-  ['FLOAT' + UniformType_ArraySuffix, []],
-  ['VEC2' + UniformType_ArraySuffix, []],
-  ['VEC3' + UniformType_ArraySuffix, []],
-  ['VEC4' + UniformType_ArraySuffix, []],
-  ['INT' + UniformType_ArraySuffix, []],
-  ['IVEC2' + UniformType_ArraySuffix, []],
-  ['IVEC3' + UniformType_ArraySuffix, []],
-  ['IVEC4' + UniformType_ArraySuffix, []],
-  
-  // matrices
-  ['MAT22', ['mat2', 'mat2x2']],
-  ['MAT23', ['mat2x3']],
-  ['MAT24', ['mat2x4']],
-  ['MAT32', ['mat3x2']],
-  ['MAT33', ['mat3', 'mat3x3']],
-  ['MAT34', ['mat3x4']],
-  ['MAT42', ['mat4x2']],
-  ['MAT43', ['mat4x3']],
-  ['MAT44', ['mat4', 'mat4x4']],
-  ['MAT22' + UniformType_ArraySuffix, []],
-  ['MAT23' + UniformType_ArraySuffix, []],
-  ['MAT24' + UniformType_ArraySuffix, []],
-  ['MAT32' + UniformType_ArraySuffix, []],
-  ['MAT33' + UniformType_ArraySuffix, []],
-  ['MAT34' + UniformType_ArraySuffix, []],
-  ['MAT42' + UniformType_ArraySuffix, []],
-  ['MAT43' + UniformType_ArraySuffix, []],
-  ['MAT44' + UniformType_ArraySuffix, []],
-  
-  // textures
-  ['SAMPLER2D', ['sampler2D']],
-  ['SAMPLER2D' + UniformType_ArraySuffix, []],
-]);
-
-export const UniformType = Enum(uniformTypeData.map(x => x[0]));
-
-const uniformEnumNameToPreferredGlslName = new Map(
-  uniformTypeData
-    .filter(([_, glslNames]) => glslNames.length == 1)
-    .map(([enumName, glslNames]) => [enumName, glslNames[0]])
-);
-
-const uniformGlslNameToEnum = new Map(
-  uniformTypeData.map(
-    ([enumName, glslNames]) => glslNames.map(x => [x, enumName])
-  ).flat()
-);
+import {
+  VERTEX_SHADER_POSITION_VAR,
+  FRAGMENT_SHADER_RESOLUTION_VAR,
+  FRAGMENT_SHADER_TEXTURE_RESOLUTION_SUFFIX,
+  VERTEX_SHADER_XY_ONLY_TEXT,
+  FRAGMENT_SHADER_PREFIX,
+  UniformType_ArraySuffix,
+  UniformType,
+  UNIFORM_ENUM_TO_PREFERRED_GLSL_NAME,
+  UNIFORM_GLSL_NAME_TO_ENUM,
+} from './gl_constants.mjs';
 
 export class CanvasManager {
   // class variables
@@ -174,11 +82,11 @@ export class CanvasManager {
       throw new Error(`uniformString invalid format: ${uniformString}`);
     }
     
-    if (!uniformGlslNameToEnum.has(glslType)) {
+    if (!UNIFORM_GLSL_NAME_TO_ENUM.has(glslType)) {
       throw new Error(`uniformString type unrecognized: ${glslType}`);
     }
     
-    let enumType = uniformGlslNameToEnum.get(glslType);
+    let enumType = UNIFORM_GLSL_NAME_TO_ENUM.get(glslType);
     
     let varName = match[1];
     
@@ -200,9 +108,9 @@ export class CanvasManager {
   
   static #uniformEntryToString(uniformEntry) {
     if ('length' in uniformEntry) {
-      return `${uniformEnumNameToPreferredGlslName.get(uniformEntry.type.slice(0, -UniformType_ArraySuffix.length))} ${uniformEntry.name}[${uniformEntry.length}]`;
+      return `${UNIFORM_ENUM_TO_PREFERRED_GLSL_NAME.get(uniformEntry.type.slice(0, -UniformType_ArraySuffix.length))} ${uniformEntry.name}[${uniformEntry.length}]`;
     } else {
-      return `${uniformEnumNameToPreferredGlslName.get(uniformEntry.type)} ${uniformEntry.name}`;
+      return `${UNIFORM_ENUM_TO_PREFERRED_GLSL_NAME.get(uniformEntry.type)} ${uniformEntry.name}`;
     }
   }
   
