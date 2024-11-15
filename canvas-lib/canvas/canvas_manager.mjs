@@ -4,17 +4,20 @@ import { fetchAsText } from '../misc/network_tools.mjs';
 import { RenderLoop } from './render_loop.mjs';
 import { ShaderManager } from './shader_manager.mjs';
 import { TextureManager } from './texture_manager.mjs';
-import { CanvasMode, ShaderSegmentType } from './enums.mjs';
 import {
-  VERTEX_SHADER_POSITION_VAR,
+  CanvasMode,
+  ShaderSegmentType,
+} from './enums.mjs';
+import {
+  FRAGMENT_SHADER_PREFIX,
   FRAGMENT_SHADER_RESOLUTION_VAR,
   FRAGMENT_SHADER_TEXTURE_RESOLUTION_SUFFIX,
-  VERTEX_SHADER_XY_ONLY_TEXT,
-  FRAGMENT_SHADER_PREFIX,
-  UniformType_ArraySuffix,
-  UniformType,
   UNIFORM_ENUM_TO_PREFERRED_GLSL_NAME,
   UNIFORM_GLSL_NAME_TO_ENUM,
+  UniformType,
+  UniformType_ArraySuffix,
+  VERTEX_SHADER_POSITION_VAR,
+  VERTEX_SHADER_XY_ONLY_TEXT,
 } from './gl_constants.mjs';
 
 export class CanvasManager {

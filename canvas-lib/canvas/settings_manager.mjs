@@ -1,4 +1,8 @@
-import { SettingEnumUIType, SettingType, SettingType_TrueSettings } from './enums.mjs';
+import {
+  SettingEnumUIType,
+  SettingType,
+  SettingType_TrueSettings,
+} from './enums.mjs';
 import { removeAllNodes } from '../misc/dom_tools.mjs';
 import { isEnum } from '../misc/enum.mjs';
 

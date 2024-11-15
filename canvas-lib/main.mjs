@@ -24,7 +24,10 @@ export {
   removeAllNodes /* TODO: Currently unused */,
   removeNode,
 } from './misc/dom_tools.mjs';
-export { Enum, isEnum } from './misc/enum.mjs';
+export {
+  Enum,
+  isEnum,
+} from './misc/enum.mjs';
 export { Lock } from './misc/lock.mjs';
 export { fetchAsText } from './misc/network_tools.mjs';
 export { ReadOnlyMap } from './misc/read_only_map.mjs';
