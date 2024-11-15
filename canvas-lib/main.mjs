@@ -1,14 +1,11 @@
 // primary exports
-export { CanvasManager } from './canvas/canvas_manager.mjs';
-export { SettingsManager } from './canvas/settings_manager.mjs';
 
-// convenience exports
+export { CanvasManager } from './canvas/canvas_manager.mjs';
 export {
   CanvasMode,
   FrameRateMode,
   SettingEnumUIType,
   SettingType,
-  SettingType_TrueSettings,
   ShaderSegmentType,
 } from './canvas/enums.mjs';
 export {
@@ -17,6 +14,11 @@ export {
   UniformType,
   UniformType_ArraySuffix,
 } from './canvas/gl_constants.mjs';
+export { SettingsManager } from './canvas/settings_manager.mjs';
+
+// convenience exports
+
+export { SettingType_TrueSettings } from './canvas/enums.mjs';
 export { RenderLoop } from './canvas/render_loop.mjs';
 export { ShaderManager } from './canvas/shader_manager.mjs';
 export { TextureManager } from './canvas/texture_manager.mjs';
