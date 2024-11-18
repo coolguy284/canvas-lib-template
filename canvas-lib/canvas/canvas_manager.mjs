@@ -1,9 +1,6 @@
 import { removeNode } from '../misc/dom_tools.mjs';
 import { Lock } from '../misc/lock.mjs';
 import { fetchAsText } from '../misc/network_tools.mjs';
-import { RenderLoop } from './render_loop.mjs';
-import { ShaderManager } from './shader_manager.mjs';
-import { TextureManager } from './texture_manager.mjs';
 import {
   CanvasMode,
   ShaderSegmentType,
@@ -19,6 +16,9 @@ import {
   VERTEX_SHADER_POSITION_VAR,
   VERTEX_SHADER_XY_ONLY_TEXT,
 } from './gl_constants.mjs';
+import { RenderLoop } from './render_loop.mjs';
+import { ShaderManager } from './shader_manager.mjs';
+import { TextureManager } from './texture_manager.mjs';
 
 export class CanvasManager {
   // class variables
