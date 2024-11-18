@@ -1,11 +1,16 @@
 features:
+rename man variables to mgr
+nocontext canvas mode
+split off gl boilerplate
+offscreenvanvas canvas mode if div explicitly set to null (not missing)
 settingsmanager
+  convert some properties to optional w. defaults
   persistence value loading
   filling out settings div
   functionality to settings div
     queue up variable updates to div components until settings div is shown again
   persistence
-split off gl boilerplate
+  if error when updating property / validating, auto revert setting to old value but log error
 stylesheets for full screen template including provisions for settings button / div using classes
 add subpixel scale to settings test
 move fps and subpixel scale from settings example to separate function
@@ -14,12 +19,15 @@ clear all TODOs in codebase
 
 low prio:
 validate that multiline text input does not contain \r, or maybe silently convert to \n
-save canvas as png, or render a larger version as png
-  helper function to add this to settings as well
+canvasmanager: screenshot functionality
+  pass in canvasmanager to setup, render, teardown to facilitate modular screenshots
+  save canvas as png, or render a larger version as png
+    helper function to add this to settings as well
 fullscreen option
   helper function to add this to settings as well
 support for more advanced webgl mode that can pass shaders into texture variables and render to framebuffers
 camera scrolling / moving lib that is a pure class that can take in functions for x and y scaling factor based on current x and y
+canvasmanager: pass in manager object to all trigger funcs for modularization
 
 don't care:
 type check value field of CanvasManager.setUniform
