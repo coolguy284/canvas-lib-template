@@ -31,9 +31,9 @@
     <script type = 'module'>
       import { CanvasManager, CanvasMode, FrameRateMode, ShaderSegmentType } from '../../canvas-lib/main.mjs';
       
-      let man = new CanvasManager(canvas_container);
+      let mgr = new CanvasManager(canvas_container);
       
-      await man.setCanvasMode({
+      await mgr.setCanvasMode({
         mode: CanvasMode.WEBGL_FULL_CANVAS_SHADER,
         frameRate: {
           mode: FrameRateMode.FRAME_MULT,
@@ -63,16 +63,16 @@
         ],
         triggers: {
           setup: async () => {
-            await man.loadTexture('texture.png');
-            man.setUniform('imageInput', 'texture.png');
+            await mgr.loadTexture('texture.png');
+            mgr.setUniform('imageInput', 'texture.png');
           },
           render: () => {
-            man.setUniform('currentTime', Date.now() / 1000 % (Math.PI * 2));
+            mgr.setUniform('currentTime', Date.now() / 1000 % (Math.PI * 2));
           },
         },
       });
       
-      window.scriptVars = { man };
+      window.scriptVars = { mgr };
     </script>
   </body>
 </html>

@@ -1,5 +1,4 @@
 features:
-rename man variables to mgr
 nocontext canvas mode
 split off gl boilerplate
 offscreenvanvas canvas mode if div explicitly set to null (not missing)

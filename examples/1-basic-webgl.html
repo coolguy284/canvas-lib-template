@@ -31,23 +31,23 @@
     <script type = 'module'>
       import { CanvasManager, CanvasMode, FrameRateMode } from '../canvas-lib/main.mjs';
       
-      let man = new CanvasManager(canvas_container);
+      let mgr = new CanvasManager(canvas_container);
       
-      await man.setCanvasMode({
+      await mgr.setCanvasMode({
         mode: CanvasMode.WEBGL2,
         frameRate: {
           mode: FrameRateMode.RESIZE_ONLY,
         },
         triggers: {
           setup: () => {
-            let gl = man.getContext();
+            let gl = mgr.getContext();
             
             gl.enable(gl.SCISSOR_TEST);
             gl.scissor(100, 100, 200, 200);
           },
           render: () => {
-            const [ width, height ] = man.getCanvasSize();
-            let gl = man.getContext();
+            const [ width, height ] = mgr.getCanvasSize();
+            let gl = mgr.getContext();
             
             gl.clearColor(1.0, 0.0, 0.0, 1.0);
             gl.clear(gl.COLOR_BUFFER_BIT);
@@ -55,7 +55,7 @@
         },
       });
       
-      window.scriptVars = { man };
+      window.scriptVars = { mgr };
     </script>
   </body>
 </html>

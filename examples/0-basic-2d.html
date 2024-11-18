@@ -31,17 +31,17 @@
     <script type = 'module'>
       import { CanvasManager, CanvasMode, FrameRateMode } from '../canvas-lib/main.mjs';
       
-      let man = new CanvasManager(canvas_container);
+      let mgr = new CanvasManager(canvas_container);
       
-      await man.setCanvasMode({
+      await mgr.setCanvasMode({
         mode: CanvasMode['2D'],
         frameRate: {
           mode: FrameRateMode.RESIZE_ONLY,
         },
         triggers: {
           render: () => {
-            const [ width, height ] = man.getCanvasSize();
-            let ctx = man.getContext();
+            const [ width, height ] = mgr.getCanvasSize();
+            let ctx = mgr.getContext();
             
             ctx.clearRect(0, 0, width, height);
             ctx.fillStyle = 'red';
@@ -50,7 +50,7 @@
         },
       });
       
-      window.scriptVars = { man };
+      window.scriptVars = { mgr };
     </script>
   </body>
 </html>
