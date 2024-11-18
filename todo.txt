@@ -1,5 +1,4 @@
 features:
-nocontext canvas mode
 split off gl boilerplate
 offscreenvanvas canvas mode if div explicitly set to null (not missing)
 settingsmanager
@@ -27,7 +26,8 @@ fullscreen option
 support for more advanced webgl mode that can pass shaders into texture variables and render to framebuffers
 camera scrolling / moving lib that is a pure class that can take in functions for x and y scaling factor based on current x and y
 canvasmanager: pass in manager object to all trigger funcs for modularization
+canvasmanager: ensure default shutdown and error based shutdowns are clean
 
 don't care:
-type check value field of CanvasManager.setUniform
-rename frameskips to renderskips
+canvasmanager: type check value field of CanvasManager.setUniform
+canvasmanager: rename frameskips to renderskips

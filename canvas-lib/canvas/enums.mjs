@@ -5,6 +5,7 @@ import { ReadOnlySet } from '../misc/read_only_set.mjs';
 
 export const CanvasMode = Enum([
   'NONE',
+  'NO_CONTEXT',
   '2D',
   'WEBGL1',
   'WEBGL2',

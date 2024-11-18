@@ -125,6 +125,7 @@ export class CanvasManager {
     this.#canvas.height = this.#canvasHeight;
     
     switch (this.#canvasMode) {
+      case CanvasMode.NO_CONTEXT:
       case CanvasMode['2D']:
         break;
       
@@ -294,6 +295,9 @@ export class CanvasManager {
     this.#canvasMode = opts.mode;
     
     switch (opts.mode) {
+      case CanvasMode.NO_CONTEXT:
+        break;
+      
       case CanvasMode['2D']:
         this.#canvasContext = canvas.getContext('2d');
         break;
@@ -448,6 +452,7 @@ export class CanvasManager {
     }
     
     switch (this.#canvasMode) {
+      case CanvasMode.NO_CONTEXT:
       case CanvasMode['2D']:
       case CanvasMode.WEBGL1:
       case CanvasMode.WEBGL2:
@@ -495,6 +500,7 @@ export class CanvasManager {
   
   async #callRender() {
     switch (this.#canvasMode) {
+      case CanvasMode.NO_CONTEXT:
       case CanvasMode['2D']:
       case CanvasMode.WEBGL1:
       case CanvasMode.WEBGL2:
