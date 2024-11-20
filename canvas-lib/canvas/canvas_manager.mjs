@@ -44,10 +44,7 @@ export class CanvasManager {
         break;
       
       case CanvasMode.WEBGL_FULL_CANVAS_SHADER:
-        this.#canvasContext.viewport(0, 0, this.#canvasWidth, this.#canvasHeight);
-        
-        // set resolution in uniform in program
-        this.#fullCanvasShaderManager.setResolutionUniform(this.#canvasWidth, this.#canvasHeight);
+        this.#fullCanvasShaderManager.resizeViewport(this.#canvasWidth, this.#canvasHeight);
         break;
       
       default:

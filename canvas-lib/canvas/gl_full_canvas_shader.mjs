@@ -302,6 +302,12 @@ class FullCanvasShaderManager {
     return this;
   }
   
+  #setResolutionUniform(width, height) {
+    this.#gl.useProgram(this.#shaderProgram);
+    this.#gl.uniform2f(this.#resolutionUniformLocation, width, height);
+    this.#gl.useProgram(null);
+  }
+  
   // public functions
   
   // This function is async as it calls an async helper and returns the corresponding promise
@@ -309,7 +315,7 @@ class FullCanvasShaderManager {
     return this.#initialize(gl, opts);
   }
   
-  setResolutionUniform(width, height) {
+  resizeViewport(width, height) {
     if (!Number.isFinite(width) || width < 0) {
       throw new Error(`width not finite nonnegative number: ${width}`);
     }
@@ -319,12 +325,14 @@ class FullCanvasShaderManager {
     }
     
     if (this.#gl == null) {
-      throw new Error('Cannot set resolution, gl context destroyed');
+      throw new Error('Cannot resize viewport, gl context destroyed');
     }
     
-    this.#gl.useProgram(this.#shaderProgram);
-    this.#gl.uniform2f(this.#resolutionUniformLocation, width, height);
-    this.#gl.useProgram(null);
+    // update viewport
+    this.#gl.viewport(0, 0, width, height);
+    
+    // set resolution in uniform in program
+    this.#setResolutionUniform(width, height);
   }
   
   tearDown() {
