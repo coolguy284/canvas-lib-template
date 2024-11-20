@@ -284,7 +284,10 @@ export class CanvasManager {
       throw new Error('Canvas container not a html element');
     }
     
-    this.#renderLoop = new RenderLoop(this.#callRender.bind(this));
+    this.#renderLoop = new RenderLoop({
+      renderFunc: this.#callRender.bind(this),
+      errorSignalingFunc: this.gracefulShutdown.bind(this),
+    });
   }
   
   getCanvasContainer() {

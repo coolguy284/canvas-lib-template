@@ -5,6 +5,7 @@ export class RenderLoop {
   
   #frameRate = null;
   #renderFunc = null;
+  #errorSignalingFunc = null;
   #renderLoopRunning = false;
   #boundVisibilityChangeListener = null;
   #skipRenderLoopWaitSentinel = false;
@@ -111,8 +112,10 @@ export class RenderLoop {
         try {
           await this.#renderFunc();
         } catch (err) {
+          if (this.#errorSignalingFunc != null) {
+            this.#errorSignalingFunc(err);
+          }
           console.error(err);
-          this.gracefulShutdown();
         }
         
         if (this.#stopRenderLoopSentinel) {
@@ -222,12 +225,17 @@ export class RenderLoop {
   
   // public functions
   
-  constructor(renderFunc) {
-    if (typeof renderFunc == 'function' || renderFunc == null) {
-      this.#renderFunc = renderFunc;
-    } else {
-      throw new Error('Renderfunc invalid type');
+  constructor({ renderFunc, errorSignalingFunc }) {
+    if (typeof renderFunc != 'function' && renderFunc != null) {
+      throw new Error('errorSignalingFunc invalid type');
     }
+    
+    if (typeof errorSignalingFunc != 'function' && errorSignalingFunc != null) {
+      throw new Error('errorSignalingFunc invalid type');
+    }
+    
+    this.#renderFunc = renderFunc;
+    this.#errorSignalingFunc = errorSignalingFunc;
     
     this.#boundVisibilityChangeListener = this.#visibilityChangeListener.bind(this);
   }
@@ -244,7 +252,7 @@ export class RenderLoop {
       
       this.#frameRate = frameRate;
       
-      this.#renderLoop.startRenderLoop();
+      this.startRenderLoop();
     } else {
       this.#frameRate = frameRate;
     }
