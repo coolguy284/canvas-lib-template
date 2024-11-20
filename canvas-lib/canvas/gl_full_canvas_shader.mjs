@@ -20,10 +20,10 @@ class FullCanvasShaderManager {
   #gl;
   #textureManager;
   #shaderManager;
-  #vertexShader;
-  #fragmentShader;
+  //#vertexShader;
+  //#fragmentShader;
   #shaderProgram;
-  #vertexAttribLocation;
+  //#vertexAttribLocation;
   #resolutionUniformLocation;
   #customUniforms;
   #positionBuffer;
@@ -216,7 +216,8 @@ class FullCanvasShaderManager {
     
     let shaderManager = this.#shaderManager = new ShaderManager(gl);
     
-    let vertexShader = this.#vertexShader = shaderManager.loadShaderFromString(gl.VERTEX_SHADER, VERTEX_SHADER_XY_ONLY_TEXT);
+    let vertexShader = shaderManager.loadShaderFromString(gl.VERTEX_SHADER, VERTEX_SHADER_XY_ONLY_TEXT);
+    //this.#vertexShader = vertexShader;
     
     let fragmentShaderSource = [
       FRAGMENT_SHADER_PREFIX,
@@ -224,7 +225,8 @@ class FullCanvasShaderManager {
       ...shaderSegmentStrings
     ].join('\n');
     
-    let fragmentShader = this.#fragmentShader = shaderManager.loadShaderFromString(gl.FRAGMENT_SHADER, fragmentShaderSource);
+    let fragmentShader = shaderManager.loadShaderFromString(gl.FRAGMENT_SHADER, fragmentShaderSource);
+    //this.#fragmentShader = fragmentShader;
     
     // gl context setup > shader program creation
     
@@ -242,7 +244,8 @@ class FullCanvasShaderManager {
     
     // gl context setup > get variable positions
     
-    let vertexAttribLocation = this.#vertexAttribLocation = gl.getAttribLocation(shaderProgram, VERTEX_SHADER_POSITION_VAR);
+    let vertexAttribLocation = gl.getAttribLocation(shaderProgram, VERTEX_SHADER_POSITION_VAR);
+    //this.#vertexAttribLocation = vertexAttribLocation;
     this.#resolutionUniformLocation = gl.getUniformLocation(shaderProgram, FRAGMENT_SHADER_RESOLUTION_VAR);
     
     this.#customUniforms = new Map(uniforms.map(uniformEntry => {
@@ -338,10 +341,10 @@ class FullCanvasShaderManager {
     this.#shaderProgram = null;
     
     this.#shaderManager.deleteAllShaders();
-    this.#vertexShader = null;
-    this.#fragmentShader = null;
+    //this.#vertexShader = null;
+    //this.#fragmentShader = null;
     this.#shaderManager = null;
-    this.#vertexAttribLocation = null;
+    //this.#vertexAttribLocation = null;
     this.#resolutionUniformLocation = null;
     this.#customUniforms = null;
     
