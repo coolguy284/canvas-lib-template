@@ -315,7 +315,7 @@ class FullCanvasShaderManager {
       throw new Error(`height not finite nonnegative number: ${height}`);
     }
     
-    if (this.gl == null) {
+    if (this.#gl == null) {
       throw new Error('Cannot set resolution, gl context destroyed');
     }
     
@@ -325,7 +325,7 @@ class FullCanvasShaderManager {
   }
   
   tearDown() {
-    if (this.gl == null) {
+    if (this.#gl == null) {
       throw new Error('GL context already destroyed');
     }
     
@@ -352,7 +352,7 @@ class FullCanvasShaderManager {
   }
   
   render() {
-    if (this.gl == null) {
+    if (this.#gl == null) {
       throw new Error('Cannot render, gl context destroyed');
     }
     
@@ -380,7 +380,7 @@ class FullCanvasShaderManager {
       throw new Error(`Error: uniformName not string: ${typeof uniformName}`);
     }
     
-    if (this.gl == null) {
+    if (this.#gl == null) {
       throw new Error('Cannot get uniform value, gl context destroyed');
     }
     
@@ -401,7 +401,7 @@ class FullCanvasShaderManager {
       throw new Error(`Error: uniformName not string: ${typeof uniformName}`);
     }
     
-    if (this.gl == null) {
+    if (this.#gl == null) {
       throw new Error('Cannot set uniform value, gl context destroyed');
     }
     
@@ -686,7 +686,7 @@ class FullCanvasShaderManager {
   }
   
   currentTextureNames() {
-    if (this.gl == null) {
+    if (this.#gl == null) {
       throw new Error('Cannot perform texture functions, gl context destroyed');
     }
     
@@ -694,7 +694,7 @@ class FullCanvasShaderManager {
   }
   
   hasTexture(alias) {
-    if (this.gl == null) {
+    if (this.#gl == null) {
       throw new Error('Cannot perform texture functions, gl context destroyed');
     }
     
@@ -708,7 +708,7 @@ class FullCanvasShaderManager {
     
     let { data, alias } = opts;
     
-    if (this.gl == null) {
+    if (this.#gl == null) {
       throw new Error('Cannot perform texture functions, gl context destroyed');
     }
     
@@ -716,7 +716,7 @@ class FullCanvasShaderManager {
   }
   
   deleteTexture(alias) {
-    if (this.gl == null) {
+    if (this.#gl == null) {
       throw new Error('Cannot perform texture functions, gl context destroyed');
     }
     
@@ -724,7 +724,7 @@ class FullCanvasShaderManager {
   }
   
   deleteAllTextures() {
-    if (this.gl == null) {
+    if (this.#gl == null) {
       throw new Error('Cannot perform texture functions, gl context destroyed');
     }
     
@@ -732,7 +732,7 @@ class FullCanvasShaderManager {
   }
   
   getTextureID(alias) {
-    if (this.gl == null) {
+    if (this.#gl == null) {
       throw new Error('Cannot perform texture functions, gl context destroyed');
     }
     
@@ -740,7 +740,7 @@ class FullCanvasShaderManager {
   }
   
   getTextureDimensions(alias) {
-    if (this.gl == null) {
+    if (this.#gl == null) {
       throw new Error('Cannot perform texture functions, gl context destroyed');
     }
     
