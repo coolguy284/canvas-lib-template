@@ -1,0 +1,47 @@
+/*
+variables settable:
+:root {
+  --font: <font family, separated by commas>;
+  --background-color: <>;
+  --text-color: <>;
+}
+*/
+
+html {
+  font-family: var(--font, Arial, sans-serif);
+  color: var(--text-color, white);
+  background-color: var(--background-color, black);
+}
+
+.fullscreen_canvas_container {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  
+  canvas {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+.settings_btn {
+  position: fixed;
+  right: 0.3rem;
+  bottom: 0.3rem;
+  background-color: inherit;
+  color: inherit;
+  border: 0.1rem solid white;
+  border-radius: 0.2rem;
+}
+
+.settings_div {
+  position: fixed;
+  right: 0.3rem;
+  top: 0.3rem;
+  height: calc(100% - 2.7rem);
+  padding: 0.2rem;
+  border: 0.1rem solid white;
+  border-radius: 0.2rem;
+}

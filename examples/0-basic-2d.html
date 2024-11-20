@@ -4,29 +4,16 @@
     <title>Basic 2D</title>
     
     <style>
-      html {
-        font-family: Arial, sans-serif;
-        color: white;
-        background-color: black;
-      }
-      
-      #canvas_container {
-        position: fixed;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        
-        canvas {
-          width: 100%;
-          height: 100%;
-        }
+      :root {
+        --background-color: black;
+        --text-color: white;
       }
     </style>
+    <link rel = 'stylesheet' href = '../canvas-lib/fullscreen_style.css'>
   </head>
   
   <body>
-    <div id = 'canvas_container'></div>
+    <div id = 'canvas_container' class = 'fullscreen_canvas_container'></div>
     
     <script type = 'module'>
       import { CanvasManager, CanvasMode, FrameRateMode } from '../canvas-lib/main.mjs';

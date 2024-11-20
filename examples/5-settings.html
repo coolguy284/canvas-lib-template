@@ -4,53 +4,20 @@
     <title>Settings</title>
     
     <style>
-      html {
-        font-family: Arial, sans-serif;
-        color: white;
-        background-color: black;
-      }
-      
-      #canvas_container {
-        position: fixed;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        
-        canvas {
-          width: 100%;
-          height: 100%;
-        }
-      }
-      
-      #settings_btn {
-        position: fixed;
-        right: 0.3rem;
-        bottom: 0.3rem;
-        background-color: inherit;
-        color: inherit;
-        border: 0.1rem solid white;
-        border-radius: 0.2rem;
-      }
-      
-      #settings_div {
-        position: fixed;
-        right: 0.3rem;
-        top: 0.3rem;
-        height: calc(100% - 2.7rem);
-        padding: 0.2rem;
-        border: 0.1rem solid white;
-        border-radius: 0.2rem;
+      :root {
+        --background-color: black;
+        --text-color: white;
       }
     </style>
+    <link rel = 'stylesheet' href = '../canvas-lib/fullscreen_style.css'>
   </head>
   
   <body>
-    <div id = 'canvas_container'></div>
+    <div id = 'canvas_container' class = 'fullscreen_canvas_container'></div>
     
-    <button id = 'settings_btn'>Settings</button>
+    <button id = 'settings_btn' class = 'settings_btn'>Settings</button>
     
-    <div id = 'settings_div' style = 'display: none;'></div>
+    <div id = 'settings_div' class = 'settings_div' style = 'display: none;'></div>
     
     <script type = 'module'>
       import { CanvasManager, CanvasMode, FrameRateMode, SettingsManager, SettingEnumUIType, SettingType } from '../canvas-lib/main.mjs';
