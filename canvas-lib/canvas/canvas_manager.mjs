@@ -1,24 +1,8 @@
 import { removeNode } from '../misc/dom_tools.mjs';
 import { Lock } from '../misc/lock.mjs';
-import { fetchAsText } from '../misc/network_tools.mjs';
-import {
-  CanvasMode,
-  ShaderSegmentType,
-} from './enums.mjs';
-import {
-  FRAGMENT_SHADER_PREFIX,
-  FRAGMENT_SHADER_RESOLUTION_VAR,
-  FRAGMENT_SHADER_TEXTURE_RESOLUTION_SUFFIX,
-  UNIFORM_ENUM_TO_PREFERRED_GLSL_NAME,
-  UNIFORM_GLSL_NAME_TO_ENUM,
-  UniformType,
-  UniformType_ArraySuffix,
-  VERTEX_SHADER_POSITION_VAR,
-  VERTEX_SHADER_XY_ONLY_TEXT,
-} from './gl_constants.mjs';
+import { CanvasMode } from './enums.mjs';
+import { createFullCanvasShaderManager } from './gl_full_canvas_shader.mjs';
 import { RenderLoop } from './render_loop.mjs';
-import { ShaderManager } from './shader_manager.mjs';
-import { TextureManager } from './texture_manager.mjs';
 
 export class CanvasManager {
   // class variables
@@ -38,84 +22,9 @@ export class CanvasManager {
   
   // class variables > webgl full canvas shader specific
   
-  #fullCanvasShaderData = null;
+  #fullCanvasShaderManager = null;
   
   // helper functions
-  
-  static #parseUniformEntry(uniformEntry) {
-    let parsedUniformEntry = {};
-    
-    if (typeof uniformEntry.name == 'string') {
-      parsedUniformEntry.name = uniformEntry.name;
-    } else {
-      throw new Error(`uniformEntry.name not string: ${typeof uniformEntry.name}`);
-    }
-    
-    if (typeof uniformEntry.type == 'string' && uniformEntry.type in UniformType) {
-      parsedUniformEntry.type = uniformEntry.type;
-    } else {
-      throw new Error(`uniformEntry.type not known: ${uniformEntry.type}`);
-    }
-    
-    if (uniformEntry.type.endsWith(UniformType_ArraySuffix)) {
-      if (Number.isSafeInteger(uniformEntry.length) && uniformEntry.length > 1) {
-        parsedUniformEntry.length = uniformEntry.length;
-      } else {
-        throw new Error(`uniformEntry.length unknown type or invalid value: ${uniformEntry.type}`);
-      }
-    }
-    
-    return parsedUniformEntry;
-  }
-  
-  static #parseUniformEntryString_regex = /^([^ \[\]]+)(?:\[([1-9]\d*)\])?$/;
-  
-  static #parseUniformEntryString(uniformString) {
-    let [ glslType, ...rest ] = uniformString.split(' ');
-    
-    if (rest.length != 1) {
-      throw new Error(`uniformString invalid format: ${uniformString}`);
-    }
-    
-    let end = rest[0];
-    
-    let match;
-    
-    if (!(match = CanvasManager.#parseUniformEntryString_regex.exec(end))) {
-      throw new Error(`uniformString invalid format: ${uniformString}`);
-    }
-    
-    if (!UNIFORM_GLSL_NAME_TO_ENUM.has(glslType)) {
-      throw new Error(`uniformString type unrecognized: ${glslType}`);
-    }
-    
-    let enumType = UNIFORM_GLSL_NAME_TO_ENUM.get(glslType);
-    
-    let varName = match[1];
-    
-    let uniformEntry = {
-      name: varName,
-      type: null,
-    };
-    
-    if (match[2]) {
-      enumType += UniformType_ArraySuffix;
-    
-      uniformEntry.length = parseInt(match[2]);
-    }
-    
-    uniformEntry.type = enumType;
-    
-    return uniformEntry;
-  }
-  
-  static #uniformEntryToString(uniformEntry) {
-    if ('length' in uniformEntry) {
-      return `${UNIFORM_ENUM_TO_PREFERRED_GLSL_NAME.get(uniformEntry.type.slice(0, -UniformType_ArraySuffix.length))} ${uniformEntry.name}[${uniformEntry.length}]`;
-    } else {
-      return `${UNIFORM_ENUM_TO_PREFERRED_GLSL_NAME.get(uniformEntry.type)} ${uniformEntry.name}`;
-    }
-  }
   
   async #updateCanvasSize() {
     this.#canvasWidth = parseInt(this.#canvasStyle.width) * window.devicePixelRatio * this.#canvasPixelsPerDisplayPixel;
@@ -138,10 +47,7 @@ export class CanvasManager {
         this.#canvasContext.viewport(0, 0, this.#canvasWidth, this.#canvasHeight);
         
         // set resolution in uniform in program
-        
-        this.#canvasContext.useProgram(this.#fullCanvasShaderData.shaderProgram);
-        this.#canvasContext.uniform2f(this.#fullCanvasShaderData.autoUniformLocations.resolution, this.#canvasWidth, this.#canvasHeight);
-        this.#canvasContext.useProgram(null);
+        this.#fullCanvasShaderManager.setResolutionUniform(this.#canvasWidth, this.#canvasHeight);
         break;
       
       default:
@@ -164,12 +70,7 @@ export class CanvasManager {
   }
   
   async #createCanvas(opts) {
-    this.#renderLoop.setFrameRate(opts.frameRate);
-    
     let triggers = {};
-    
-    let uniforms;
-    let shaderSegmentStrings;
     
     if (opts.triggers != null) {
       if (typeof opts.triggers != 'object') {
@@ -195,243 +96,91 @@ export class CanvasManager {
       }
     }
     
-    if (opts.mode == CanvasMode.WEBGL_FULL_CANVAS_SHADER) {
-      uniforms = [];
+    this.#renderLoop.setFrameRate(opts.frameRate);
+    
+    try {
+      let canvas = document.createElement('canvas');
       
-      if (opts.uniforms != null) {
-        if (Array.isArray(opts.uniforms)) {
-          let uniformNames = new Set();
+      switch (opts.mode) {
+        case CanvasMode.NO_CONTEXT:
+          break;
+        
+        case CanvasMode['2D']:
+          this.#canvasContext = canvas.getContext('2d');
+          break;
+        
+        case CanvasMode.WEBGL1:
+          this.#canvasContext = canvas.getContext('webgl1');
+          break;
+        
+        case CanvasMode.WEBGL2:
+          this.#canvasContext = canvas.getContext('webgl2');
+          break;
+        
+        case CanvasMode.WEBGL_FULL_CANVAS_SHADER: {
+          let gl = canvas.getContext('webgl2');
+          let fullCanvasShaderManager = await createFullCanvasShaderManager(gl, opts);
           
-          for (let i = 0; i < opts.uniforms.length; i++) {
-            let uniformEntry = opts.uniforms[i];
-            
-            if (typeof uniformEntry == 'object' && uniformEntry != null) {
-              uniformEntry = CanvasManager.#parseUniformEntry(uniformEntry);
-            } else if (typeof uniformEntry == 'string') {
-              uniformEntry = CanvasManager.#parseUniformEntryString(uniformEntry);
-            } else {
-              throw new Error(`opts.uniforms[${i}] unrecognized type: ${typeof uniformEntry}`);
-            }
-            
-            if (uniformNames.has(uniformEntry.name)) {
-              throw new Error(`opts.uniforms[${i}].name taken: ${uniformEntry.name}`);
-            }
-            
-            uniforms.push(uniformEntry);
-            uniformNames.add(uniformEntry.name);
-            
-            if (uniformEntry.type == UniformType['SAMPLER2D']) {
-              let resolutionUniformEntry = {
-                name: `${uniformEntry.name}${FRAGMENT_SHADER_TEXTURE_RESOLUTION_SUFFIX}`,
-                type: UniformType['VEC2'],
-              };
-              
-              if (uniformNames.has(resolutionUniformEntry.name)) {
-                throw new Error(`(opts.uniforms[${i}].name + '${FRAGMENT_SHADER_TEXTURE_RESOLUTION_SUFFIX}') taken: ${resolutionUniformEntry.name}`);
-              }
-              
-              uniforms.push(resolutionUniformEntry);
-              uniformNames.add(resolutionUniformEntry.name);
-            } else if (uniformEntry.type == UniformType['SAMPLER2D' + UniformType_ArraySuffix]) {
-              let resolutionUniformEntry = {
-                name: `${uniformEntry.name}${FRAGMENT_SHADER_TEXTURE_RESOLUTION_SUFFIX}`,
-                type: UniformType['VEC2' + UniformType_ArraySuffix],
-                length: uniformEntry.length,
-              };
-              
-              if (uniformNames.has(resolutionUniformEntry.name)) {
-                throw new Error(`(opts.uniforms[${i}].name + '${FRAGMENT_SHADER_TEXTURE_RESOLUTION_SUFFIX}') taken: ${resolutionUniformEntry.name}`);
-              }
-              
-              uniforms.push(resolutionUniformEntry);
-              uniformNames.add(resolutionUniformEntry.name);
-            }
-          }
-        } else {
-          throw new Error('opts.uniforms must be Array or null');
+          this.#canvasContext = gl;
+          this.#fullCanvasShaderManager = fullCanvasShaderManager;
+          break;
         }
+        
+        default:
+          throw new Error('default case should not be triggered');
       }
       
-      if (Array.isArray(opts.shaderSegments)) {
-        shaderSegmentStrings = [];
-        
-        for (let i = 0; i < opts.shaderSegments.length; i++) {
-          let segment = opts.shaderSegments[i];
-          
-          if (typeof segment.type != 'string' || !(segment.type in ShaderSegmentType)) {
-            throw new Error(`opts.shaderSegments[${i}].type value ${segment.type} invalid`);
-          }
-          
-          switch (segment.type) {
-            case ShaderSegmentType.STRING:
-              if (typeof segment.content != 'string') {
-                throw new Error(`opts.shaderSegments[${i}].content not string`);
-              }
-              
-              shaderSegmentStrings.push(segment.content);
-              break;
-            
-            case ShaderSegmentType.URL:
-              if (typeof segment.url != 'string') {
-                throw new Error(`opts.shaderSegments[${i}].url not string`);
-              }
-              
-              shaderSegmentStrings.push(await fetchAsText(segment.url));
-              break;
-          }
-        }
-      } else {
-        throw new Error(`opts.triggers.tearDown not function or null: ${typeof opts.triggers.tearDown}`);
-      }
-    }
-    
-    this.#triggers = triggers;
-    
-    let canvas = document.createElement('canvas');
-    
-    this.#canvasContainer.appendChild(canvas);
-    this.#canvas = canvas;
-    
-    this.#canvasMode = opts.mode;
-    
-    switch (opts.mode) {
-      case CanvasMode.NO_CONTEXT:
-        break;
+      this.#triggers = triggers;
       
-      case CanvasMode['2D']:
-        this.#canvasContext = canvas.getContext('2d');
-        break;
+      this.#canvasContainer.appendChild(canvas);
+      this.#canvas = canvas;
       
-      case CanvasMode.WEBGL1:
-        this.#canvasContext = canvas.getContext('webgl1');
-        break;
+      this.#canvasMode = opts.mode;
       
-      case CanvasMode.WEBGL2:
-        this.#canvasContext = canvas.getContext('webgl2');
-        break;
+      this.#canvasStyle = getComputedStyle(this.#canvas);
       
-      case CanvasMode.WEBGL_FULL_CANVAS_SHADER: {
-        let gl = canvas.getContext('webgl2');
-        
-        this.#canvasContext = gl;
-        
+      this.#resizeObserver = new ResizeObserver(() => { this.#resizeHandler(); });
+      this.#resizeObserver.observe(this.#canvas);
+      
+      if (this.#triggers.setup != null) {
         try {
-          // https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Tutorial/Adding_2D_content_to_a_WebGL_context
-          
-          // shader creation
-          
-          this.#fullCanvasShaderData = {};
-          
-          this.#fullCanvasShaderData.textureManager = new TextureManager(gl);
-          
-          let shaderManager = this.#fullCanvasShaderData.shaderManager = new ShaderManager(gl);
-          
-          let vertexShader = this.#fullCanvasShaderData.vertexShader = shaderManager.loadShaderFromString(gl.VERTEX_SHADER, VERTEX_SHADER_XY_ONLY_TEXT);
-          
-          let fragmentShaderSource = [
-            FRAGMENT_SHADER_PREFIX,
-            ...uniforms.map(x => `uniform ${CanvasManager.#uniformEntryToString(x)};`),
-            ...shaderSegmentStrings
-          ].join('\n');
-          
-          let fragmentShader = this.#fullCanvasShaderData.fragmentShader = shaderManager.loadShaderFromString(gl.FRAGMENT_SHADER, fragmentShaderSource);
-          
-          // shader program creation
-          
-          let shaderProgram = this.#fullCanvasShaderData.shaderProgram = gl.createProgram();
-          
-          gl.attachShader(shaderProgram, vertexShader);
-          gl.attachShader(shaderProgram, fragmentShader);
-          gl.linkProgram(shaderProgram);
-          
-          if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
-            let info = gl.getProgramInfoLog(shaderProgram);
-            gl.deleteProgram(shaderProgram);
-            throw new Error(`Shader program initialization error: ${info}`);
+          // temporarily release lock during call to setup
+          this.#editLock.release();
+          try {
+            await this.#triggers.setup();
+          } finally {
+            this.#editLock.acquire();
           }
-          
-          // get variable positions
-          
-          let autoAttribLocations = this.#fullCanvasShaderData.autoAttribLocations = {
-            vertexPosition: gl.getAttribLocation(shaderProgram, VERTEX_SHADER_POSITION_VAR),
-          };
-          
-          this.#fullCanvasShaderData.autoUniformLocations = {
-            resolution: gl.getUniformLocation(shaderProgram, FRAGMENT_SHADER_RESOLUTION_VAR),
-          };
-          
-          this.#fullCanvasShaderData.uniforms = new Map(uniforms.map(uniformEntry => {
-            if ('length' in uniformEntry) {
-              return [
-                uniformEntry.name,
-                {
-                  type: uniformEntry.type,
-                  length: uniformEntry.length,
-                  location: gl.getUniformLocation(shaderProgram, uniformEntry.name),
-                },
-              ];
-            } else {
-              return [
-                uniformEntry.name,
-                {
-                  type: uniformEntry.type,
-                  location: gl.getUniformLocation(shaderProgram, uniformEntry.name),
-                },
-              ];
-            }
-          }));
-          
-          // buffer for quad coordinates
-          
-          let positionBuffer = this.#fullCanvasShaderData.positionBuffer = gl.createBuffer();
-          
-          const positionData = new Float32Array([
-            1, 1,
-            -1, 1,
-            1, -1,
-            -1, -1,
-          ]);
-          
-          const numComponents = 2; // pull out 2 values per iteration
-          const type = gl.FLOAT; // the data in the buffer is 32bit floats
-          const normalize = false; // don't normalize
-          const stride = 0; // how many bytes to get from one set of values to the next
-          // 0 = use type and numComponents above
-          const offset = 0; // how many bytes inside the buffer to start from
-          
-          gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-          gl.bufferData(gl.ARRAY_BUFFER, positionData, gl.STATIC_DRAW);
-          gl.vertexAttribPointer(autoAttribLocations.vertexPosition, numComponents, type, normalize, stride, offset);
-          gl.enableVertexAttribArray(autoAttribLocations.vertexPosition);
-          gl.bindBuffer(gl.ARRAY_BUFFER, null);
         } catch (err) {
-          console.error(err);
-          this.gracefulShutdown();
+          this.#resizeObserver.unobserve(this.#canvas);
+          this.#resizeObserver = null;
+    
+          this.#canvasWidth = null;
+          this.#canvasHeight = null;
+          
+          this.#canvasStyle = null;
+          
+          this.#canvasMode = CanvasMode.NONE;
+          
+          removeNode(this.#canvas);
+          this.#canvas = null;
+          
+          this.#triggers = null;
+          
+          if (opts.mode == CanvasMode.WEBGL_FULL_CANVAS_SHADER) {
+            this.#fullCanvasShaderManager.tearDown();
+            this.#fullCanvasShaderManager = null;
+          }
+          
+          this.#canvasContext = null;
+          
+          throw err;
         }
-        break;
       }
+    } catch (err) {
+      this.#renderLoop.clearFrameRate();
       
-      default:
-        throw new Error('default case should not be triggered');
-    }
-    
-    this.#canvasStyle = getComputedStyle(this.#canvas);
-    this.#resizeObserver = new ResizeObserver(() => { this.#resizeHandler(); });
-    this.#resizeObserver.observe(this.#canvas);
-    
-    if (this.#triggers.setup != null) {
-      try {
-        // temporarily release lock during call to setup
-        this.#editLock.release();
-        try {
-          await this.#triggers.setup();
-        } finally {
-          this.#editLock.acquire();
-        }
-      } catch (err) {
-        console.error(err);
-        this.gracefulShutdown();
-      }
+      throw err;
     }
   }
   
@@ -461,24 +210,8 @@ export class CanvasManager {
       case CanvasMode.WEBGL_FULL_CANVAS_SHADER: {
         // https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Tutorial/Adding_2D_content_to_a_WebGL_context
         
-        let gl = this.#canvasContext;
-        
-        gl.deleteBuffer(this.#fullCanvasShaderData.positionBuffer);
-        this.#fullCanvasShaderData.positionBuffer = null;
-        
-        gl.deleteProgram(this.#fullCanvasShaderData.shaderProgram);
-        this.#fullCanvasShaderData.shaderProgram = null;
-        
-        this.#fullCanvasShaderData.shaderManager.deleteAllShaders();
-        this.#fullCanvasShaderData.vertexShader = null;
-        this.#fullCanvasShaderData.fragmentShader = null;
-        this.#fullCanvasShaderData.shaderManager = null;
-        this.#fullCanvasShaderData.uniforms = null;
-        
-        this.#fullCanvasShaderData.textureManager.deleteAllTextures();
-        this.#fullCanvasShaderData.textureManager = null;
-        
-        this.#fullCanvasShaderData = null;
+        this.#fullCanvasShaderManager.tearDown();
+        this.#fullCanvasShaderManager = null;
         break;
       }
       
@@ -486,15 +219,23 @@ export class CanvasManager {
         throw new Error('default case should not be triggered');
     }
     
-    removeNode(this.#canvas);
-    
     this.#resizeObserver.unobserve(this.#canvas);
-    this.#canvas = null;
-    this.#canvasContext = null;
+    this.#resizeObserver = null;
+    
     this.#canvasWidth = null;
     this.#canvasHeight = null;
+    
     this.#canvasStyle = null;
-    this.#resizeObserver = null;
+          
+    this.#canvasMode = CanvasMode.NONE;
+    
+    removeNode(this.#canvas);
+    this.#canvas = null;
+    
+    this.#triggers = null;
+    
+    this.#canvasContext = null;
+    
     this.#renderLoop.clearFrameRate();
   }
   
@@ -514,23 +255,7 @@ export class CanvasManager {
           await this.#triggers.render();
         }
         
-        // https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Tutorial/Adding_2D_content_to_a_WebGL_context
-        
-        let gl = this.#canvasContext;
-        
-        // no need to clear screen if shader is drawing over full screen anyway
-        
-        //gl.clearColor(0.0, 0.0, 0.0, 1.0);
-        //gl.clearDepth(1.0);
-        //gl.clear(gl.COLOR_BUFFER_BIT, gl.DEPTH_BUFFER_BIT);
-        
-        gl.useProgram(this.#fullCanvasShaderData.shaderProgram);
-        
-        const offset = 0;
-        const vertexCount = 4;
-        gl.drawArrays(gl.TRIANGLE_STRIP, offset, vertexCount);
-        
-        gl.useProgram(null);
+        this.#fullCanvasShaderManager.render();
         break;
       }
       
@@ -595,8 +320,6 @@ export class CanvasManager {
           
           if (newMode != CanvasMode.NONE) {
             await this.#createCanvas(opts);
-          } else {
-            this.#canvasMode = newMode;
           }
         }
       } finally {
@@ -689,313 +412,19 @@ export class CanvasManager {
   // webgl full canvas shader specific
   
   getUniform(uniformName) {
-    if (typeof uniformName != 'string') {
-      throw new Error(`Error: uniformName not string: ${typeof uniformName}`);
-    }
-    
     if (this.getCanvasMode() != CanvasMode.WEBGL_FULL_CANVAS_SHADER) {
       throw new Error('Uniform get/set functions only available on full canvas shader mode');
     }
     
-    if (!this.#fullCanvasShaderData.uniforms.has(uniformName)) {
-      throw new Error(`Uniform ${uniformName} does not exist or was not user set`);
-    }
-    
-    let uniformEntry = this.#fullCanvasShaderData.uniforms.get(uniformName);
-    
-    return this.#canvasContext.getUniform(
-      this.#fullCanvasShaderData.shaderProgram,
-      uniformEntry.location
-    );
+    return this.#fullCanvasShaderManager.getUniform(uniformName);
   }
   
   setUniform(uniformName, value) {
-    if (typeof uniformName != 'string') {
-      throw new Error(`Error: uniformName not string: ${typeof uniformName}`);
-    }
-    
     if (this.getCanvasMode() != CanvasMode.WEBGL_FULL_CANVAS_SHADER) {
       throw new Error('Uniform get/set functions only available on full canvas shader mode');
     }
     
-    if (!this.#fullCanvasShaderData.uniforms.has(uniformName)) {
-      throw new Error(`Uniform ${uniformName} does not exist or was not user set`);
-    }
-    
-    let uniformEntry = this.#fullCanvasShaderData.uniforms.get(uniformName);
-    
-    let gl = this.#canvasContext;
-    let loc = uniformEntry.location;
-    
-    gl.useProgram(this.#fullCanvasShaderData.shaderProgram);
-    
-    try {
-      // for setting boolean uniforms, apparently any uniform function can be used,
-      // and 0 = false and nonzero = true?:
-      // https://stackoverflow.com/questions/33690186/opengl-bool-uniform/33690786#33690786
-      // here, the signed-integer uniform functions are used
-      
-      switch (uniformEntry.type) {
-        // scalars / vectors
-        
-        case UniformType['BOOLEAN']:
-          gl.uniform1i(loc, value);
-          break;
-        
-        case UniformType['BVEC2']:
-          gl.uniform2i(loc, ...value);
-          break;
-        
-        case UniformType['BVEC3']:
-          gl.uniform3i(loc, ...value);
-          break;
-        
-        case UniformType['BVEC4']:
-          gl.uniform4i(loc, ...value);
-          break;
-        
-        case UniformType['UINT']:
-          gl.uniform1ui(loc, value);
-          break;
-        
-        case UniformType['UVEC2']:
-          gl.uniform2ui(loc, ...value);
-          break;
-        
-        case UniformType['UVEC3']:
-          gl.uniform3ui(loc, ...value);
-          break;
-        
-        case UniformType['UVEC4']:
-          gl.uniform4ui(loc, ...value);
-          break;
-        
-        case UniformType['FLOAT']:
-          gl.uniform1f(loc, value);
-          break;
-        
-        case UniformType['VEC2']:
-          gl.uniform2f(loc, ...value);
-          break;
-        
-        case UniformType['VEC3']:
-          gl.uniform3f(loc, ...value);
-          break;
-        
-        case UniformType['VEC4']:
-          gl.uniform4f(loc, ...value);
-          break;
-        
-        case UniformType['INT']:
-          gl.uniform1i(loc, value);
-          break;
-        
-        case UniformType['IVEC2']:
-          gl.uniform2i(loc, ...value);
-          break;
-        
-        case UniformType['IVEC3']:
-          gl.uniform3i(loc, ...value);
-          break;
-        
-        case UniformType['IVEC4']:
-          gl.uniform4i(loc, ...value);
-          break;
-        
-        case UniformType['BOOLEAN' + UniformType_ArraySuffix]:
-          gl.uniform1iv(loc, value);
-          break;
-        
-        case UniformType['BVEC2' + UniformType_ArraySuffix]:
-          gl.uniform2iv(loc, value);
-          break;
-        
-        case UniformType['BVEC3' + UniformType_ArraySuffix]:
-          gl.uniform3iv(loc, value);
-          break;
-        
-        case UniformType['BVEC4' + UniformType_ArraySuffix]:
-          gl.uniform4iv(loc, value);
-          break;
-        
-        case UniformType['UINT' + UniformType_ArraySuffix]:
-          gl.uniform1uiv(loc, value);
-          break;
-        
-        case UniformType['UVEC2' + UniformType_ArraySuffix]:
-          gl.uniform2uiv(loc, value);
-          break;
-        
-        case UniformType['UVEC3' + UniformType_ArraySuffix]:
-          gl.uniform3uiv(loc, value);
-          break;
-        
-        case UniformType['UVEC4' + UniformType_ArraySuffix]:
-          gl.uniform4uiv(loc, value);
-          break;
-        
-        case UniformType['FLOAT' + UniformType_ArraySuffix]:
-          gl.uniform1fv(loc, value);
-          break;
-        
-        case UniformType['VEC2' + UniformType_ArraySuffix]:
-          gl.uniform2fv(loc, value);
-          break;
-        
-        case UniformType['VEC3' + UniformType_ArraySuffix]:
-          gl.uniform3fv(loc, value);
-          break;
-        
-        case UniformType['VEC4' + UniformType_ArraySuffix]:
-          gl.uniform4fv(loc, value);
-          break;
-        
-        case UniformType['INT' + UniformType_ArraySuffix]:
-          gl.uniform1iv(loc, value);
-          break;
-        
-        case UniformType['IVEC2' + UniformType_ArraySuffix]:
-          gl.uniform2iv(loc, value);
-          break;
-        
-        case UniformType['IVEC3' + UniformType_ArraySuffix]:
-          gl.uniform3iv(loc, value);
-          break;
-        
-        case UniformType['IVEC4' + UniformType_ArraySuffix]:
-          gl.uniform4iv(loc, value);
-          break;
-        
-        // matrices
-        
-        case ['MAT22']:
-          gl.uniformMatrix2fv(loc, false, value);
-          break;
-        
-        case ['MAT23']:
-          gl.uniformMatrix2x3fv(loc, false, value);
-          break;
-        
-        case ['MAT24']:
-          gl.uniformMatrix2x4fv(loc, false, value);
-          break;
-        
-        case ['MAT32']:
-          gl.uniformMatrix3x2fv(loc, false, value);
-          break;
-        
-        case ['MAT33']:
-          gl.uniformMatrix3fv(loc, false, value);
-          break;
-        
-        case ['MAT34']:
-          gl.uniformMatrix3x4fv(loc, false, value);
-          break;
-        
-        case ['MAT42']:
-          gl.uniformMatrix4x2fv(loc, false, value);
-          break;
-        
-        case ['MAT43']:
-          gl.uniformMatrix4x3fv(loc, false, value);
-          break;
-        
-        case ['MAT44']:
-          gl.uniformMatrix4fv(loc, false, value);
-          break;
-        
-        case ['MAT22' + UniformType_ArraySuffix]:
-          gl.uniformMatrix2fv(loc, false, value);
-          break;
-        
-        case ['MAT23' + UniformType_ArraySuffix]:
-          gl.uniformMatrix2x3fv(loc, false, value);
-          break;
-        
-        case ['MAT24' + UniformType_ArraySuffix]:
-          gl.uniformMatrix2x4fv(loc, false, value);
-          break;
-        
-        case ['MAT32' + UniformType_ArraySuffix]:
-          gl.uniformMatrix3x2fv(loc, false, value);
-          break;
-        
-        case ['MAT33' + UniformType_ArraySuffix]:
-          gl.uniformMatrix3fv(loc, false, value);
-          break;
-        
-        case ['MAT34' + UniformType_ArraySuffix]:
-          gl.uniformMatrix3x4fv(loc, false, value);
-          break;
-        
-        case ['MAT42' + UniformType_ArraySuffix]:
-          gl.uniformMatrix4x2fv(loc, false, value);
-          break;
-        
-        case ['MAT43' + UniformType_ArraySuffix]:
-          gl.uniformMatrix4x3fv(loc, false, value);
-          break;
-        
-        case ['MAT44' + UniformType_ArraySuffix]:
-          gl.uniformMatrix4fv(loc, false, value);
-          break;
-        
-        case UniformType['SAMPLER2D']: {
-          let texID;
-          
-          try {
-            texID = this.#fullCanvasShaderData.textureManager.getTextureID(value);
-          } catch (err) {
-            throw new Error(`value[${i}] invalid, error resulted: ${err.toString()}`);
-          }
-          
-          let { width, height } = this.#fullCanvasShaderData.textureManager.getTextureDimensions(value);
-          
-          let resolutionLoc = this.#fullCanvasShaderData.uniforms.get(`${uniformName}${FRAGMENT_SHADER_TEXTURE_RESOLUTION_SUFFIX}`).location;
-          
-          gl.uniform1i(loc, texID);
-          gl.uniform2f(resolutionLoc, width, height);
-          break;
-        }
-        
-        case UniformType['SAMPLER2D' + UniformType_ArraySuffix]: {
-          if (!Array.isArray(value)) {
-            throw new Error(`Sampler2d[] (array) enum must be set with array of texture names`);
-          }
-          
-          let texIDs = [];
-          let widthAndHeight = [];
-          
-          for (let i = 0; i < value.length; i++) {
-            let textureAlias = value[i];
-            
-            let texID;
-            
-            try {
-              texID = this.#fullCanvasShaderData.textureManager.getTextureID(textureAlias);
-            } catch (err) {
-              throw new Error(`value[${i}] invalid, error resulted: ${err.toString()}`);
-            }
-            
-            let { width, height } = this.#fullCanvasShaderData.textureManager.getTextureDimensions(value);
-            
-            texIDs.push(texID);
-            widthAndHeight.push({ width, height });
-          }
-          
-          let resolutionLoc = this.#fullCanvasShaderData.uniforms.get(`${uniformName}${FRAGMENT_SHADER_TEXTURE_RESOLUTION_SUFFIX}`).location;
-          
-          gl.uniform1iv(loc, texIDs);
-          gl.uniform1fv(resolutionLoc, widthAndHeight.map(({ width, height}) => [width, height]).flat());
-          break;
-        }
-        
-        default:
-          throw new Error(`Uniform setting not implemented for type ${uniformEntry.type}`);
-      }
-    } finally {
-      gl.useProgram(null);
-    }
+    this.#fullCanvasShaderManager.setUniform(uniformName, value);
   }
   
   currentTextureNames() {
@@ -1003,7 +432,7 @@ export class CanvasManager {
       throw new Error('texture functions only available on full canvas shader mode');
     }
     
-    return this.#fullCanvasShaderData.textureManager.currentTextureNames();
+    return this.#fullCanvasShaderManager.currentTextureNames();
   }
   
   hasTexture(alias) {
@@ -1011,7 +440,7 @@ export class CanvasManager {
       throw new Error('texture functions only available on full canvas shader mode');
     }
     
-    return this.#fullCanvasShaderData.textureManager.hasTexture(alias);
+    return this.#fullCanvasShaderManager.hasTexture(alias);
   }
   
   async loadTexture(opts) {
@@ -1025,7 +454,7 @@ export class CanvasManager {
       throw new Error('texture functions only available on full canvas shader mode');
     }
     
-    await this.#fullCanvasShaderData.textureManager.loadTexture({ data, alias });
+    await this.#fullCanvasShaderManager.loadTexture({ data, alias });
   }
   
   deleteTexture(alias) {
@@ -1033,7 +462,7 @@ export class CanvasManager {
       throw new Error('texture functions only available on full canvas shader mode');
     }
     
-    this.#fullCanvasShaderData.textureManager.deleteTexture(alias);
+    this.#fullCanvasShaderManager.deleteTexture(alias);
   }
   
   deleteAllTextures() {
@@ -1041,7 +470,7 @@ export class CanvasManager {
       throw new Error('texture functions only available on full canvas shader mode');
     }
     
-    this.#fullCanvasShaderData.textureManager.deleteAllTextures();
+    this.#fullCanvasShaderManager.deleteAllTextures();
   }
   
   getTextureID(alias) {
@@ -1049,7 +478,7 @@ export class CanvasManager {
       throw new Error('texture functions only available on full canvas shader mode');
     }
     
-    return this.#fullCanvasShaderData.textureManager.getTextureID(alias);
+    return this.#fullCanvasShaderManager.getTextureID(alias);
   }
   
   getTextureDimensions(alias) {
@@ -1057,6 +486,6 @@ export class CanvasManager {
       throw new Error('texture functions only available on full canvas shader mode');
     }
     
-    return this.#fullCanvasShaderData.textureManager.getTextureDimensions(alias);
+    return this.#fullCanvasShaderManager.getTextureDimensions(alias);
   }
 }

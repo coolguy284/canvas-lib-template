@@ -27,7 +27,11 @@ support for more advanced webgl mode that can pass shaders into texture variable
 camera scrolling / moving lib that is a pure class that can take in functions for x and y scaling factor based on current x and y
 canvasmanager: pass in manager object to all trigger funcs for modularization
 canvasmanager: ensure default shutdown and error based shutdowns are clean
+canvasmanager: lock
+  rename editlock to modelock
+  allow lock to be acquired many times, add function for exclusiveAcquire that requires no use of lock at time of acquire, but normal acquires still function after
 
 don't care:
 canvasmanager: type check value field of CanvasManager.setUniform
 canvasmanager: rename frameskips to renderskips
+explain that "uniform" means passing value to shader in parens on index page

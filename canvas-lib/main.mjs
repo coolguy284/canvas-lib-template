@@ -44,4 +44,5 @@ export {
   VERTEX_SHADER_POSITION_VAR,
   VERTEX_SHADER_XY_ONLY_TEXT,
 } from './canvas/gl_constants.mjs';
+export { createFullCanvasShaderManager } from './canvas/gl_full_canvas_shader.mjs';
 */
