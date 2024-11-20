@@ -237,27 +237,32 @@ export class CanvasManager {
   }
   
   async #callRender() {
-    switch (this.#canvasMode) {
-      case CanvasMode.NO_CONTEXT:
-      case CanvasMode['2D']:
-      case CanvasMode.WEBGL1:
-      case CanvasMode.WEBGL2:
-        if (this.#triggers.render != null) {
-          await this.#triggers.render();
-        }
-        break;
-      
-      case CanvasMode.WEBGL_FULL_CANVAS_SHADER: {
-        if (this.#triggers.render != null) {
-          await this.#triggers.render();
+    try {
+      switch (this.#canvasMode) {
+        case CanvasMode.NO_CONTEXT:
+        case CanvasMode['2D']:
+        case CanvasMode.WEBGL1:
+        case CanvasMode.WEBGL2:
+          if (this.#triggers.render != null) {
+            await this.#triggers.render();
+          }
+          break;
+        
+        case CanvasMode.WEBGL_FULL_CANVAS_SHADER: {
+          if (this.#triggers.render != null) {
+            await this.#triggers.render();
+          }
+          
+          this.#fullCanvasShaderManager.render();
+          break;
         }
         
-        this.#fullCanvasShaderManager.render();
-        break;
+        default:
+          throw new Error('default case should not be triggered');
       }
-      
-      default:
-        throw new Error('default case should not be triggered');
+    } catch (err) {
+      this.gracefulShutdown();
+      throw err;
     }
   }
   
