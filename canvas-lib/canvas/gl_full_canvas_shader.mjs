@@ -133,6 +133,10 @@ class FullCanvasShaderManager {
             throw new Error(`opts.uniforms[${i}] unrecognized type: ${typeof uniformEntry}`);
           }
           
+          if (uniformEntry.name == FRAGMENT_SHADER_RESOLUTION_VAR) {
+            throw new Error(`opts.uniforms[${i}].name "${FRAGMENT_SHADER_RESOLUTION_VAR}" is internal, reserved for screen resolution`);
+          }
+          
           if (uniformNames.has(uniformEntry.name)) {
             throw new Error(`opts.uniforms[${i}].name taken: ${uniformEntry.name}`);
           }
