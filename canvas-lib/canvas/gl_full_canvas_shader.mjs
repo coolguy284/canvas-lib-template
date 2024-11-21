@@ -26,6 +26,7 @@ class FullCanvasShaderManager {
   //#vertexAttribLocation;
   #resolutionUniformLocation;
   #customUniforms;
+  #customUniformsInternal;
   #positionBuffer;
   
   // helper functions
@@ -52,6 +53,8 @@ class FullCanvasShaderManager {
         throw new Error(`uniformEntry.length unknown type or invalid value: ${uniformEntry.type}`);
       }
     }
+    
+    parsedUniformEntry.internal = false;
     
     return parsedUniformEntry;
   }
@@ -94,6 +97,8 @@ class FullCanvasShaderManager {
     
     uniformEntry.type = enumType;
     
+    uniformEntry.internal = false;
+    
     return uniformEntry;
   }
   
@@ -103,6 +108,29 @@ class FullCanvasShaderManager {
     } else {
       return `${UNIFORM_ENUM_TO_PREFERRED_GLSL_NAME.get(uniformEntry.type)} ${uniformEntry.name}`;
     }
+  }
+  
+  static #uniformEntryArrToMap(gl, shaderProgram, uniforms) {
+    return new Map(uniforms.map(uniformEntry => {
+      if ('length' in uniformEntry) {
+        return [
+          uniformEntry.name,
+          {
+            type: uniformEntry.type,
+            length: uniformEntry.length,
+            location: gl.getUniformLocation(shaderProgram, uniformEntry.name),
+          },
+        ];
+      } else {
+        return [
+          uniformEntry.name,
+          {
+            type: uniformEntry.type,
+            location: gl.getUniformLocation(shaderProgram, uniformEntry.name),
+          },
+        ];
+      }
+    }));
   }
   
   async #initialize(gl, opts) {
@@ -134,7 +162,7 @@ class FullCanvasShaderManager {
           }
           
           if (uniformEntry.name == FRAGMENT_SHADER_RESOLUTION_VAR) {
-            throw new Error(`opts.uniforms[${i}].name "${FRAGMENT_SHADER_RESOLUTION_VAR}" is internal, reserved for screen resolution`);
+            throw new Error(`opts.uniforms[${i}].name '${FRAGMENT_SHADER_RESOLUTION_VAR}' is internal, reserved for screen resolution`);
           }
           
           if (uniformNames.has(uniformEntry.name)) {
@@ -148,6 +176,7 @@ class FullCanvasShaderManager {
             let resolutionUniformEntry = {
               name: `${uniformEntry.name}${FRAGMENT_SHADER_TEXTURE_RESOLUTION_SUFFIX}`,
               type: UniformType['VEC2'],
+              internal: true,
             };
             
             if (uniformNames.has(resolutionUniformEntry.name)) {
@@ -161,6 +190,7 @@ class FullCanvasShaderManager {
               name: `${uniformEntry.name}${FRAGMENT_SHADER_TEXTURE_RESOLUTION_SUFFIX}`,
               type: UniformType['VEC2' + UniformType_ArraySuffix],
               length: uniformEntry.length,
+              internal: true,
             };
             
             if (uniformNames.has(resolutionUniformEntry.name)) {
@@ -252,26 +282,20 @@ class FullCanvasShaderManager {
     //this.#vertexAttribLocation = vertexAttribLocation;
     this.#resolutionUniformLocation = gl.getUniformLocation(shaderProgram, FRAGMENT_SHADER_RESOLUTION_VAR);
     
-    this.#customUniforms = new Map(uniforms.map(uniformEntry => {
-      if ('length' in uniformEntry) {
-        return [
-          uniformEntry.name,
-          {
-            type: uniformEntry.type,
-            length: uniformEntry.length,
-            location: gl.getUniformLocation(shaderProgram, uniformEntry.name),
-          },
-        ];
+    let normalUniforms = [];
+    let internalUniforms = [];
+    
+    uniforms.forEach(uniformEntry => {
+      if (uniformEntry.internal) {
+        internalUniforms.push(uniformEntry);
       } else {
-        return [
-          uniformEntry.name,
-          {
-            type: uniformEntry.type,
-            location: gl.getUniformLocation(shaderProgram, uniformEntry.name),
-          },
-        ];
+        normalUniforms.push(uniformEntry);
       }
-    }));
+      delete uniformEntry.internal;
+    });
+    
+    this.#customUniforms = FullCanvasShaderManager.#uniformEntryArrToMap(gl, shaderProgram, normalUniforms);
+    this.#customUniformsInternal = FullCanvasShaderManager.#uniformEntryArrToMap(gl, shaderProgram, internalUniforms);
     
     // gl context setup > buffer for quad coordinates
     
@@ -359,6 +383,7 @@ class FullCanvasShaderManager {
     //this.#vertexAttribLocation = null;
     this.#resolutionUniformLocation = null;
     this.#customUniforms = null;
+    this.#customUniformsInternal = null;
     
     this.#textureManager.deleteAllTextures();
     this.#textureManager = null;
@@ -653,7 +678,7 @@ class FullCanvasShaderManager {
           
           let { width, height } = this.#textureManager.getTextureDimensions(value);
           
-          let resolutionLoc = this.#customUniforms.get(`${uniformName}${FRAGMENT_SHADER_TEXTURE_RESOLUTION_SUFFIX}`).location;
+          let resolutionLoc = this.#customUniformsInternal.get(`${uniformName}${FRAGMENT_SHADER_TEXTURE_RESOLUTION_SUFFIX}`).location;
           
           gl.uniform1i(loc, texID);
           gl.uniform2f(resolutionLoc, width, height);
@@ -685,7 +710,7 @@ class FullCanvasShaderManager {
             widthAndHeight.push({ width, height });
           }
           
-          let resolutionLoc = this.#customUniforms.get(`${uniformName}${FRAGMENT_SHADER_TEXTURE_RESOLUTION_SUFFIX}`).location;
+          let resolutionLoc = this.#customUniformsInternal.get(`${uniformName}${FRAGMENT_SHADER_TEXTURE_RESOLUTION_SUFFIX}`).location;
           
           gl.uniform1iv(loc, texIDs);
           gl.uniform1fv(resolutionLoc, widthAndHeight.map(({ width, height}) => [width, height]).flat());

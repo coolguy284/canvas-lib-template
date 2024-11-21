@@ -1,5 +1,4 @@
 features:
-separate internal shader vars (derived from user defined) from user defined
 offscreenvanvas canvas mode if div explicitly set to null (not missing)
 settingsmanager
   convert some properties to optional w. defaults
