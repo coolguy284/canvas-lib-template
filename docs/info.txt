@@ -9,15 +9,18 @@ CanvasManager notes:
     vec2 <sampler2d[] name>_resolution[]:
       set by CanvasManager, contains the width and height of each image in the sampler2d array as floats
 
+definitions:
+  nullish: null/undefined/missing
+
 CanvasManager > setMode:
   {
-    mode: CanvasMode,
+    mode: CanvasMode | nullish (default CanvasMode.NONE),
     if mode != CanvasMode.NONE:
       triggers: {
-        setup: <function() -> undefined; called to set up variables> | null,
-        render: <function() -> undefined; called every render> | null,
-        tearDown: <function() -> undefined; called to tear down variables> | null,
-      } | null,
+        setup: <function() -> undefined; called to set up variables> | nullish,
+        render: <function() -> undefined; called every render> | nullish,
+        tearDown: <function() -> undefined; called to tear down variables> | nullish,
+      } | nullish,
       frameRate: {
         mode: FrameRateMode,
         if mode == FrameRateMode.FRAME_MULT:
@@ -46,7 +49,7 @@ CanvasManager > setMode:
             length: <integer>,
         },
       ] | null,
-  }
+  } | null (default {})
 
 SettingsManager > constructor:
   {

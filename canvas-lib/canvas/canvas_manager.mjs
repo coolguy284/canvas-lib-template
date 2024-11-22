@@ -303,7 +303,15 @@ export class CanvasManager {
   }
   
   async setCanvasMode(opts) {
-    let newMode = opts.mode;
+    if (typeof opts != 'object' && opts !== null) {
+      throw new Error(`opts must be object or null (not undefined): ${opts}`);
+    }
+    
+    if (opts === null) {
+      opts = {};
+    }
+    
+    let newMode = opts.mode ?? CanvasMode.NONE;
     
     if (typeof newMode == 'string' && newMode in CanvasMode) {
       // it is a bit forbidden to check the canvasmode before acquiring the lock, but it is
