@@ -1,4 +1,5 @@
 features:
+fix canvas element still created if setmode called with only mode:2D (too few args)
 offscreenvanvas canvas mode if div explicitly set to null (not missing)
 settingsmanager
   convert some properties to optional w. defaults

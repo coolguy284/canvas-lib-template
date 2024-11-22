@@ -93,7 +93,7 @@ export class CanvasManager {
       }
     }
     
-    this.#renderLoop.setFrameRate(opts.frameRate);
+    await this.#renderLoop.setFrameRate(opts.frameRate);
     
     try {
       let canvas = document.createElement('canvas');
