@@ -11,6 +11,7 @@ export class SettingsManager {
   // class variables
   
   #button;
+  #btnToggleSettingsListener;
   #div;
   #localStorageKey;
   #settingsMap;
@@ -987,11 +988,13 @@ export class SettingsManager {
     // TODO
   }
   
+  #destroyUI() {
+    removeAllNodes(this.#div);
+  }
+  
   // public functions
   
   constructor(opts) {
-    // TODO remove
-    
     if (!(opts.button instanceof HTMLElement)) {
       throw new Error('opts.button not instance of HTMLElement');
     }
@@ -1017,16 +1020,45 @@ export class SettingsManager {
     
     this.#initialSettingValuesLoad();
     
-    // TODO (bind settings button click to toggle settings)
+    this.#btnToggleSettingsListener = this.toggleSettingsVisibility.bind(this);
+    this.#button.addEventListener('click', this.#btnToggleSettingsListener);
     
     this.#createUI(uiEntries, settingsUiPropertiesMap);
   }
   
+  tearDown() {
+    if (this.#button == null) {
+      throw new Error('SettingsManager already torn down');
+    }
+    
+    this.#destroyUI();
+    
+    this.#button.removeEventListener('click', this.#btnToggleSettingsListener);
+    this.#btnToggleSettingsListener = null;
+    
+    this.#button = null;
+    this.#div = null;
+    this.#localStorageKey = null;
+    this.#settingsMap = null;
+  }
+  
+  isTornDown() {
+    return this.#button == null;
+  }
+  
   settingsList() {
-    // TODO
+    if (this.#button == null) {
+      throw new Error('cannot get settings list, manager torn down');
+    }
+    
+    return Array.from(this.#settingsMap.keys());
   }
   
   has(name) {
+    if (this.#button == null) {
+      throw new Error('cannot read/write settings, manager torn down');
+    }
+    
     if (typeof name != 'string') {
       throw new Error(`Type of name not string: ${typeof name}`);
     }
@@ -1035,6 +1067,10 @@ export class SettingsManager {
   }
   
   get(name) {
+    if (this.#button == null) {
+      throw new Error('cannot read/write settings, manager torn down');
+    }
+    
     if (typeof name != 'string') {
       throw new Error(`Type of name not string: ${typeof name}`);
     }
@@ -1047,6 +1083,10 @@ export class SettingsManager {
   }
   
   set(name, value) {
+    if (this.#button == null) {
+      throw new Error('cannot read/write settings, manager torn down');
+    }
+    
     if (typeof name != 'string') {
       throw new Error(`Type of name not string: ${typeof name}`);
     }
@@ -1061,10 +1101,18 @@ export class SettingsManager {
   }
   
   getSettingsVisibility() {
+    if (this.#button == null) {
+      throw new Error('cannot read/write settings visibility, manager torn down');
+    }
+    
     return this.#div.style.display != 'none';
   }
   
   setSettingsVisibility(visibility) {
+    if (this.#button == null) {
+      throw new Error('cannot read/write settings visibility, manager torn down');
+    }
+    
     if (typeof visibility != 'boolean') {
       throw new Error(`Type of visibility not bool: ${typeof visibility}`);
     }
@@ -1081,6 +1129,10 @@ export class SettingsManager {
   }
   
   toggleSettingsVisibility() {
+    if (this.#button == null) {
+      throw new Error('cannot read/write settings visibility, manager torn down');
+    }
+    
     this.setSettingsVisibility(!this.getSettingsVisibility());
   }
 }

@@ -343,26 +343,6 @@ class FullCanvasShaderManager {
     return this.#initialize(gl, opts);
   }
   
-  resizeViewport(width, height) {
-    if (!Number.isFinite(width) || width < 0) {
-      throw new Error(`width not finite nonnegative number: ${width}`);
-    }
-    
-    if (!Number.isFinite(height) || height < 0) {
-      throw new Error(`height not finite nonnegative number: ${height}`);
-    }
-    
-    if (this.#gl == null) {
-      throw new Error('Cannot resize viewport, gl context destroyed');
-    }
-    
-    // update viewport
-    this.#gl.viewport(0, 0, width, height);
-    
-    // set resolution in uniform in program
-    this.#setResolutionUniform(width, height);
-  }
-  
   tearDown() {
     if (this.#gl == null) {
       throw new Error('GL context already destroyed');
@@ -389,6 +369,30 @@ class FullCanvasShaderManager {
     this.#textureManager = null;
     
     this.#gl = null;
+  }
+  
+  isTornDown() {
+    return this.#gl == null;
+  }
+  
+  resizeViewport(width, height) {
+    if (!Number.isFinite(width) || width < 0) {
+      throw new Error(`width not finite nonnegative number: ${width}`);
+    }
+    
+    if (!Number.isFinite(height) || height < 0) {
+      throw new Error(`height not finite nonnegative number: ${height}`);
+    }
+    
+    if (this.#gl == null) {
+      throw new Error('Cannot resize viewport, gl context destroyed');
+    }
+    
+    // update viewport
+    this.#gl.viewport(0, 0, width, height);
+    
+    // set resolution in uniform in program
+    this.#setResolutionUniform(width, height);
   }
   
   render() {
