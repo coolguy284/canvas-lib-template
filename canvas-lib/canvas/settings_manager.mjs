@@ -921,6 +921,10 @@ export class SettingsManager {
       } else {
         switch (settingEntry.type) {
           case SettingType.SEPARATOR:
+            uiEntries.push({
+              type: settingEntry.type,
+              text: settingEntry.text,
+            });
             break;
           
           case SettingType.HEADER:
@@ -989,7 +993,44 @@ export class SettingsManager {
   #createUI(uiEntries, settingsUiPropertiesMap) {
     removeAllNodes(this.#div);
     
-    // TODO
+    for (let entry of uiEntries) {
+      switch (entry.type) {
+        case SettingType.SEPARATOR: {
+          this.#div.appendChild(document.createElement('hr'));
+          break;
+        }
+        
+        case SettingType.HEADER: {
+          let headerElem = document.createElement('h2');
+          headerElem.textContent = entry.text;
+          this.#div.appendChild(headerElem);
+          break;
+        }
+        
+        case SettingType.INFO_TEXT: {
+          let textElem = document.createElement('p');
+          textElem.textContent = entry.text;
+          this.#div.appendChild(textElem);
+          break;
+        }
+        
+        case SettingType.BUTTON: {
+          let buttonElem = document.createElement('button');
+          buttonElem.textContent = entry.text;
+          buttonElem.addEventListener('click', entry.onClick);
+          this.#div.appendChild(buttonElem);
+          break;
+        }
+        
+        case null: {
+          // TODO
+          break;
+        }
+        
+        default:
+          throw new Error('default case not possible, all options accounted for');
+      }
+    }
   }
   
   #destroyUI() {

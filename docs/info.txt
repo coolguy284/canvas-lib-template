@@ -271,7 +271,7 @@ SettingsManager > constructor (after parsing):
       ...
     ],
     uiEntries: [
-      type: <SettingType in SettingType in SettingType.{ ENUM, HEADER, INFO_TEXT, BUTTON }> | null (for other SettingType values),
+      type: <SettingType in SettingType in SettingType.{ SEPARATOR, HEADER, INFO_TEXT, BUTTON }> | null (for other SettingType values),
       if type == null:
         name: <string key in settingsMap>,
       if type == SettingType.{ HEADER, INFO_TEXT }:
