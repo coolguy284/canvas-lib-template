@@ -979,7 +979,11 @@ export class SettingsManager {
   }
   
   #initialSettingValuesLoad() {
-    // TODO
+    // TODO pull data from persistence
+    
+    for (let settingEntry of this.#settingsMap.values()) {
+      settingEntry.value = settingEntry.defaultValue;
+    }
   }
   
   #createUI(uiEntries, settingsUiPropertiesMap) {
