@@ -189,6 +189,21 @@
             multiline: true,
             defaultValue: '',
           },
+          {
+            type: SettingType.HEADER,
+            text: 'Header',
+          },
+          {
+            type: SettingType.INFO_TEXT,
+            text: 'Informational text. If the text is too long, the text should wrap around to the next line.',
+          },
+          {
+            type: SettingType.BUTTON,
+            text: 'Button',
+            onClick: () => {
+              alert('Button was clicked');
+            },
+          },
         ],
       });
       
