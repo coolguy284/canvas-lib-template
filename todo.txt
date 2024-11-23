@@ -1,14 +1,13 @@
 features:
 offscreenvanvas canvas mode if div explicitly set to null (not missing)
 settingsmanager
-  convert some properties to optional w. defaults
-  change visibility to object with properties
   persistence value loading
   filling out settings div
   functionality to settings div
     queue up variable updates to div components until settings div is shown again
   persistence
   if error when updating property / validating, auto revert setting to old value but log error
+  check that each line of setting info.txt has implementation
 stylesheets for full screen template including provisions for settings button / div using classes
 add subpixel scale to settings test
 move fps and subpixel scale from settings example to separate function

@@ -65,7 +65,13 @@ SettingsManager > constructor:
           displayName: <string> | nullish,
           if localStorageKey != nullish:
             forceNonPersistent: <boolean, if true then this property will not be saved persistently regardless>,
-          visibility: <function() -> boolean; true for setting to be visible, false otherwise> | nullish,
+          visibility: {
+            func: <function() -> boolean; true for setting to be visible, false otherwise>,
+            updateOn: [
+              <string, containing name of a setting, if the referenced setting is changed, then this visibility function will be called to re-assess the visibility>,
+              ...
+            ] | SettingVisibility.ALL_EXCLUDING_OWN (to call this function to re-assess the visibility on the update of any setting  except this one) | SettingVisibility.ALL (to call this function to re-assess the visibility on the update of any setting including this one),
+          } | nullish,
           updateValidator: <
             function(newValue, oldValue: <null if no old value>) -> (nullish | {} (only if oldValue is not null) | { adjustedNewValue })
             to validate data update, passed in new value of data
@@ -222,7 +228,13 @@ SettingsManager > constructor (after parsing):
         <string: name>,
         {
           displayName: <string>,
-          visibility: <function() -> boolean; true for setting to be visible, false otherwise> | null,
+          visibility: {
+            func: <function() -> boolean; true for setting to be visible, false otherwise>,
+            updateOn: Set [
+              <string, containing name of a setting, if the referenced setting is changed, then this visibility function will be called to re-assess the visibility>,
+              ...
+            ] | SettingVisibility.ALL_EXCLUDING_OWN (to call this function to re-assess the visibility on the update of any setting  except this one) | SettingVisibility.ALL (to call this function to re-assess the visibility on the update of any setting including this one),
+          } | null,
           if type == SettingType.ENUM:
             valueNames: Map [
               [ <string: name>, displayName: <string: displayName> ],

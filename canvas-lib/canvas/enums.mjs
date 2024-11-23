@@ -59,3 +59,8 @@ export const SettingType_TrueSettings = new ReadOnlySet([
   SettingType.NUMBER,
   SettingType.TEXT,
 ]);
+
+export const SettingVisibility = Enum([
+  'ALL_EXCLUDING_OWN',
+  'ALL',
+]);

@@ -69,7 +69,6 @@
           {
             type: SettingType.ENUM,
             name: 'Framerate Mode',
-            onUpdate: forceRenderFunc,
             values: [
               { name: FrameRateMode.NONE, displayName: 'None' },
               { name: FrameRateMode.RESIZE_ONLY, displayName: 'Resize Only' },
@@ -86,7 +85,6 @@
           {
             type: SettingType.NUMBER,
             name: 'Subpixel Scale',
-            onUpdate: forceRenderFunc,
             min: 0,
             infinityAcceptable: false,
             nanAcceptable: false,

@@ -2,6 +2,7 @@ import {
   SettingEnumUIType,
   SettingType,
   SettingType_TrueSettings,
+  SettingVisibility,
 } from './enums.mjs';
 import { removeAllNodes } from '../misc/dom_tools.mjs';
 import { isEnum } from '../misc/enum.mjs';
@@ -338,11 +339,43 @@ export class SettingsManager {
           newSettingEntry.forceNonPersistent = settingEntry.forceNonPersistent;
         }
         
-        if (typeof settingEntry.visibility != 'function' && settingEntry.visibility != null) {
-          throw new Error(`settings[${i}].visibility type not function or null: ${typeof settingEntry.visibility}`);
+        if (typeof settingEntry.visibility != 'object' && settingEntry.visibility != null) {
+          throw new Error(`settings[${i}].visibility type not object or null: ${typeof settingEntry.visibility}`);
         }
         
-        settingUiProperties.visibility = settingEntry.visibility != null ? settingEntry.visibility : null;
+        if (settingEntry.visibility != null) {
+          settingUiProperties.visibility = {};
+          
+          if (typeof settingEntry.visibility.func != 'function') {
+            throw new Error(`settings[${i}].visibility.func type not function: ${typeof settingEntry.visibility.func}`);
+          }
+          
+          settingUiProperties.visibility.func = settingEntry.visibility.func;
+          
+          if (!Array.isArray(settingEntry.visibility.updateOn) && typeof settingEntry.visibility.updateOn != 'string') {
+            throw new Error(`settings[${i}].visibility.updateOn not array or SettingVisibility enum: ${settingEntry.visibility.updateOn}`);
+          }
+          
+          if (typeof settingEntry.visibility.updateOn == 'string') {
+            if (!(settingEntry.visibility.updateOn in SettingVisibility)) {
+              throw new Error(`settings[${i}].visibility.updateOn value not in SettingVisibility enum: ${settingEntry.visibility.updateOn}`);
+            }
+          } else {
+            // updateOn must be an array here
+            
+            for (let j = 0; j < settingEntry.visibility.updateOn.length; j++) {
+              let updateOnEntry = settingEntry.visibility.updateOn[j];
+              
+              if (typeof updateOnEntry != 'string') {
+                throw new Error(`settings[${i}].visibility.updateOn[${j}] type not string: ${typeof updateOnEntry}`);
+              }
+            }
+            
+            settingUiProperties.visibility.updateOn = new Set(settingEntry.visibility.updateOn);
+          }
+        } else {
+          settingUiProperties.visibility = null;
+        }
         
         if (typeof settingEntry.updateValidator != 'function' && settingEntry.updateValidator != null) {
           throw new Error(`settings[${i}].updateValidator type not function or null: ${typeof settingEntry.updateValidator}`);
@@ -919,6 +952,20 @@ export class SettingsManager {
           
           default:
             throw new Error('default case not possible, all options accounted for');
+        }
+      }
+    }
+    
+    for (let [ name, settingUiEntry ] of settingsUiPropertiesMap.entries()) {
+      if (settingUiEntry.visibility != null && typeof settingUiEntry.visibility.updateOn != 'string') {
+        // updateOn is array here
+        
+        for (let i = 0; i < settingUiEntry.visibility.updateOn.length; i++) {
+          let updateOnEntry = settingUiEntry.visibility.updateOn[i];
+          
+          if (!settingsMap.has(updateOnEntry)) {
+            throw new Error(`setting[name: ${name}].visibility.updateOn[${i}] name not in settings: ${updateOnEntry}`);
+          }
         }
       }
     }
