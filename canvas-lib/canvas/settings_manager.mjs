@@ -607,7 +607,7 @@ export class SettingsManager {
                 value: settingEntry.defaultValue,
                 oldValue: null,
                 min: newSettingEntry.min,
-                min: newSettingEntry.max,
+                max: newSettingEntry.max,
                 updateValidator: newSettingEntry.updateValidator,
                 allowValueCoercion: false,
               });
@@ -619,12 +619,6 @@ export class SettingsManager {
             break;
           
           case SettingType.NUMBER:
-            if (typeof settingEntry.infinityAcceptable != 'boolean') {
-              throw new Error(`settings[${i}].infinityAcceptable not boolean: ${typeof settingEntry.infinityAcceptable}`);
-            }
-            
-            newSettingEntry.infinityAcceptable = settingEntry.infinityAcceptable;
-            
             if (typeof settingEntry.nanAcceptable != 'boolean') {
               throw new Error(`settings[${i}].nanAcceptable not boolean: ${typeof settingEntry.nanAcceptable}`);
             }
@@ -679,6 +673,20 @@ export class SettingsManager {
               if (newSettingEntry.min > newSettingEntry.max) {
                 throw new Error(`settings[${i}].min (${newSettingEntry.min}) > settings[${i}].max (${newSettingEntry.max})`);
               }
+            }
+            
+            if (newSettingEntry.min != null && newSettingEntry.max != null) {
+              if (settingEntry.infinityAcceptable != null) {
+                throw new Error(`settings[${i}].infinityAcceptable not nullish despite min and max defined: ${settingEntry.infinityAcceptable}`);
+              }
+              
+              newSettingEntry.infinityAcceptable = false;
+            } else {
+              if (typeof settingEntry.infinityAcceptable != 'boolean') {
+                throw new Error(`settings[${i}].infinityAcceptable not boolean despite either min or max not defined: ${typeof settingEntry.infinityAcceptable}`);
+              }
+              
+              newSettingEntry.infinityAcceptable = settingEntry.infinityAcceptable;
             }
             
             if (typeof settingEntry.sliderPresent != 'boolean' && settingEntry.sliderPresent != null) {
@@ -793,17 +801,21 @@ export class SettingsManager {
                 }
               }
               
-              if (typeof settingEntry.sliderStepSize != 'number') {
+              if (typeof settingEntry.sliderStepSize != 'number' && settingEntry.sliderStepSize != null) {
                 throw new Error(`settings[${i}].sliderStepSize not number: ${typeof settingEntry.sliderStepSize}`);
               }
               
-              if (Number.isNaN(settingEntry.sliderStepSize)) {
-                throw new Error(`settings[${i}].sliderStepSize is NaN`);
+              if (settingEntry.sliderStepSize != null) {
+                if (Number.isNaN(settingEntry.sliderStepSize)) {
+                  throw new Error(`settings[${i}].sliderStepSize is NaN`);
+                }
+                
+                if (settingEntry.sliderStepSize < 0 || settingEntry.sliderStepSize == Infinity) {
+                  throw new Error(`settings[${i}].sliderStepSize out of range 0 <= x < Infinity: ${settingEntry.sliderStepSize}`);
+                }
               }
               
-              if (settingEntry.sliderStepSize < 0 || settingEntry.sliderStepSize == Infinity) {
-                throw new Error(`settings[${i}].sliderStepSize out of range 0 <= x < Infinity: ${settingEntry.sliderStepSize}`);
-              }
+              settingUiProperties.sliderStepSize = settingEntry.sliderStepSize ?? 0;
               
               if (typeof settingEntry.largeSliderAndNumberBox != 'boolean' && settingEntry.largeSliderAndNumberBox != null) {
                 throw new Error(`settings[${i}].largeSliderAndNumberBox not boolean: ${settingEntry.largeSliderAndNumberBox}`);
@@ -874,6 +886,9 @@ export class SettingsManager {
         });
       } else {
         switch (settingEntry.type) {
+          case SettingType.SEPARATOR:
+            break;
+          
           case SettingType.HEADER:
           case SettingType.INFO_TEXT:
             if (typeof settingEntry.text != 'string') {

@@ -112,7 +112,7 @@ SettingsManager > constructor:
           if type == SettingType.NUMBER:
             min: <number> | nullish,
             max: <number> | nullish,
-            infinityAcceptable: <boolean>,
+            infinityAcceptable: <boolean> (if either min or max is not defined) | nullish (if min and max are both defined; then infinityAcceptable is automatically false),
             nanAcceptable: <boolean>,
             sliderPresent: <boolean> | nullish (default false),
             if sliderPresent == true:
