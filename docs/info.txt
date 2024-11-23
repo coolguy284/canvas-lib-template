@@ -97,35 +97,35 @@ SettingsManager > constructor:
           if type == SettingType.INTEGER:
             min: <integer> | nullish,
             max: <integer> | nullish,
-            sliderPresent: <boolean>,
+            sliderPresent: <boolean> | nullish (default false),
             if sliderPresent == true:
-              sliderMin: <integer> | nullish,
-              sliderMax: <integer> | nullish,
+              sliderMin: <integer> (if sliderMapping == nullish) | nullish,
+              sliderMax: <integer> (if sliderMapping == nullish) | nullish,
               sliderMapping: {
                 sliderToValue: <function(sliderPosition: integer) -> integer (value); that takes integer from 0 to sliderIncrements representing slider position and outputs value of setting>,
                 valueToSlider: <function(value: integer) -> integer (sliderPosition); that takes value of setting and outputs integer from 0 to sliderIncrements representing slider position>,
                 sliderIncrements: <integer > 0>,
               } | nullish (if present, sliderMin and sliderMax cannot be defined),
-              largeSliderAndNumberBox: <boolean, if true, slider and number box both are width of full line>,
-              sliderDraggingIsUpdate: <boolean, if true, dragging slider will call onUpdate, if false, onUpdate will only be called once slider is let go>,
+              largeSliderAndNumberBox: <boolean, if true, slider and number box both are width of full line> | nullish (default false),
+              sliderDraggingIsUpdate: <boolean, if true, dragging slider will call onUpdate, if false, onUpdate will only be called once slider is let go> | nullish (default false),
             defaultValue: <integer>,
           if type == SettingType.NUMBER:
             min: <number> | nullish,
             max: <number> | nullish,
             infinityAcceptable: <boolean>,
             nanAcceptable: <boolean>,
-            sliderPresent: <boolean>,
+            sliderPresent: <boolean> | nullish (default false),
             if sliderPresent == true:
-              sliderMin: <number> | nullish,
-              sliderMax: <number> | nullish,
-              sliderStepSize: <number: 0 <= x < Infinity>,
+              sliderMin: <number> (if sliderMapping == nullish) | nullish,
+              sliderMax: <number> (if sliderMapping == nullish) | nullish,
+              sliderStepSize: <number: 0 <= x < Infinity> | nullish (default 0),
               sliderMapping: {
                 sliderToValue: <function(sliderPosition: number) -> number (value); that takes number from 0 to 1 representing slider position and outputs value of setting>,
                 valueToSlider: <function(value: number) -> number (sliderPosition); that takes value of setting and outputs number from 0 to 1 representing slider position>,
                 sliderIncrements: <integer > 0> | Infinity,
               } | nullish (if present, sliderMin and sliderMax cannot be defined),
-              largeSliderAndNumberBox: <boolean, if true, slider and number box both are width of full line>,
-              sliderDraggingIsUpdate: <boolean, if true, dragging slider will call onUpdate, if false, onUpdate will only be called once slider is let go>,
+              largeSliderAndNumberBox: <boolean, if true, slider and number box both are width of full line> | nullish (default false),
+              sliderDraggingIsUpdate: <boolean, if true, dragging slider will call onUpdate, if false, onUpdate will only be called once slider is let go> | nullish (default false),
             defaultValue: <number>,
           if type == SettingType.TEXT:
             multiline: <

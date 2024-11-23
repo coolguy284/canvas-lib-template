@@ -497,11 +497,11 @@ export class SettingsManager {
               throw new Error(`settings[${i}].min (${newSettingEntry.min}) > settings[${i}].max (${newSettingEntry.max})`);
             }
             
-            if (typeof settingEntry.sliderPresent != 'boolean') {
+            if (typeof settingEntry.sliderPresent != 'boolean' && settingEntry.sliderPresent != null) {
               throw new Error(`settings[${i}].sliderPresent not boolean: ${typeof settingEntry.sliderPresent}`);
             }
             
-            settingUiProperties.sliderPresent = settingEntry.sliderPresent;
+            settingUiProperties.sliderPresent = settingEntry.sliderPresent ?? false;
             
             if (settingUiProperties.sliderPresent) {
               if (typeof settingEntry.sliderMapping != 'object' && settingEntry.sliderMapping != null) {
@@ -589,17 +589,17 @@ export class SettingsManager {
                 }
               }
               
-              if (typeof settingEntry.largeSliderAndNumberBox != 'boolean') {
+              if (typeof settingEntry.largeSliderAndNumberBox != 'boolean' && settingEntry.largeSliderAndNumberBox != null) {
                 throw new Error(`settings[${i}].largeSliderAndNumberBox not boolean: ${settingEntry.largeSliderAndNumberBox}`);
               }
               
-              settingUiProperties.largeSliderAndNumberBox = settingEntry.largeSliderAndNumberBox;
+              settingUiProperties.largeSliderAndNumberBox = settingEntry.largeSliderAndNumberBox ?? false;
               
-              if (typeof settingEntry.sliderDraggingIsUpdate != 'boolean') {
+              if (typeof settingEntry.sliderDraggingIsUpdate != 'boolean' && settingEntry.sliderDraggingIsUpdate != null) {
                 throw new Error(`settings[${i}].sliderDraggingIsUpdate not boolean: ${settingEntry.sliderDraggingIsUpdate}`);
               }
               
-              settingUiProperties.sliderDraggingIsUpdate = settingEntry.sliderDraggingIsUpdate;
+              settingUiProperties.sliderDraggingIsUpdate = settingEntry.sliderDraggingIsUpdate ?? false;
             }
             
             try {
@@ -681,11 +681,11 @@ export class SettingsManager {
               }
             }
             
-            if (typeof settingEntry.sliderPresent != 'boolean') {
+            if (typeof settingEntry.sliderPresent != 'boolean' && settingEntry.sliderPresent != null) {
               throw new Error(`settings[${i}].sliderPresent not boolean: ${typeof settingEntry.sliderPresent}`);
             }
             
-            settingUiProperties.sliderPresent = settingEntry.sliderPresent;
+            settingUiProperties.sliderPresent = settingEntry.sliderPresent ?? false;
             
             if (settingUiProperties.sliderPresent) {
               if (typeof settingEntry.sliderMapping != 'object' && settingEntry.sliderMapping != null) {
@@ -805,17 +805,17 @@ export class SettingsManager {
                 throw new Error(`settings[${i}].sliderStepSize out of range 0 <= x < Infinity: ${settingEntry.sliderStepSize}`);
               }
               
-              if (typeof settingEntry.largeSliderAndNumberBox != 'boolean') {
+              if (typeof settingEntry.largeSliderAndNumberBox != 'boolean' && settingEntry.largeSliderAndNumberBox != null) {
                 throw new Error(`settings[${i}].largeSliderAndNumberBox not boolean: ${settingEntry.largeSliderAndNumberBox}`);
               }
               
-              settingUiProperties.largeSliderAndNumberBox = settingEntry.largeSliderAndNumberBox;
+              settingUiProperties.largeSliderAndNumberBox = settingEntry.largeSliderAndNumberBox ?? null;
               
-              if (typeof settingEntry.sliderDraggingIsUpdate != 'boolean') {
+              if (typeof settingEntry.sliderDraggingIsUpdate != 'boolean' && settingEntry.sliderDraggingIsUpdate != null) {
                 throw new Error(`settings[${i}].sliderDraggingIsUpdate not boolean: ${settingEntry.sliderDraggingIsUpdate}`);
               }
               
-              settingUiProperties.sliderDraggingIsUpdate = settingEntry.sliderDraggingIsUpdate;
+              settingUiProperties.sliderDraggingIsUpdate = settingEntry.sliderDraggingIsUpdate ?? null;
             }
             
             try {

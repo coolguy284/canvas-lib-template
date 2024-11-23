@@ -2,6 +2,7 @@ features:
 offscreenvanvas canvas mode if div explicitly set to null (not missing)
 settingsmanager
   convert some properties to optional w. defaults
+  change visibility to object with properties
   persistence value loading
   filling out settings div
   functionality to settings div
