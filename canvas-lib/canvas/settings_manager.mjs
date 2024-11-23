@@ -63,11 +63,11 @@ export class SettingsManager {
     allowValueCoercion,
   }) {
     if (typeof value != 'string') {
-      throw new Error(`settings[${i}].defaultValue type not string: ${typeof value}`);
+      throw new Error(`value type not string: ${typeof value}`);
     }
     
     if (!enumValuesSet.has(value)) {
-      throw new Error(`settings[${i}].defaultValue not present in enum: ${value}`);
+      throw new Error(`value not present in enum: ${value}`);
     }
     
     if (updateValidator != null) {
@@ -315,7 +315,7 @@ export class SettingsManager {
       
       newSettingEntry.type = settingEntry.type;
       
-      if (SettingType_TrueSettings.has(type)) {
+      if (SettingType_TrueSettings.has(settingEntry.type)) {
         if (typeof settingEntry.name != 'string') {
           throw new Error(`settings[${i}].name type not string: ${typeof settingEntry.name}`);
         }
@@ -358,12 +358,16 @@ export class SettingsManager {
         
         switch (settingEntry.type) {
           case SettingType.BOOLEAN:
-            SettingsManager.#validateBool({
-              value: settingEntry.defaultValue,
-              oldValue: null,
-              updateValidator: newSettingEntry.updateValidator,
-              allowValueCoercion: false,
-            });
+            try {
+              SettingsManager.#validateBool({
+                value: settingEntry.defaultValue,
+                oldValue: null,
+                updateValidator: newSettingEntry.updateValidator,
+                allowValueCoercion: false,
+              });
+            } catch (err) {
+              throw new Error(`settings[${i}].defaultValue: ${err.toString()}`);
+            }
             
             newSettingEntry.defaultValue = settingEntry.defaultValue;
             break;
@@ -377,7 +381,7 @@ export class SettingsManager {
               throw new Error(`settings[${i}].values not array: ${settingEntry.values}`);
             }
             
-            for (let j = 0; j < settingEntry.values; j++) {
+            for (let j = 0; j < settingEntry.values.length; j++) {
               let valueEntry = settingEntry.values[j];
               
               if (typeof valueEntry != 'object' || valueEntry == null) {
@@ -392,7 +396,7 @@ export class SettingsManager {
                 throw new Error(`settings[${i}].values[${j}].displayName type not string or null: ${typeof valueEntry.displayName}`);
               }
               
-              if (values.has(valueEntry.name)) {
+              if (valuesSet.has(valueEntry.name)) {
                 throw new Error(`settings[${i}].values[${j}].name is duplicate: ${valueEntry.name}`);
               }
               
@@ -452,13 +456,17 @@ export class SettingsManager {
               throw new Error(`settings[${i}].uiMode not in SettingEnumUIType: ${settingEntry.uiMode}`);
             }
             
-            SettingsManager.#validateEnum({
-              value: settingEntry.defaultValue,
-              oldValue: null,
-              enumValuesSet: valuesSet,
-              updateValidator: newSettingEntry.updateValidator,
-              allowValueCoercion: false,
-            });
+            try {
+              SettingsManager.#validateEnum({
+                value: settingEntry.defaultValue,
+                oldValue: null,
+                enumValuesSet: valuesSet,
+                updateValidator: newSettingEntry.updateValidator,
+                allowValueCoercion: false,
+              });
+            } catch (err) {
+              throw new Error(`settings[${i}].defaultValue: ${err.toString()}`);
+            }
             
             newSettingEntry.defaultValue = settingEntry.defaultValue;
             break;
@@ -594,14 +602,18 @@ export class SettingsManager {
               settingUiProperties.sliderDraggingIsUpdate = settingEntry.sliderDraggingIsUpdate;
             }
             
-            SettingsManager.#validateInt({
-              value: settingEntry.defaultValue,
-              oldValue: null,
-              min: newSettingEntry.min,
-              min: newSettingEntry.max,
-              updateValidator: newSettingEntry.updateValidator,
-              allowValueCoercion: false,
-            });
+            try {
+              SettingsManager.#validateInt({
+                value: settingEntry.defaultValue,
+                oldValue: null,
+                min: newSettingEntry.min,
+                min: newSettingEntry.max,
+                updateValidator: newSettingEntry.updateValidator,
+                allowValueCoercion: false,
+              });
+            } catch (err) {
+              throw new Error(`settings[${i}].defaultValue: ${err.toString()}`);
+            }
             
             newSettingEntry.defaultValue = settingEntry.defaultValue;
             break;
@@ -806,16 +818,20 @@ export class SettingsManager {
               settingUiProperties.sliderDraggingIsUpdate = settingEntry.sliderDraggingIsUpdate;
             }
             
-            SettingsManager.#validateNumber({
-              value: settingEntry.defaultValue,
-              oldValue: null,
-              min: newSettingEntry.min,
-              max: newSettingEntry.max,
-              infinityAcceptable: newSettingEntry.infinityAcceptable,
-              nanAcceptable: newSettingEntry.nanAcceptable,
-              updateValidator: newSettingEntry.updateValidator,
-              allowValueCoercion: false,
-            });
+            try {
+              SettingsManager.#validateNumber({
+                value: settingEntry.defaultValue,
+                oldValue: null,
+                min: newSettingEntry.min,
+                max: newSettingEntry.max,
+                infinityAcceptable: newSettingEntry.infinityAcceptable,
+                nanAcceptable: newSettingEntry.nanAcceptable,
+                updateValidator: newSettingEntry.updateValidator,
+                allowValueCoercion: false,
+              });
+            } catch (err) {
+              throw new Error(`settings[${i}].defaultValue: ${err.toString()}`);
+            }
             
             newSettingEntry.defaultValue = settingEntry.defaultValue;
             break;
@@ -827,13 +843,17 @@ export class SettingsManager {
             
             newSettingEntry.multiline = settingEntry.multiline;
             
-            SettingsManager.#validateText({
-              value: settingEntry.defaultValue,
-              oldValue: null,
-              multiline: newSettingEntry.multiline,
-              updateValidator: newSettingEntry.updateValidator,
-              allowValueCoercion: false,
-            });
+            try {
+              SettingsManager.#validateText({
+                value: settingEntry.defaultValue,
+                oldValue: null,
+                multiline: newSettingEntry.multiline,
+                updateValidator: newSettingEntry.updateValidator,
+                allowValueCoercion: false,
+              });
+            } catch (err) {
+              throw new Error(`settings[${i}].defaultValue: ${err.toString()}`);
+            }
             
             newSettingEntry.defaultValue = settingEntry.defaultValue;
             break;
@@ -909,8 +929,6 @@ export class SettingsManager {
   
   constructor(opts) {
     // TODO remove
-    
-    throw new Error(`SettingsManager is currently non-functional`);
     
     if (!(opts.button instanceof HTMLElement)) {
       throw new Error('opts.button not instance of HTMLElement');

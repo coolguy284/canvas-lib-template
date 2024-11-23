@@ -24,10 +24,10 @@ CanvasManager > setMode:
       frameRate: {
         mode: FrameRateMode,
         if mode == FrameRateMode.FRAME_MULT:
-          frameSkips: <integer>,
+          frameSkips: <integer >= 0>,
         if mode == FrameRateMode.MILLISECOND:
           delay: <integer milliseconds > 0>,
-      },
+      } | nullish (only allowed if triggers.render == nullish; default { mode: FrameRateMode.NONE }),
     if mode == CanvasMode.WEBGL_FULL_CANVAS_SHADER:
       shaderSegments: [
         {
@@ -48,35 +48,35 @@ CanvasManager > setMode:
           if type endswith _ARRAY:
             length: <integer>,
         },
-      ] | null,
+      ] | nullish,
   } | null (default {})
 
 SettingsManager > constructor:
   {
     button: HTMLElement (button for toggling settings),
     div: HTMLElement (element that will be shown / hidden and populated with settings),
-    localStorageKey: <string> | null (for no persistence),
+    localStorageKey: <string> | nullish (for no persistence),
     settings: [
       {
         type: SettingType,
         
         if type in SettingType.{ BOOLEAN, ENUM, INTEGER, NUMBER, TEXT }:
           name: <string>,
-          displayName: <string> | null,
-          if localStorageKey != null:
+          displayName: <string> | nullish,
+          if localStorageKey != nullish:
             forceNonPersistent: <boolean, if true then this property will not be saved persistently regardless>,
-          visibility: <function() -> boolean; true for setting to be visible, false otherwise> | null,
+          visibility: <function() -> boolean; true for setting to be visible, false otherwise> | nullish,
           updateValidator: <
-            function(newValue, oldValue: <null if no old value>) -> (null | {} (only if oldValue is not null) | { adjustedNewValue })
+            function(newValue, oldValue: <null if no old value>) -> (nullish | {} (only if oldValue is not null) | { adjustedNewValue })
             to validate data update, passed in new value of data
             return value:
-              null (if data valid),
+              nullish (if data valid),
               OR
               {
                 adjustedNewValue: new value to set field to | can omit to revert field to old value,
               },
-          > | null,
-          onUpdate: <function(data: <type is type of settings[i].defaultValue>) -> undefined; called on data update, passed new value of data> | null,
+          > | nullish,
+          onUpdate: <function(data: <type is type of settings[i].defaultValue>) -> undefined; called on data update, passed new value of data> | nullish,
           
           if type == SettingType.BOOLEAN:
             defaultValue: <boolean>,
@@ -84,46 +84,46 @@ SettingsManager > constructor:
             values: [
               {
                 name: <string>,
-                displayName: <string> | null,
+                displayName: <string> | nullish,
               },
               ...
             ],
             valuesReference: {
               enum: <Enum, all properties of enum must be in values array with no extra properties in values array>,
               requireSameOrderAsEnum: <boolean, if true, values must be in same order as provided enum>,
-            } | null,
+            } | nullish,
             uiMode: SettingEnumUIType,
             defaultValue: <string>,
           if type == SettingType.INTEGER:
-            min: <integer> | null,
-            max: <integer> | null,
+            min: <integer> | nullish,
+            max: <integer> | nullish,
             sliderPresent: <boolean>,
             if sliderPresent == true:
-              sliderMin: <integer> | null,
-              sliderMax: <integer> | null,
+              sliderMin: <integer> | nullish,
+              sliderMax: <integer> | nullish,
               sliderMapping: {
                 sliderToValue: <function(sliderPosition: integer) -> integer (value); that takes integer from 0 to sliderIncrements representing slider position and outputs value of setting>,
                 valueToSlider: <function(value: integer) -> integer (sliderPosition); that takes value of setting and outputs integer from 0 to sliderIncrements representing slider position>,
                 sliderIncrements: <integer > 0>,
-              } | null (if present, sliderMin and sliderMax cannot be defined),
+              } | nullish (if present, sliderMin and sliderMax cannot be defined),
               largeSliderAndNumberBox: <boolean, if true, slider and number box both are width of full line>,
               sliderDraggingIsUpdate: <boolean, if true, dragging slider will call onUpdate, if false, onUpdate will only be called once slider is let go>,
             defaultValue: <integer>,
           if type == SettingType.NUMBER:
-            min: <number> | null,
-            max: <number> | null,
+            min: <number> | nullish,
+            max: <number> | nullish,
             infinityAcceptable: <boolean>,
             nanAcceptable: <boolean>,
             sliderPresent: <boolean>,
             if sliderPresent == true:
-              sliderMin: <number> | null,
-              sliderMax: <number> | null,
+              sliderMin: <number> | nullish,
+              sliderMax: <number> | nullish,
               sliderStepSize: <number: 0 <= x < Infinity>,
               sliderMapping: {
                 sliderToValue: <function(sliderPosition: number) -> number (value); that takes number from 0 to 1 representing slider position and outputs value of setting>,
                 valueToSlider: <function(value: number) -> number (sliderPosition); that takes value of setting and outputs number from 0 to 1 representing slider position>,
                 sliderIncrements: <integer > 0> | Infinity,
-              } | null (if present, sliderMin and sliderMax cannot be defined),
+              } | nullish (if present, sliderMin and sliderMax cannot be defined),
               largeSliderAndNumberBox: <boolean, if true, slider and number box both are width of full line>,
               sliderDraggingIsUpdate: <boolean, if true, dragging slider will call onUpdate, if false, onUpdate will only be called once slider is let go>,
             defaultValue: <number>,

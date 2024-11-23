@@ -71,13 +71,17 @@
             name: 'Framerate Mode',
             onUpdate: forceRenderFunc,
             values: [
-              { name: 'None' },
-              { name: 'Resize Only' },
-              { name: 'Frame Multiplier' },
-              { name: 'Millisecond Delay' },
+              { name: FrameRateMode.NONE, displayName: 'None' },
+              { name: FrameRateMode.RESIZE_ONLY, displayName: 'Resize Only' },
+              { name: FrameRateMode.FRAME_MULT, displayName: 'Frame Multiplier' },
+              { name: FrameRateMode.MILLISECOND, displayName: 'Millisecond Delay' },
             ],
+            valuesReference: {
+              enum: FrameRateMode,
+              requireSameOrderAsEnum: true,
+            },
             uiMode: SettingEnumUIType.SELECT,
-            defaultValue: 'Option 1',
+            defaultValue: FrameRateMode.FRAME_MULT,
           },
           {
             type: SettingType.NUMBER,
