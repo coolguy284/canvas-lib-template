@@ -23,37 +23,94 @@ export class SettingsManager {
     oldValue,
     updateValidator,
     allowValueCoercion,
+    revertWithoutErrorAndSuppressValidatorErrors,
   }) {
-    if (typeof value != 'boolean') {
-      throw new Error(`value type not boolean: ${typeof value}`);
-    }
-    
-    if (updateValidator != null) {
-      let validationResults = updateValidator(value, oldValue);
-      
-      if (validationResults != null) {
-        let adjustedNewValue = validationResults.adjustedNewValue;
-        
-        if (adjustedNewValue != null) {
-          if (typeof adjustedNewValue != 'boolean') {
-            throw new Error(`validator output not boolean: ${typeof adjustedNewValue}`);
-          }
-        } else {
-          if (oldValue == null) {
-            throw new Error('validator output revert to old value, but old value is null');
-          }
-        }
-        
-        if (allowValueCoercion) {
-          return adjustedNewValue != null ? adjustedNewValue : oldValue;
-        } else {
-          throw new Error(`value does not pass validation function: ${adjustedNewValue == null ? 'Generic Failure' : 'Converted to: ' + adjustedNewValue}`);
-        }
+    if (revertWithoutErrorAndSuppressValidatorErrors) {
+      if (typeof value != 'boolean') {
+        return oldValue;
       }
-    }
-    
-    if (allowValueCoercion) {
-      return value;
+      
+      if (updateValidator != null) {
+        let validationResults;
+        
+        try {
+          validationResults = updateValidator(value, oldValue);
+        } catch (err) {
+          console.error(err);
+          
+          if (oldValue == null) {
+            throw new Error('validator error, so revert to old value, but old value is null');
+          }
+          
+          return oldValue;
+        }
+        
+        if (validationResults != null) {
+          let adjustedNewValue = validationResults.adjustedNewValue;
+          
+          if (adjustedNewValue != null) {
+            if (typeof adjustedNewValue != 'boolean') {
+              console.error(new Error(`validator output not boolean: ${typeof adjustedNewValue}`));
+              
+              if (oldValue == null) {
+                throw new Error('validator error, so revert to old value, but old value is null');
+              }
+              
+              return oldValue;
+            }
+            
+            if (allowValueCoercion) {
+              return adjustedNewValue;
+            } else {
+              throw new Error('validator output new value, but allowValueCoercion is false');
+            }
+          } else {
+            if (oldValue == null) {
+              throw new Error('validator output revert to old value, but old value is null');
+            }
+            
+            return oldValue;
+          }
+        } else {
+          return null;
+        }
+      } else {
+        return null;
+      }
+    } else {
+      if (typeof value != 'boolean') {
+        throw new Error(`value type not boolean: ${typeof value}`);
+      }
+      
+      if (updateValidator != null) {
+        let validationResults = updateValidator(value, oldValue);
+        
+        if (validationResults != null) {
+          let adjustedNewValue = validationResults.adjustedNewValue;
+          
+          if (adjustedNewValue != null) {
+            if (typeof adjustedNewValue != 'boolean') {
+              throw new Error(`validator output not boolean: ${typeof adjustedNewValue}`);
+            }
+            
+            if (allowValueCoercion) {
+              return adjustedNewValue;
+            } else {
+              throw new Error('validator output new value, but allowValueCoercion is false');
+            }
+          } else {
+            if (oldValue == null) {
+              throw new Error('validator output revert to old value, but old value is null');
+            }
+            
+            return oldValue;
+          }
+        } else {
+          return null;
+        }
+      } else {
+        return null;
+      }
     }
   }
   
@@ -63,6 +120,7 @@ export class SettingsManager {
     enumValuesSet,
     updateValidator,
     allowValueCoercion,
+    revertWithoutErrorAndSuppressValidatorErrors,
   }) {
     if (typeof value != 'string') {
       throw new Error(`value type not string: ${typeof value}`);
@@ -79,17 +137,25 @@ export class SettingsManager {
         let adjustedNewValue = validationResults.adjustedNewValue;
         
         if (adjustedNewValue != null) {
-          if (typeof adjustedNewValue != 'string') {
-            throw new Error(`validator output not string: ${typeof adjustedNewValue}`);
-          }
-          
-          if (!enumValuesSet.has(adjustedNewValue)) {
-            throw new Error(`validator output not present in enum: ${adjustedNewValue}`);
+          if (allowValueCoercion) {
+            if (typeof adjustedNewValue != 'string') {
+              throw new Error(`validator output not string: ${typeof adjustedNewValue}`);
+            }
+            
+            if (!enumValuesSet.has(adjustedNewValue)) {
+              throw new Error(`validator output not present in enum: ${adjustedNewValue}`);
+            }
+            
+            return adjustedNewValue;
+          } else {
+            
           }
         } else {
           if (oldValue == null) {
             throw new Error('validator output revert to old value, but old value is null');
           }
+          
+          return oldValue;
         }
         
         if (allowValueCoercion) {
@@ -112,6 +178,7 @@ export class SettingsManager {
     max,
     updateValidator,
     allowValueCoercion,
+    revertWithoutErrorAndSuppressValidatorErrors,
   }) {
     if (!Number.isSafeInteger(value)) {
       throw new Error(`value not integer: ${value}`);
@@ -171,6 +238,7 @@ export class SettingsManager {
     nanAcceptable,
     updateValidator,
     allowValueCoercion,
+    revertWithoutErrorAndSuppressValidatorErrors,
   }) {
     if (typeof value != 'number') {
       throw new Error(`value not number: ${typeof value}`);
@@ -201,40 +269,44 @@ export class SettingsManager {
         let adjustedNewValue = validationResults.adjustedNewValue;
         
         if (adjustedNewValue != null) {
-          if (Number.isNaN(adjustedNewValue)) {
-            if (!nanAcceptable) {
-              throw new Error(`validator output is NaN but NaN values are not allowed`);
+          try {
+            if (allowValueCoercion) {
+              if (Number.isNaN(adjustedNewValue)) {
+                if (!nanAcceptable) {
+                  throw new Error(`validator output is NaN but NaN values are not allowed`);
+                }
+              } else {
+                if (!Number.isFinite(adjustedNewValue) && !infinityAcceptable) {
+                  throw new Error(`validator output is [+-] Infinity but Infinity values are not allowed: ${adjustedNewValue}`);
+                }
+                
+                if (min != null && adjustedNewValue < min) {
+                  throw new Error(`validator output (${adjustedNewValue}) < min (${min})`);
+                }
+                
+                if (max != null && adjustedNewValue > max) {
+                  throw new Error(`validator output (${adjustedNewValue}) > max (${max})`);
+                }
+              }
+              
+              return adjustedNewValue;
+            } else {
+              throw new Error(`value does not pass validation function, converted to: ${adjustedNewValue}`);
             }
-          } else {
-            if (!Number.isFinite(adjustedNewValue) && !infinityAcceptable) {
-              throw new Error(`validator output is [+-] Infinity but Infinity values are not allowed: ${adjustedNewValue}`);
-            }
+          } catch (err) {
             
-            if (min != null && adjustedNewValue < min) {
-              throw new Error(`validator output (${adjustedNewValue}) < min (${min})`);
-            }
-            
-            if (max != null && adjustedNewValue > max) {
-              throw new Error(`validator output (${adjustedNewValue}) > max (${max})`);
-            }
           }
         } else {
           if (oldValue == null) {
             throw new Error('validator output revert to old value, but old value is null');
           }
-        }
-        
-        if (allowValueCoercion) {
-          return adjustedNewValue != null ? adjustedNewValue : oldValue;
-        } else {
-          throw new Error(`value does not pass validation function: ${adjustedNewValue == null ? 'Generic Failure' : 'Converted to: ' + adjustedNewValue}`);
+          
+          return oldValue;
         }
       }
     }
     
-    if (allowValueCoercion) {
-      return value;
-    }
+    return value;
   }
   
   static #validateText({
@@ -243,6 +315,7 @@ export class SettingsManager {
     multiline,
     updateValidator,
     allowValueCoercion,
+    revertWithoutErrorAndSuppressValidatorErrors,
   }) {
     if (typeof value != 'string') {
       throw new Error(`value type not string: ${typeof value}`);
@@ -398,6 +471,7 @@ export class SettingsManager {
                 oldValue: null,
                 updateValidator: newSettingEntry.updateValidator,
                 allowValueCoercion: false,
+                revertWithoutErrorAndSuppressValidatorErrors: false,
               });
             } catch (err) {
               throw new Error(`settings[${i}].defaultValue: ${err.toString()}`);
@@ -497,6 +571,7 @@ export class SettingsManager {
                 enumValuesSet: valuesSet,
                 updateValidator: newSettingEntry.updateValidator,
                 allowValueCoercion: false,
+                revertWithoutErrorAndSuppressValidatorErrors: false,
               });
             } catch (err) {
               throw new Error(`settings[${i}].defaultValue: ${err.toString()}`);
@@ -644,6 +719,7 @@ export class SettingsManager {
                 max: newSettingEntry.max,
                 updateValidator: newSettingEntry.updateValidator,
                 allowValueCoercion: false,
+                revertWithoutErrorAndSuppressValidatorErrors: false,
               });
             } catch (err) {
               throw new Error(`settings[${i}].defaultValue: ${err.toString()}`);
@@ -874,6 +950,7 @@ export class SettingsManager {
                 nanAcceptable: newSettingEntry.nanAcceptable,
                 updateValidator: newSettingEntry.updateValidator,
                 allowValueCoercion: false,
+                revertWithoutErrorAndSuppressValidatorErrors: false,
               });
             } catch (err) {
               throw new Error(`settings[${i}].defaultValue: ${err.toString()}`);
@@ -896,6 +973,7 @@ export class SettingsManager {
                 multiline: newSettingEntry.multiline,
                 updateValidator: newSettingEntry.updateValidator,
                 allowValueCoercion: false,
+                revertWithoutErrorAndSuppressValidatorErrors: false,
               });
             } catch (err) {
               throw new Error(`settings[${i}].defaultValue: ${err.toString()}`);
@@ -991,26 +1069,26 @@ export class SettingsManager {
   }
   
   #createUI(uiEntries, settingsUiPropertiesMap) {
-    removeAllNodes(this.#div);
+    let elemsToAdd = [];
     
     for (let entry of uiEntries) {
       switch (entry.type) {
         case SettingType.SEPARATOR: {
-          this.#div.appendChild(document.createElement('hr'));
+          elemsToAdd.push(document.createElement('hr'));
           break;
         }
         
         case SettingType.HEADER: {
           let headerElem = document.createElement('h2');
           headerElem.textContent = entry.text;
-          this.#div.appendChild(headerElem);
+          elemsToAdd.push(headerElem);
           break;
         }
         
         case SettingType.INFO_TEXT: {
           let textElem = document.createElement('p');
           textElem.textContent = entry.text;
-          this.#div.appendChild(textElem);
+          elemsToAdd.push(textElem);
           break;
         }
         
@@ -1018,7 +1096,7 @@ export class SettingsManager {
           let buttonElem = document.createElement('button');
           buttonElem.textContent = entry.text;
           buttonElem.addEventListener('click', entry.onClick);
-          this.#div.appendChild(buttonElem);
+          elemsToAdd.push(buttonElem);
           break;
         }
         
@@ -1030,6 +1108,12 @@ export class SettingsManager {
         default:
           throw new Error('default case not possible, all options accounted for');
       }
+    }
+    
+    removeAllNodes(this.#div);
+    
+    for (let elem of elemsToAdd) {
+      this.#div.appendChild(elem);
     }
   }
   
@@ -1068,7 +1152,19 @@ export class SettingsManager {
     this.#btnToggleSettingsListener = this.toggleSettingsVisibility.bind(this);
     this.#button.addEventListener('click', this.#btnToggleSettingsListener);
     
-    this.#createUI(uiEntries, settingsUiPropertiesMap);
+    try {
+      this.#createUI(uiEntries, settingsUiPropertiesMap);
+    } catch (err) {
+      this.#button.removeEventListener('click', this.#btnToggleSettingsListener);
+      this.#btnToggleSettingsListener = null;
+      
+      this.#button = null;
+      this.#div = null;
+      this.#localStorageKey = null;
+      this.#settingsMap = null;
+      
+      throw err;
+    }
   }
   
   tearDown() {

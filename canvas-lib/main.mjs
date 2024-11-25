@@ -23,7 +23,7 @@ export { RenderLoop } from './canvas/render_loop.mjs';
 export { ShaderManager } from './canvas/shader_manager.mjs';
 export { TextureManager } from './canvas/texture_manager.mjs';
 export {
-  removeAllNodes /* TODO: Currently unused */,
+  removeAllNodes,
   removeNode,
 } from './misc/dom_tools.mjs';
 export {

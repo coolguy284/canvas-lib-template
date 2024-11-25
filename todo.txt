@@ -1,7 +1,8 @@
 features:
 offscreenvanvas canvas mode if div explicitly set to null (not missing)
 settingsmanager
-  filling out settings div
+  if validatebool is in context of constructor or set function call, validator error is not caught, pass through, otherwise (set input element), catch, assume fail, and log error
+  filling out settings div with true settings
   functionality to settings div
     queue up variable updates to div components until settings div is shown again
   persistence
@@ -15,6 +16,9 @@ add subpixel scale to settings test
 move fps and subpixel scale from settings example to separate function
 jsdoc everything in canvas-lib
 clear all TODOs in codebase
+canvasmanager: proper line nums for shader error
+canvasmanager: log shader warns by default unless suppresswarnings or suppress a specific warning
+version constant exported from version file in misc
 
 low prio:
 validate that multiline text input does not contain \r, or maybe silently convert to \n
@@ -41,6 +45,7 @@ canvasmanager:
 canvasmanager: introspection
   function to get all uniforms?
   function to get code of shader?
+settingsmanager: await on validator and await on visibility functions
 
 don't care:
 canvasmanager: type check value field of CanvasManager.setUniform

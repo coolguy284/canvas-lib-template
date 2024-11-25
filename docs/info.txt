@@ -281,3 +281,66 @@ SettingsManager > constructor (after parsing):
         onClick: <function() -> undefined; called on button click>,
     ],
   }
+
+SettingsManager > validation:
+  4 places called:
+    to validate default values in constructor:
+      Method (revertWithoutErrorAndSuppressValidatorErrors = false, allowCoercion = false)
+        clarification:
+          if validator func:
+            if revert: throw [revert not possible anyway]
+    
+    to validate localstorage load (oldValue = defaultValue):
+      Method (revertWithoutErrorAndSuppressValidatorErrors = true, allowCoercion = true)
+    
+    to validate new set values (inputs: allowCoercion bool):
+      Method (revertWithoutErrorAndSuppressValidatorErrors = false, allowCoercion = allowCoercion)
+    
+    to validate new values from input:
+      Method (revertWithoutErrorAndSuppressValidatorErrors = true, allowCoercion = true)
+        clarification:
+          invalid type: revert to oldValue (but should not be possible)
+    
+    Method (inputs: revertWithoutErrorAndSuppressValidatorErrors bool, allowCoercion bool):
+      if revertWithoutErrorAndSuppressValidatorErrors:
+        invalid type: revert to oldValue
+        uncoercible value constraints (nan, inf if no min/max set): revert to oldValue
+        coercible value constraints (inf if min/max set):
+          if allowCoercion:
+            perform coerce
+          else:
+            throw
+        if validator func:
+          [call validator func]
+          error during validator func: revert to oldValue & log error (as validate should not fail like this)
+          if revert: revert to oldValue
+          if new value:
+            invalid type: revert to oldValue & log error (as validate should not fail like this)
+            uncoercible value constraints (nan, inf if no min/max set): revert to oldValue & log error (as validate should not fail like this)
+            coercible value constraints (inf if min/max set): revert to oldValue & log error (as validate should not fail like this)
+            valid new value:
+              if allowCoercion:
+                perform coerce
+              else:
+                throw
+      else:
+        invalid type: throw
+        uncoercible value constraints (nan, inf if no min/max set): throw
+        coercible value constraints (inf if min/max set):
+          if allowCoercion:
+            perform coerce
+          else:
+            throw
+        if validator func:
+          [call validator func]
+          error during validator func: throw
+          if revert: throw
+          if new value:
+            invalid type: throw (validate should not fail like this)
+            uncoercible value constraints (nan, inf if no min/max set): throw (validate should not fail like this)
+            coercible value constraints (inf if min/max set): throw (validate should not fail like this)
+            valid new value:
+              if allowCoercion:
+                perform coerce
+              else:
+                throw
