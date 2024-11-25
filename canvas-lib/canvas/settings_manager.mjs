@@ -18,6 +18,45 @@ export class SettingsManager {
   
   // helper functions
   
+  static #validatorThrowOrReturn({
+    errorToThrowGeneratorFunc,
+    valueToReturn,
+    returnValueNullErrorGenerator,
+    performThrow,
+  }) {
+    if (performThrow) {
+      throw errorToThrowGeneratorFunc();
+    } else {
+      if (valueToReturn == null) {
+        throw returnValueNullErrorGenerator();
+      } else {
+        return valueToReturn;
+      }
+    }
+  }
+  
+  static #validatorThrowOrReturnAndLog({
+    errorToThrow,
+    valueToReturn,
+    returnValueNullErrorGenerator,
+    performThrow,
+  }) {
+    if (performThrow) {
+      throw errorToThrow;
+    } else {
+      console.error(errorToThrow);
+      
+      if (valueToReturn == null) {
+        throw returnValueNullErrorGenerator();
+      } else {
+        return valueToReturn;
+      }
+    }
+  }
+  
+  // return null means new value is acceptable
+  // otherwise returned value is coerced value
+  // or if error thrown then value is invalid or coercions not allowed or error in validator
   static #validateBool({
     value,
     oldValue,
@@ -25,92 +64,73 @@ export class SettingsManager {
     allowValueCoercion,
     revertWithoutErrorAndSuppressValidatorErrors,
   }) {
-    if (revertWithoutErrorAndSuppressValidatorErrors) {
-      if (typeof value != 'boolean') {
-        return oldValue;
+    // invalid type
+    
+    if (typeof value != 'boolean') {
+      return SettingsManager.#validatorThrowOrReturn({
+        errorToThrowGeneratorFunc: () => new Error(`value type not boolean: ${typeof value}`),
+        valueToReturn: oldValue,
+        returnValueNullErrorGenerator: () => new Error('invalid type for value, so revert to old value, but old value is null'),
+        performThrow: !revertWithoutErrorAndSuppressValidatorErrors,
+      });
+    }
+    
+    if (updateValidator != null) {
+      // possible error during validator func
+      
+      let validationResults;
+      
+      try {
+        validationResults = updateValidator(value, oldValue);
+      } catch (err) {
+        return SettingsManager.#validatorThrowOrReturnAndLog({
+          errorToThrow: err,
+          valueToReturn: oldValue,
+          returnValueNullErrorGenerator: () => new Error('validator error, so revert to old value, but old value is null'),
+          performThrow: !revertWithoutErrorAndSuppressValidatorErrors,
+        });
       }
       
-      if (updateValidator != null) {
-        let validationResults;
+      if (validationResults != null) {
+        let adjustedNewValue = validationResults.adjustedNewValue;
         
-        try {
-          validationResults = updateValidator(value, oldValue);
-        } catch (err) {
-          console.error(err);
+        if (adjustedNewValue == null) {
+          // validator requested revert
           
-          if (oldValue == null) {
-            throw new Error('validator error, so revert to old value, but old value is null');
-          }
-          
-          return oldValue;
-        }
-        
-        if (validationResults != null) {
-          let adjustedNewValue = validationResults.adjustedNewValue;
-          
-          if (adjustedNewValue != null) {
-            if (typeof adjustedNewValue != 'boolean') {
-              console.error(new Error(`validator output not boolean: ${typeof adjustedNewValue}`));
-              
-              if (oldValue == null) {
-                throw new Error('validator error, so revert to old value, but old value is null');
-              }
-              
-              return oldValue;
-            }
-            
-            if (allowValueCoercion) {
-              return adjustedNewValue;
-            } else {
-              throw new Error('validator output new value, but allowValueCoercion is false');
-            }
-          } else {
-            if (oldValue == null) {
-              throw new Error('validator output revert to old value, but old value is null');
-            }
-            
-            return oldValue;
-          }
+          return SettingsManager.#validatorThrowOrReturn({
+            errorToThrowGeneratorFunc: () => new Error('validator requested revert but value coercion not allowed'),
+            valueToReturn: oldValue,
+            returnValueNullErrorGenerator: () => new Error('validator requested revert but old value null'),
+            performThrow: !allowValueCoercion,
+          });
         } else {
-          return null;
+          // validator provided new value
+          
+          if (typeof adjustedNewValue != 'boolean') {
+            // validator value is invalid type
+            
+            return SettingsManager.#validatorThrowOrReturnAndLog({
+              errorToThrow: new Error(`validator output not boolean: ${typeof adjustedNewValue}`),
+              valueToReturn: oldValue,
+              returnValueNullErrorGenerator: () => new Error(`validator output not boolean (${typeof adjustedNewValue}), so revert to old value, but old value is null`),
+              performThrow: !revertWithoutErrorAndSuppressValidatorErrors,
+            });
+          }
+          
+          // valid new value from validator
+          
+          return SettingsManager.#validatorThrowOrReturn({
+            errorToThrowGeneratorFunc: () => new Error('validator output new value, but allowValueCoercion is false'),
+            valueToReturn: adjustedNewValue,
+            returnValueNullErrorGenerator: () => new Error('validator requested revert but old value null'),
+            performThrow: !allowValueCoercion,
+          });
         }
       } else {
         return null;
       }
     } else {
-      if (typeof value != 'boolean') {
-        throw new Error(`value type not boolean: ${typeof value}`);
-      }
-      
-      if (updateValidator != null) {
-        let validationResults = updateValidator(value, oldValue);
-        
-        if (validationResults != null) {
-          let adjustedNewValue = validationResults.adjustedNewValue;
-          
-          if (adjustedNewValue != null) {
-            if (typeof adjustedNewValue != 'boolean') {
-              throw new Error(`validator output not boolean: ${typeof adjustedNewValue}`);
-            }
-            
-            if (allowValueCoercion) {
-              return adjustedNewValue;
-            } else {
-              throw new Error('validator output new value, but allowValueCoercion is false');
-            }
-          } else {
-            if (oldValue == null) {
-              throw new Error('validator output revert to old value, but old value is null');
-            }
-            
-            return oldValue;
-          }
-        } else {
-          return null;
-        }
-      } else {
-        return null;
-      }
+      return null;
     }
   }
   
