@@ -284,8 +284,10 @@ export class SettingsManager {
     
     // coercible value constraints
     
+    let preAlteredValue = null;
+    
     if (min != null && value < min) {
-      return SettingsManager.#validatorThrowOrReturn({
+      preAlteredValue = SettingsManager.#validatorThrowOrReturn({
         errorToThrowGenerator: () => new Error(`value (${value}) < min (${min})`),
         valueToReturn: min,
         returnValueNullErrorGenerator: null,
@@ -294,7 +296,7 @@ export class SettingsManager {
     }
     
     if (max != null && value > max) {
-      return SettingsManager.#validatorThrowOrReturn({
+      preAlteredValue = SettingsManager.#validatorThrowOrReturn({
         errorToThrowGenerator: () => new Error(`value (${value}) > max (${max})`),
         valueToReturn: max,
         returnValueNullErrorGenerator: null,
@@ -308,7 +310,11 @@ export class SettingsManager {
       let validationResults;
       
       try {
-        validationResults = updateValidator(value, oldValue);
+        if (preAlteredValue != null) {
+          validationResults = updateValidator(preAlteredValue, oldValue);
+        } else {
+          validationResults = updateValidator(value, oldValue);
+        }
       } catch (err) {
         return SettingsManager.#validatorThrowOrReturnAndLog({
           errorToThrow: err,
@@ -374,8 +380,16 @@ export class SettingsManager {
           });
         }
       } else {
-        return null;
+        // fall through to ending if
       }
+    } else {
+      // fall through to ending if
+    }
+    
+    if (preAlteredValue != null) {
+      // ordinarily there would be a possible throw here if allowValueCoercion = false, but
+      // preAlteredValue is only set if allowValueCoercion = true
+      return preAlteredValue;
     } else {
       return null;
     }
@@ -427,9 +441,11 @@ export class SettingsManager {
     
     // coercible value constraints
     
+    let preAlteredValue = null;
+    
     if (!Number.isNaN(value)) {
       if (min != null && value < min) {
-        return SettingsManager.#validatorThrowOrReturn({
+        preAlteredValue = SettingsManager.#validatorThrowOrReturn({
           errorToThrowGenerator: () => new Error(`value (${value}) < min (${min})`),
           valueToReturn: min,
           returnValueNullErrorGenerator: null,
@@ -438,7 +454,7 @@ export class SettingsManager {
       }
       
       if (max != null && value > max) {
-        return SettingsManager.#validatorThrowOrReturn({
+        preAlteredValue = SettingsManager.#validatorThrowOrReturn({
           errorToThrowGenerator: () => new Error(`value (${value}) > max (${max})`),
           valueToReturn: max,
           returnValueNullErrorGenerator: null,
@@ -453,7 +469,11 @@ export class SettingsManager {
       let validationResults;
       
       try {
-        validationResults = updateValidator(value, oldValue);
+        if (preAlteredValue != null) {
+          validationResults = updateValidator(preAlteredValue, oldValue);
+        } else {
+          validationResults = updateValidator(value, oldValue);
+        }
       } catch (err) {
         return SettingsManager.#validatorThrowOrReturnAndLog({
           errorToThrow: err,
@@ -541,8 +561,16 @@ export class SettingsManager {
           });
         }
       } else {
-        return null;
+        // fall through to ending if
       }
+    } else {
+      // fall through to ending if
+    }
+    
+    if (preAlteredValue != null) {
+      // ordinarily there would be a possible throw here if allowValueCoercion = false, but
+      // preAlteredValue is only set if allowValueCoercion = true
+      return preAlteredValue;
     } else {
       return null;
     }
@@ -569,9 +597,11 @@ export class SettingsManager {
     
     // coercible value constraints
     
+    let preAlteredValue = null;
+    
     if (!multiline) {
       if (value.includes('\n') || value.includes('\r')) {
-        return SettingsManager.#validatorThrowOrReturnGenerator({
+        preAlteredValue = SettingsManager.#validatorThrowOrReturnGenerator({
           errorToThrowGenerator: () => new Error(`text not multiline but value includes newlines: ${value}`),
           valueToReturnGenerator: () => value.replaceAll(/[\r\n]/, ''),
           returnValueNullErrorGenerator: () => new Error('text not multiline so revert but old value null'),
@@ -586,7 +616,11 @@ export class SettingsManager {
       let validationResults;
       
       try {
-        validationResults = updateValidator(value, oldValue);
+        if (preAlteredValue != null) {
+          validationResults = updateValidator(preAlteredValue, oldValue);
+        } else {
+          validationResults = updateValidator(value, oldValue);
+        }
       } catch (err) {
         return SettingsManager.#validatorThrowOrReturnAndLog({
           errorToThrow: err,
@@ -647,8 +681,16 @@ export class SettingsManager {
           });
         }
       } else {
-        return null;
+        // fall through to ending if
       }
+    } else {
+      // fall through to ending if
+    }
+    
+    if (preAlteredValue != null) {
+      // ordinarily there would be a possible throw here if allowValueCoercion = false, but
+      // preAlteredValue is only set if allowValueCoercion = true
+      return preAlteredValue;
     } else {
       return null;
     }
