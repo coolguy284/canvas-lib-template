@@ -106,7 +106,7 @@ export class SettingsManager {
     }
     
     if (updateValidator != null) {
-      // possible error during validator func
+      // catch possible error during validator func
       
       let validationResults;
       
@@ -193,7 +193,7 @@ export class SettingsManager {
     }
     
     if (updateValidator != null) {
-      // possible error during validator func
+      // catch possible error during validator func
       
       let validationResults;
       
@@ -303,6 +303,8 @@ export class SettingsManager {
     }
     
     if (updateValidator != null) {
+      // catch possible error during validator func
+      
       let validationResults;
       
       try {
@@ -346,7 +348,7 @@ export class SettingsManager {
           
           if (min != null && adjustedNewValue < min) {
             return SettingsManager.#validatorThrowOrReturnAndLog({
-              errorToThrowGenerator: new Error(`validator output (${adjustedNewValue}) < min (${min})`),
+              errorToThrow: new Error(`validator output (${adjustedNewValue}) < min (${min})`),
               valueToReturn: min,
               returnValueNullErrorGenerator: null,
               performThrow: !revertWithoutErrorAndSuppressValidatorErrors,
@@ -355,7 +357,7 @@ export class SettingsManager {
           
           if (max != null && adjustedNewValue > max) {
             return SettingsManager.#validatorThrowOrReturnAndLog({
-              errorToThrowGenerator: new Error(`validator output (${adjustedNewValue}) > max (${max})`),
+              errorToThrow: new Error(`validator output (${adjustedNewValue}) > max (${max})`),
               valueToReturn: max,
               returnValueNullErrorGenerator: null,
               performThrow: !revertWithoutErrorAndSuppressValidatorErrors,
@@ -390,73 +392,160 @@ export class SettingsManager {
     allowValueCoercion,
     revertWithoutErrorAndSuppressValidatorErrors,
   }) {
+    // invalid type
+    
     if (typeof value != 'number') {
-      throw new Error(`value not number: ${typeof value}`);
+      return SettingsManager.#validatorThrowOrReturn({
+        errorToThrowGenerator: () => new Error(`value type not number: ${typeof value}`),
+        valueToReturn: oldValue,
+        returnValueNullErrorGenerator: () => new Error('invalid type for value, so revert to old value, but old value is null'),
+        performThrow: !revertWithoutErrorAndSuppressValidatorErrors,
+      });
     }
+    
+    // uncoercible value constraints
     
     if (Number.isNaN(value)) {
       if (!nanAcceptable) {
-        throw new Error(`value is NaN but NaN values are not allowed`);
+        return SettingsManager.#validatorThrowOrReturn({
+          errorToThrowGenerator: () => new Error(`value is NaN but NaN values are not allowed`),
+          valueToReturn: oldValue,
+          returnValueNullErrorGenerator: () => new Error('value is NaN but NaN values are not allowed, so revert to old value, but old value is null'),
+          performThrow: !revertWithoutErrorAndSuppressValidatorErrors,
+        });
       }
     } else {
-      if (!Number.isFinite(value) && !infinityAcceptable) {
-        throw new Error(`value is [+-] Infinity but Infinity values are not allowed: ${value}`);
+      if (!infinityAcceptable && !Number.isFinite(value)) {
+        return SettingsManager.#validatorThrowOrReturn({
+          errorToThrowGenerator: () => new Error(`value is [+-] Infinity but Infinity values are not allowed: ${value}`),
+          valueToReturn: oldValue,
+          returnValueNullErrorGenerator: () => new Error(`value is [+-] Infinity (${value}) but Infinity values are not allowed, so revert to old value, but old value is null`),
+          performThrow: !revertWithoutErrorAndSuppressValidatorErrors,
+        });
       }
-      
+    }
+    
+    // coercible value constraints
+    
+    if (!Number.isNaN(value)) {
       if (min != null && value < min) {
-        throw new Error(`value (${value}) < min (${min})`);
+        return SettingsManager.#validatorThrowOrReturn({
+          errorToThrowGenerator: () => new Error(`value (${value}) < min (${min})`),
+          valueToReturn: min,
+          returnValueNullErrorGenerator: null,
+          performThrow: !revertWithoutErrorAndSuppressValidatorErrors,
+        });
       }
       
       if (max != null && value > max) {
-        throw new Error(`value (${value}) > max (${max})`);
+        return SettingsManager.#validatorThrowOrReturn({
+          errorToThrowGenerator: () => new Error(`value (${value}) > max (${max})`),
+          valueToReturn: max,
+          returnValueNullErrorGenerator: null,
+          performThrow: !revertWithoutErrorAndSuppressValidatorErrors,
+        });
       }
     }
     
     if (updateValidator != null) {
-      let validationResults = updateValidator(value, oldValue);
+      // catch possible error during validator func
+      
+      let validationResults;
+      
+      try {
+        validationResults = updateValidator(value, oldValue);
+      } catch (err) {
+        return SettingsManager.#validatorThrowOrReturnAndLog({
+          errorToThrow: err,
+          valueToReturn: oldValue,
+          returnValueNullErrorGenerator: () => new Error('validator error, so revert to old value, but old value is null'),
+          performThrow: !revertWithoutErrorAndSuppressValidatorErrors,
+        });
+      }
       
       if (validationResults != null) {
         let adjustedNewValue = validationResults.adjustedNewValue;
         
-        if (adjustedNewValue != null) {
-          try {
-            if (allowValueCoercion) {
-              if (Number.isNaN(adjustedNewValue)) {
-                if (!nanAcceptable) {
-                  throw new Error(`validator output is NaN but NaN values are not allowed`);
-                }
-              } else {
-                if (!Number.isFinite(adjustedNewValue) && !infinityAcceptable) {
-                  throw new Error(`validator output is [+-] Infinity but Infinity values are not allowed: ${adjustedNewValue}`);
-                }
-                
-                if (min != null && adjustedNewValue < min) {
-                  throw new Error(`validator output (${adjustedNewValue}) < min (${min})`);
-                }
-                
-                if (max != null && adjustedNewValue > max) {
-                  throw new Error(`validator output (${adjustedNewValue}) > max (${max})`);
-                }
-              }
-              
-              return adjustedNewValue;
-            } else {
-              throw new Error(`value does not pass validation function, converted to: ${adjustedNewValue}`);
-            }
-          } catch (err) {
-            
-          }
+        if (adjustedNewValue == null) {
+          // validator requested revert
+          
+          return SettingsManager.#validatorThrowOrReturn({
+            errorToThrowGenerator: () => new Error('validator requested revert but value coercion not allowed'),
+            valueToReturn: oldValue,
+            returnValueNullErrorGenerator: () => new Error('validator requested revert but old value null'),
+            performThrow: !allowValueCoercion,
+          });
         } else {
-          if (oldValue == null) {
-            throw new Error('validator output revert to old value, but old value is null');
+          // validator provided new value
+          
+          if (typeof adjustedNewValue != 'number') {
+            // validator value is invalid type
+            
+            return SettingsManager.#validatorThrowOrReturnAndLog({
+              errorToThrow: new Error(`validator output not number: ${typeof adjustedNewValue}`),
+              valueToReturn: oldValue,
+              returnValueNullErrorGenerator: () => new Error('validator output not number, so revert to old value, but old value is null'),
+              performThrow: !revertWithoutErrorAndSuppressValidatorErrors,
+            });
           }
           
-          return oldValue;
+          // validator failed uncoercible value constraint
+          
+          if (Number.isNaN(adjustedNewValue)) {
+            if (!nanAcceptable) {
+              return SettingsManager.#validatorThrowOrReturnAndLog({
+                errorToThrow: new Error(`validator output is NaN but NaN values are not allowed`),
+                valueToReturn: oldValue,
+                returnValueNullErrorGenerator: () => new Error('validator output is NaN but NaN values are not allowed, so revert to old value, but old value is null'),
+                performThrow: !revertWithoutErrorAndSuppressValidatorErrors,
+              });
+            }
+          } else {
+            if (!infinityAcceptable && !Number.isFinite(adjustedNewValue)) {
+              return SettingsManager.#validatorThrowOrReturnAndLog({
+                errorToThrow: new Error(`validator output is [+-] Infinity but Infinity values are not allowed: ${adjustedNewValue}`),
+                valueToReturn: oldValue,
+                returnValueNullErrorGenerator: () => new Error(`validator output is [+-] Infinity (${adjustedNewValue}) but Infinity values are not allowed, so revert to old value, but old value is null`),
+                performThrow: !revertWithoutErrorAndSuppressValidatorErrors,
+              });
+            }
+          }
+          
+          // validator failed coercible value constraint
+          
+          if (!Number.isNaN(adjustedNewValue)) {
+            if (min != null && adjustedNewValue < min) {
+              return SettingsManager.#validatorThrowOrReturnAndLog({
+                errorToThrow: new Error(`validator output (${adjustedNewValue}) < min (${min})`),
+                valueToReturn: min,
+                returnValueNullErrorGenerator: null,
+                performThrow: !revertWithoutErrorAndSuppressValidatorErrors,
+              });
+            }
+            
+            if (max != null && adjustedNewValue > max) {
+              return SettingsManager.#validatorThrowOrReturnAndLog({
+                errorToThrow: new Error(`validator output (${adjustedNewValue}) > max (${max})`),
+                valueToReturn: max,
+                returnValueNullErrorGenerator: null,
+                performThrow: !revertWithoutErrorAndSuppressValidatorErrors,
+              });
+            }
+          }
+          
+          return SettingsManager.#validatorThrowOrReturn({
+            errorToThrowGenerator: () => new Error('validator output new value, but allowValueCoercion is false'),
+            valueToReturn: adjustedNewValue,
+            returnValueNullErrorGenerator: () => new Error('validator requested new value but value is null (should not be possible)'),
+            performThrow: !allowValueCoercion,
+          });
         }
+      } else {
+        return null;
       }
+    } else {
+      return null;
     }
-    
-    return value;
   }
   
   static #validateText({
@@ -508,6 +597,8 @@ export class SettingsManager {
       }
       
       if (validationResults != null) {
+        // catch possible error during validator func
+        
         let adjustedNewValue = validationResults.adjustedNewValue;
         
         if (adjustedNewValue == null) {
