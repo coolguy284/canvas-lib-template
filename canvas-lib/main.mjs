@@ -46,6 +46,7 @@ export {
 } from './canvas/gl_constants.mjs';
 export { createFullCanvasShaderManager } from './canvas/gl_full_canvas_shader.mjs';
 
+export { parseSettings } from './canvas/settings_parser.mjs';
 export {
   validateBool,
   validateEnum,
