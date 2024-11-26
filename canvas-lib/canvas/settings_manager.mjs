@@ -19,14 +19,32 @@ export class SettingsManager {
   // helper functions
   
   static #validatorThrowOrReturn({
-    errorToThrowGeneratorFunc,
+    errorToThrowGenerator,
     valueToReturn,
     returnValueNullErrorGenerator,
     performThrow,
   }) {
     if (performThrow) {
-      throw errorToThrowGeneratorFunc();
+      throw errorToThrowGenerator();
     } else {
+      if (valueToReturn == null) {
+        throw returnValueNullErrorGenerator();
+      } else {
+        return valueToReturn;
+      }
+    }
+  }
+  
+  static #validatorThrowOrReturnGenerator({
+    errorToThrowGenerator,
+    valueToReturnGenerator,
+    returnValueNullErrorGenerator,
+    performThrow,
+  }) {
+    if (performThrow) {
+      throw errorToThrowGenerator();
+    } else {
+      let valueToReturn = valueToReturnGenerator();
       if (valueToReturn == null) {
         throw returnValueNullErrorGenerator();
       } else {
@@ -68,7 +86,7 @@ export class SettingsManager {
     
     if (typeof value != 'boolean') {
       return SettingsManager.#validatorThrowOrReturn({
-        errorToThrowGeneratorFunc: () => new Error(`value type not boolean: ${typeof value}`),
+        errorToThrowGenerator: () => new Error(`value type not boolean: ${typeof value}`),
         valueToReturn: oldValue,
         returnValueNullErrorGenerator: () => new Error('invalid type for value, so revert to old value, but old value is null'),
         performThrow: !revertWithoutErrorAndSuppressValidatorErrors,
@@ -98,7 +116,7 @@ export class SettingsManager {
           // validator requested revert
           
           return SettingsManager.#validatorThrowOrReturn({
-            errorToThrowGeneratorFunc: () => new Error('validator requested revert but value coercion not allowed'),
+            errorToThrowGenerator: () => new Error('validator requested revert but value coercion not allowed'),
             valueToReturn: oldValue,
             returnValueNullErrorGenerator: () => new Error('validator requested revert but old value null'),
             performThrow: !allowValueCoercion,
@@ -120,9 +138,9 @@ export class SettingsManager {
           // valid new value from validator
           
           return SettingsManager.#validatorThrowOrReturn({
-            errorToThrowGeneratorFunc: () => new Error('validator output new value, but allowValueCoercion is false'),
+            errorToThrowGenerator: () => new Error('validator output new value, but allowValueCoercion is false'),
             valueToReturn: adjustedNewValue,
-            returnValueNullErrorGenerator: () => new Error('validator requested revert but old value null'),
+            returnValueNullErrorGenerator: () => new Error('validator requested new value but value is null (should not be possible)'),
             performThrow: !allowValueCoercion,
           });
         }
@@ -142,52 +160,93 @@ export class SettingsManager {
     allowValueCoercion,
     revertWithoutErrorAndSuppressValidatorErrors,
   }) {
+    // invalid type
+    
     if (typeof value != 'string') {
-      throw new Error(`value type not string: ${typeof value}`);
+      return SettingsManager.#validatorThrowOrReturn({
+        errorToThrowGenerator: () => new Error(`value type not string: ${typeof value}`),
+        valueToReturn: oldValue,
+        returnValueNullErrorGenerator: () => new Error('invalid type for value, so revert to old value, but old value is null'),
+        performThrow: !revertWithoutErrorAndSuppressValidatorErrors,
+      });
     }
     
     if (!enumValuesSet.has(value)) {
-      throw new Error(`value not present in enum: ${value}`);
+      return SettingsManager.#validatorThrowOrReturn({
+        errorToThrowGenerator: () => new Error(`value not present in enum: ${value}`),
+        valueToReturn: oldValue,
+        returnValueNullErrorGenerator: () => new Error('value not in enum, so revert to old value, but old value is null'),
+        performThrow: !revertWithoutErrorAndSuppressValidatorErrors,
+      });
     }
     
     if (updateValidator != null) {
-      let validationResults = updateValidator(value, oldValue);
+      // possible error during validator func
+      
+      let validationResults;
+      
+      try {
+        validationResults = updateValidator(value, oldValue);
+      } catch (err) {
+        return SettingsManager.#validatorThrowOrReturnAndLog({
+          errorToThrow: err,
+          valueToReturn: oldValue,
+          returnValueNullErrorGenerator: () => new Error('validator error, so revert to old value, but old value is null'),
+          performThrow: !revertWithoutErrorAndSuppressValidatorErrors,
+        });
+      }
       
       if (validationResults != null) {
         let adjustedNewValue = validationResults.adjustedNewValue;
         
-        if (adjustedNewValue != null) {
-          if (allowValueCoercion) {
-            if (typeof adjustedNewValue != 'string') {
-              throw new Error(`validator output not string: ${typeof adjustedNewValue}`);
-            }
-            
-            if (!enumValuesSet.has(adjustedNewValue)) {
-              throw new Error(`validator output not present in enum: ${adjustedNewValue}`);
-            }
-            
-            return adjustedNewValue;
-          } else {
-            
-          }
+        if (adjustedNewValue == null) {
+          // validator requested revert
+          
+          return SettingsManager.#validatorThrowOrReturn({
+            errorToThrowGenerator: () => new Error('validator requested revert but value coercion not allowed'),
+            valueToReturn: oldValue,
+            returnValueNullErrorGenerator: () => new Error('validator requested revert but old value null'),
+            performThrow: !allowValueCoercion,
+          });
         } else {
-          if (oldValue == null) {
-            throw new Error('validator output revert to old value, but old value is null');
+          // validator provided new value
+          
+          if (typeof adjustedNewValue != 'string') {
+            // validator value is invalid type
+            
+            return SettingsManager.#validatorThrowOrReturnAndLog({
+              errorToThrow: new Error(`validator output not string: ${typeof adjustedNewValue}`),
+              valueToReturn: oldValue,
+              returnValueNullErrorGenerator: () => new Error(`validator output not string (${typeof adjustedNewValue}), so revert to old value, but old value is null`),
+              performThrow: !revertWithoutErrorAndSuppressValidatorErrors,
+            });
+          }
+    
+          if (!enumValuesSet.has(adjustedNewValue)) {
+            // validator value is invalid type
+            
+            return SettingsManager.#validatorThrowOrReturnAndLog({
+              errorToThrow: new Error(`validator output not present in enum: ${adjustedNewValue}`),
+              valueToReturn: oldValue,
+              returnValueNullErrorGenerator: () => new Error(`validator output not present in enum (${adjustedNewValue}), so revert to old value, but old value is null`),
+              performThrow: !revertWithoutErrorAndSuppressValidatorErrors,
+            });
           }
           
-          return oldValue;
+          // valid new value from validator
+          
+          return SettingsManager.#validatorThrowOrReturn({
+            errorToThrowGenerator: () => new Error('validator output new value, but allowValueCoercion is false'),
+            valueToReturn: adjustedNewValue,
+            returnValueNullErrorGenerator: () => new Error('validator requested new value but value is null (should not be possible)'),
+            performThrow: !allowValueCoercion,
+          });
         }
-        
-        if (allowValueCoercion) {
-          return adjustedNewValue != null ? adjustedNewValue : oldValue;
-        } else {
-          throw new Error(`value does not pass validation function: ${adjustedNewValue == null ? 'Generic Failure' : 'Converted to: ' + adjustedNewValue}`);
-        }
+      } else {
+        return null;
       }
-    }
-    
-    if (allowValueCoercion) {
-      return value;
+    } else {
+      return null;
     }
   }
   
@@ -337,48 +396,99 @@ export class SettingsManager {
     allowValueCoercion,
     revertWithoutErrorAndSuppressValidatorErrors,
   }) {
+    // invalid type
+    
     if (typeof value != 'string') {
-      throw new Error(`value type not string: ${typeof value}`);
+      return SettingsManager.#validatorThrowOrReturn({
+        errorToThrowGenerator: () => new Error(`value type not string: ${typeof value}`),
+        valueToReturn: oldValue,
+        returnValueNullErrorGenerator: () => new Error('invalid type for value, so revert to old value, but old value is null'),
+        performThrow: !revertWithoutErrorAndSuppressValidatorErrors,
+      });
     }
+    
+    // coercible value constraints
     
     if (!multiline) {
       if (value.includes('\n') || value.includes('\r')) {
-        throw new Error(`text not multiline but value includes newlines: ${value}`);
+        return SettingsManager.#validatorThrowOrReturnGenerator({
+          errorToThrowGenerator: () => new Error(`text not multiline but value includes newlines: ${value}`),
+          valueToReturnGenerator: () => value.replaceAll(/[\r\n]/, ''),
+          returnValueNullErrorGenerator: () => new Error('text not multiline so revert but old value null'),
+          performThrow: !allowValueCoercion,
+        });
       }
     }
     
     if (updateValidator != null) {
-      let validationResults = updateValidator(value, oldValue);
+      // possible error during validator func
+      
+      let validationResults;
+      
+      try {
+        validationResults = updateValidator(value, oldValue);
+      } catch (err) {
+        return SettingsManager.#validatorThrowOrReturnAndLog({
+          errorToThrow: err,
+          valueToReturn: oldValue,
+          returnValueNullErrorGenerator: () => new Error('validator error, so revert to old value, but old value is null'),
+          performThrow: !revertWithoutErrorAndSuppressValidatorErrors,
+        });
+      }
       
       if (validationResults != null) {
         let adjustedNewValue = validationResults.adjustedNewValue;
         
-        if (adjustedNewValue != null) {
+        if (adjustedNewValue == null) {
+          // validator requested revert
+          
+          return SettingsManager.#validatorThrowOrReturn({
+            errorToThrowGenerator: () => new Error('validator requested revert but value coercion not allowed'),
+            valueToReturn: oldValue,
+            returnValueNullErrorGenerator: () => new Error('validator requested revert but old value null'),
+            performThrow: !allowValueCoercion,
+          });
+        } else {
+          // validator provided new value
+          
           if (typeof adjustedNewValue != 'string') {
-            throw new Error(`validator output not string: ${typeof adjustedNewValue}`);
+            // validator value is invalid type
+            
+            return SettingsManager.#validatorThrowOrReturnAndLog({
+              errorToThrow: new Error(`validator output not string: ${typeof adjustedNewValue}`),
+              valueToReturn: oldValue,
+              returnValueNullErrorGenerator: () => new Error(`validator output not string (${typeof adjustedNewValue}), so revert to old value, but old value is null`),
+              performThrow: !revertWithoutErrorAndSuppressValidatorErrors,
+            });
           }
           
           if (!multiline) {
             if (adjustedNewValue.includes('\n') || adjustedNewValue.includes('\r')) {
-              throw new Error(`text not multiline but validator output includes newlines: ${adjustedNewValue}`);
+              // validator value fails a coercible constraint
+              
+              return SettingsManager.#validatorThrowOrReturnGenerator({
+                errorToThrowGenerator: () => new Error(`text not multiline but validator output includes newlines: ${adjustedNewValue}`),
+                valueToReturnGenerator: () => adjustedNewValue.replaceAll(/[\r\n]/, ''),
+                returnValueNullErrorGenerator: () => new Error('validator requested revert but old value null'),
+                performThrow: !allowValueCoercion,
+              });
             }
           }
-        } else {
-          if (oldValue == null) {
-            throw new Error('validator output revert to old value, but old value is null');
-          }
+          
+          // valid new value from validator
+          
+          return SettingsManager.#validatorThrowOrReturn({
+            errorToThrowGenerator: () => new Error('validator output new value, but allowValueCoercion is false'),
+            valueToReturn: adjustedNewValue,
+            returnValueNullErrorGenerator: () => new Error('validator requested new value but value is null (should not be possible)'),
+            performThrow: !allowValueCoercion,
+          });
         }
-        
-        if (allowValueCoercion) {
-          return adjustedNewValue != null ? adjustedNewValue : oldValue;
-        } else {
-          throw new Error(`value does not pass validation function: ${adjustedNewValue == null ? 'Generic Failure' : 'Converted to: ' + adjustedNewValue}`);
-        }
+      } else {
+        return null;
       }
-    }
-    
-    if (allowValueCoercion) {
-      return value;
+    } else {
+      return null;
     }
   }
   
