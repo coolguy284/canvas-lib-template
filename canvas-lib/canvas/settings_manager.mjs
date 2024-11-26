@@ -28,7 +28,11 @@ export class SettingsManager {
       throw errorToThrowGenerator();
     } else {
       if (valueToReturn == null) {
-        throw returnValueNullErrorGenerator();
+        if (returnValueNullErrorGenerator) {
+          throw returnValueNullErrorGenerator();
+        } else {
+          throw new Error('valueToReturn is null');
+        }
       } else {
         return valueToReturn;
       }
@@ -46,7 +50,11 @@ export class SettingsManager {
     } else {
       let valueToReturn = valueToReturnGenerator();
       if (valueToReturn == null) {
-        throw returnValueNullErrorGenerator();
+        if (returnValueNullErrorGenerator) {
+          throw returnValueNullErrorGenerator();
+        } else {
+          throw new Error('valueToReturn is null');
+        }
       } else {
         return valueToReturn;
       }
@@ -65,7 +73,11 @@ export class SettingsManager {
       console.error(errorToThrow);
       
       if (valueToReturn == null) {
-        throw returnValueNullErrorGenerator();
+        if (returnValueNullErrorGenerator) {
+          throw returnValueNullErrorGenerator();
+        } else {
+          throw new Error('valueToReturn is null');
+        }
       } else {
         return valueToReturn;
       }
@@ -238,7 +250,7 @@ export class SettingsManager {
           return SettingsManager.#validatorThrowOrReturn({
             errorToThrowGenerator: () => new Error('validator output new value, but allowValueCoercion is false'),
             valueToReturn: adjustedNewValue,
-            returnValueNullErrorGenerator: () => new Error('validator requested new value but value is null (should not be possible)'),
+            returnValueNullErrorGenerator: null,
             performThrow: !allowValueCoercion,
           });
         }
@@ -259,52 +271,111 @@ export class SettingsManager {
     allowValueCoercion,
     revertWithoutErrorAndSuppressValidatorErrors,
   }) {
+    // invalid type
+    
     if (!Number.isSafeInteger(value)) {
-      throw new Error(`value not integer: ${value}`);
+      return SettingsManager.#validatorThrowOrReturn({
+        errorToThrowGenerator: () => new Error(`value not integer: ${value}`),
+        valueToReturn: oldValue,
+        returnValueNullErrorGenerator: () => new Error('invalid type for value, so revert to old value, but old value is null'),
+        performThrow: !revertWithoutErrorAndSuppressValidatorErrors,
+      });
     }
     
+    // coercible value constraints
+    
     if (min != null && value < min) {
-      throw new Error(`value (${value}) < min (${min})`);
+      return SettingsManager.#validatorThrowOrReturn({
+        errorToThrowGenerator: () => new Error(`value (${value}) < min (${min})`),
+        valueToReturn: min,
+        returnValueNullErrorGenerator: null,
+        performThrow: !revertWithoutErrorAndSuppressValidatorErrors,
+      });
     }
     
     if (max != null && value > max) {
-      throw new Error(`value (${value}) > max (${max})`);
+      return SettingsManager.#validatorThrowOrReturn({
+        errorToThrowGenerator: () => new Error(`value (${value}) > max (${max})`),
+        valueToReturn: max,
+        returnValueNullErrorGenerator: null,
+        performThrow: !revertWithoutErrorAndSuppressValidatorErrors,
+      });
     }
     
     if (updateValidator != null) {
-      let validationResults = updateValidator(value, oldValue);
+      let validationResults;
+      
+      try {
+        validationResults = updateValidator(value, oldValue);
+      } catch (err) {
+        return SettingsManager.#validatorThrowOrReturnAndLog({
+          errorToThrow: err,
+          valueToReturn: oldValue,
+          returnValueNullErrorGenerator: () => new Error('validator error, so revert to old value, but old value is null'),
+          performThrow: !revertWithoutErrorAndSuppressValidatorErrors,
+        });
+      }
       
       if (validationResults != null) {
         let adjustedNewValue = validationResults.adjustedNewValue;
         
-        if (adjustedNewValue != null) {
+        if (adjustedNewValue == null) {
+          // validator requested revert
+          
+          return SettingsManager.#validatorThrowOrReturn({
+            errorToThrowGenerator: () => new Error('validator requested revert but value coercion not allowed'),
+            valueToReturn: oldValue,
+            returnValueNullErrorGenerator: () => new Error('validator requested revert but old value null'),
+            performThrow: !allowValueCoercion,
+          });
+        } else {
+          // validator provided new value
+          
           if (!Number.isSafeInteger(adjustedNewValue)) {
-            throw new Error(`validator output not integer: ${adjustedNewValue}`);
+            // validator value is invalid type
+            
+            return SettingsManager.#validatorThrowOrReturnAndLog({
+              errorToThrow: new Error(`validator output not integer: ${adjustedNewValue}`),
+              valueToReturn: oldValue,
+              returnValueNullErrorGenerator: () => new Error(`validator output not integer (${typeof adjustedNewValue}), so revert to old value, but old value is null`),
+              performThrow: !revertWithoutErrorAndSuppressValidatorErrors,
+            });
           }
           
+          // validator failed coercible value constraints
+          
           if (min != null && adjustedNewValue < min) {
-            throw new Error(`validator output (${adjustedNewValue}) < min (${min})`);
+            return SettingsManager.#validatorThrowOrReturnAndLog({
+              errorToThrowGenerator: new Error(`validator output (${adjustedNewValue}) < min (${min})`),
+              valueToReturn: min,
+              returnValueNullErrorGenerator: null,
+              performThrow: !revertWithoutErrorAndSuppressValidatorErrors,
+            });
           }
           
           if (max != null && adjustedNewValue > max) {
-            throw new Error(`validator output (${adjustedNewValue}) > max (${max})`);
+            return SettingsManager.#validatorThrowOrReturnAndLog({
+              errorToThrowGenerator: new Error(`validator output (${adjustedNewValue}) > max (${max})`),
+              valueToReturn: max,
+              returnValueNullErrorGenerator: null,
+              performThrow: !revertWithoutErrorAndSuppressValidatorErrors,
+            });
           }
-        } else {
-          if (oldValue == null) {
-            throw new Error('validator output revert to old value, but old value is null');
-          }
+          
+          // valid new value from validator
+          
+          return SettingsManager.#validatorThrowOrReturn({
+            errorToThrowGenerator: () => new Error('validator output new value, but allowValueCoercion is false'),
+            valueToReturn: adjustedNewValue,
+            returnValueNullErrorGenerator: () => new Error('validator requested new value but value is null (should not be possible)'),
+            performThrow: !allowValueCoercion,
+          });
         }
-        
-        if (allowValueCoercion) {
-          return adjustedNewValue != null ? adjustedNewValue : oldValue;
-        } else {
-          throw new Error(`value does not pass validation function: ${adjustedNewValue == null ? 'Generic Failure' : 'Converted to: ' + adjustedNewValue}`);
-        }
+      } else {
+        return null;
       }
-    }
-    
-    if (allowValueCoercion) {
-      return value;
+    } else {
+      return null;
     }
   }
   
@@ -480,7 +551,7 @@ export class SettingsManager {
           return SettingsManager.#validatorThrowOrReturn({
             errorToThrowGenerator: () => new Error('validator output new value, but allowValueCoercion is false'),
             valueToReturn: adjustedNewValue,
-            returnValueNullErrorGenerator: () => new Error('validator requested new value but value is null (should not be possible)'),
+            returnValueNullErrorGenerator: null,
             performThrow: !allowValueCoercion,
           });
         }
