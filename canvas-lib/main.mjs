@@ -45,4 +45,12 @@ export {
   VERTEX_SHADER_XY_ONLY_TEXT,
 } from './canvas/gl_constants.mjs';
 export { createFullCanvasShaderManager } from './canvas/gl_full_canvas_shader.mjs';
+
+export {
+  validateBool,
+  validateEnum,
+  validateInt,
+  validateNumber,
+  validateText,
+} from './canvas/settings_validation.mjs';
 */
