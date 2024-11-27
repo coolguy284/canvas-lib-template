@@ -595,7 +595,7 @@ export function validateText({
     if (value.includes('\n') || value.includes('\r')) {
       preAlteredValue = validatorThrowOrReturnGenerator({
         errorToThrowGenerator: () => new Error(`text not multiline but value includes newlines: ${value}`),
-        valueToReturnGenerator: () => value.replaceAll(/[\r\n]/, ''),
+        valueToReturnGenerator: () => value.replaceAll(/[\r\n]/g, ''),
         returnValueNullErrorGenerator: () => new Error('text not multiline so revert but old value null'),
         performThrow: !allowValueCoercion,
       });
@@ -656,7 +656,7 @@ export function validateText({
             
             return validatorThrowOrReturnGenerator({
               errorToThrowGenerator: () => new Error(`text not multiline but validator output includes newlines: ${adjustedNewValue}`),
-              valueToReturnGenerator: () => adjustedNewValue.replaceAll(/[\r\n]/, ''),
+              valueToReturnGenerator: () => adjustedNewValue.replaceAll(/[\r\n]/g, ''),
               returnValueNullErrorGenerator: () => new Error('validator requested revert but old value null'),
               performThrow: !allowValueCoercion,
             });

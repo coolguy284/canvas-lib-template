@@ -1,7 +1,6 @@
 features:
 offscreenvanvas canvas mode if div explicitly set to null (not missing)
 settingsmanager
-  if validatebool is in context of constructor or set function call, validator error is not caught, pass through, otherwise (set input element), catch, assume fail, and log error
   filling out settings div with true settings
   functionality to settings div
     queue up variable updates to div components until settings div is shown again
