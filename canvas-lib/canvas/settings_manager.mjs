@@ -10,8 +10,27 @@ export class SettingsManager {
   #div;
   #localStorageKey;
   #settingsMap;
+  #settingsUiPropertiesMap;
   
   // helper functions
+  
+  #postSettingUpdateHooks(name) {
+    let settingEntry = this.#settingsMap.get(name);
+    
+    // TODO visibility updates
+    
+    if (settingEntry.onUpdate) {
+      try {
+        settingEntry.onUpdate(settingEntry.value);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+  }
+  
+  #updateSettingFromElement(name, value) {
+    this.#settingsMap.get(name).value = value;
+  }
   
   #initialSettingValuesLoad() {
     // TODO pull data from persistence
@@ -21,7 +40,7 @@ export class SettingsManager {
     }
   }
   
-  #createUI(uiEntries, settingsUiPropertiesMap) {
+  #createUI(uiEntries) {
     let elemsToAdd = [];
     
     for (let entry of uiEntries) {
@@ -54,7 +73,44 @@ export class SettingsManager {
         }
         
         case null: {
-          // TODO
+          let settingEntry = this.#settingsMap.get(entry.name);
+          let settingUIEntry = this.#settingsUiPropertiesMap.get(entry.name);
+          
+          switch (settingEntry.type) {
+            case SettingType.BOOLEAN:
+              let container = document.createElement('div');
+              
+              let checkElem = document.createElement('input');
+              checkElem.type = 'checkbox';
+              let id = checkElem.id = crypto.randomUUID();
+              checkElem.addEventListener('change', () => {
+                this.#updateSettingFromElement(settingEntry.name, checkElem.checked);
+              });
+              container.appendChild(checkElem);
+              
+              let labelElem = document.createElement('label');
+              labelElem.textContent = settingUIEntry.displayName;
+              labelElem.htmlFor = id;
+              container.appendChild(labelElem);
+              
+              elemsToAdd.push(container);
+              break;
+            
+            case SettingType.ENUM:
+              break;
+            
+            case SettingType.INTEGER:
+              break;
+            
+            case SettingType.NUMBER:
+              break;
+            
+            case SettingType.TEXT:
+              break;
+            
+            default:
+              throw new Error('default case not possible, all options accounted for');
+          }
           break;
         }
         
@@ -99,6 +155,7 @@ export class SettingsManager {
     this.#div = opts.div;
     this.#localStorageKey = opts.localStorageKey;
     this.#settingsMap = settingsMap;
+    this.#settingsUiPropertiesMap = settingsUiPropertiesMap;
     
     this.#initialSettingValuesLoad();
     
@@ -106,7 +163,7 @@ export class SettingsManager {
     this.#button.addEventListener('click', this.#btnToggleSettingsListener);
     
     try {
-      this.#createUI(uiEntries, settingsUiPropertiesMap);
+      this.#createUI(uiEntries);
     } catch (err) {
       this.#button.removeEventListener('click', this.#btnToggleSettingsListener);
       this.#btnToggleSettingsListener = null;
@@ -191,7 +248,9 @@ export class SettingsManager {
     
     let settingEntry = this.#settingsMap.get(name);
     
-    // TODO
+    settingEntry.value = value;
+    
+    this.#postSettingUpdateHooks(name);
   }
   
   getSettingsVisibility() {

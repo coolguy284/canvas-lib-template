@@ -183,7 +183,7 @@ SettingsManager > constructor (after parsing):
           
           if type == SettingType.BOOLEAN:
             defaultValue: <boolean>,
-            value: <boolean> (TODO),
+            value: <boolean>,
           if type == SettingType.ENUM:
             values: [
               <string: name>,
@@ -194,19 +194,19 @@ SettingsManager > constructor (after parsing):
               ...
             ],
             defaultValue: <string>,
-            value: <boolstringean> (TODO),
+            value: <string>,
           if type == SettingType.INTEGER:
             min: <integer>,
             max: <integer>,
             defaultValue: <integer>,
-            value: <integer> (TODO),
+            value: <integer>,
           if type == SettingType.NUMBER:
             min: <number> | null,
             max: <number> | null,
             infinityAcceptable: <boolean>,
             nanAcceptable: <boolean>,
             defaultValue: <number>,
-            value: <number> (TODO),
+            value: <number>,
           if type == SettingType.TEXT:
             multiline: <
               boolean
@@ -218,7 +218,7 @@ SettingsManager > constructor (after parsing):
                 newline characters are not allowed in value
             >,
             defaultValue: <string>,
-            value: <string> (TODO),
+            value: <string>,
         },
       ],
       ...
@@ -235,6 +235,7 @@ SettingsManager > constructor (after parsing):
               ...
             ] | SettingVisibility.ALL_EXCLUDING_OWN (to call this function to re-assess the visibility on the update of any setting  except this one) | SettingVisibility.ALL (to call this function to re-assess the visibility on the update of any setting including this one),
           } | null,
+          
           if type == SettingType.ENUM:
             valueNames: Map [
               [ <string: name>, displayName: <string: displayName> ],

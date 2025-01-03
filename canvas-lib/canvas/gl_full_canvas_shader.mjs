@@ -793,5 +793,7 @@ class FullCanvasShaderManager {
 }
 
 export async function createFullCanvasShaderManager(gl, opts) {
+  // the 'await' call does have an effect, as constructor returns a promise that gets
+  // fulfilled with the newly constructed FullCanvasShaderManager object
   return await new FullCanvasShaderManager(gl, opts);
 }

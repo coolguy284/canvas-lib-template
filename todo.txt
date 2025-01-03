@@ -1,4 +1,5 @@
 features:
+canvasmgr: on resize trigger
 offscreenvanvas canvas mode if div explicitly set to null (not missing)
 settingsmanager
   filling out settings div with true settings
@@ -10,7 +11,7 @@ settingsmanager
   if error when updating property / validating, auto revert setting to old value but log error
   if error when calling visibility, assume true but log error
   check that each line of setting info.txt has implementation
-stylesheets for full screen template including provisions for settings button / div using classes
+  add settings to stylesheet
 add subpixel scale to settings test
 move fps and subpixel scale from settings example to separate function
 jsdoc everything in canvas-lib
@@ -20,7 +21,6 @@ canvasmanager: log shader warns by default unless suppresswarnings or suppress a
 version constant exported from version file in misc
 
 low prio:
-validate that multiline text input does not contain \r, or maybe silently convert to \n
 canvasmanager: screenshot functionality
   pass in canvasmanager to setup, render, teardown to facilitate modular screenshots
   save canvas as png, or render a larger version as png
